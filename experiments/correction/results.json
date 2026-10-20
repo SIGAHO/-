@@ -2,7 +2,7 @@
   "schema_version": 1,
   "suite": "correction",
   "fixture_time": "2026-10-21T09:00:00+09:00",
-  "source_commit": "4f9ca6d6c65357cc87f29c54aaab32d31f37a613",
+  "source_commit": "54253615b2fae2d45760dba9a6a527e8d6ea3e5f",
   "sha256": {
     "src/companion_core/__init__.py": "3f13daea6411d553c4704acda9ba7db671e28aeefeebfbf29d51fb2d849c77ed",
     "src/companion_core/context.py": "bd5eb128946a173455538fcf0ff4eb57f2127fbd10dcf13f8f9ff88b0cdfc192",
@@ -16,7 +16,7 @@
     "src/companion_core/state.py": "22c52c2522c840f90690e3a0c93db5c8ce9be5f2db785bf9262385c6db5dc273",
     "src/companion_core/textmath.py": "a4b49e51a95f909a9d19dce430bf8200a0aaf059b85ddd25caf9aa2ce321696f",
     "src/companion_core/time_engine.py": "0e913e6ef8b965c90c714085d24f8e46be8b1fa4ca0be571c6b41099e860ae9e",
-    "src/companion_core/topic.py": "2d4397f6579c7dc30606df9574fba8285a1139c0eba77fd39a1cdf76f83f41ef",
+    "src/companion_core/topic.py": "b6728675c31a73d382a967c6bf4bc511b20b0759254a324d158c6185634dc439",
     "experiments/runner.py": "1c8f2657be91b131a6466b945c5a7e4707a57c107041ffa9edefe3708c31ad0d",
     "experiments/correction/cases.jsonl": "17bbab88a2f719d84e8a0bf18c9e801f2b4fe8acc45b7835d1f6bd55833b705b",
     "experiments/correction/hypothesis.md": "6feed2e0edf6cca4913cc735f54a8f9a927e0a422111b9c5152a50cecae6ec2f"

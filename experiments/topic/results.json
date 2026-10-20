@@ -2,7 +2,7 @@
   "schema_version": 1,
   "suite": "topic",
   "fixture_time": "2026-10-21T09:00:00+09:00",
-  "source_commit": "4f9ca6d6c65357cc87f29c54aaab32d31f37a613",
+  "source_commit": "54253615b2fae2d45760dba9a6a527e8d6ea3e5f",
   "sha256": {
     "src/companion_core/__init__.py": "3f13daea6411d553c4704acda9ba7db671e28aeefeebfbf29d51fb2d849c77ed",
     "src/companion_core/context.py": "bd5eb128946a173455538fcf0ff4eb57f2127fbd10dcf13f8f9ff88b0cdfc192",
@@ -16,16 +16,16 @@
     "src/companion_core/state.py": "22c52c2522c840f90690e3a0c93db5c8ce9be5f2db785bf9262385c6db5dc273",
     "src/companion_core/textmath.py": "a4b49e51a95f909a9d19dce430bf8200a0aaf059b85ddd25caf9aa2ce321696f",
     "src/companion_core/time_engine.py": "0e913e6ef8b965c90c714085d24f8e46be8b1fa4ca0be571c6b41099e860ae9e",
-    "src/companion_core/topic.py": "2d4397f6579c7dc30606df9574fba8285a1139c0eba77fd39a1cdf76f83f41ef",
+    "src/companion_core/topic.py": "b6728675c31a73d382a967c6bf4bc511b20b0759254a324d158c6185634dc439",
     "experiments/runner.py": "1c8f2657be91b131a6466b945c5a7e4707a57c107041ffa9edefe3708c31ad0d",
-    "experiments/topic/cases.jsonl": "e7a4e8709122465709a513b9fd90eeaa83bf96edae7c36bf77b59e848a2e1a63",
+    "experiments/topic/cases.jsonl": "3734448cdec78f1424d22dc98691e8d8364f52a663df762e468f4f39a920cd2d",
     "experiments/topic/hypothesis.md": "095f513f20eddff775f5f4f6281b0ff02980f9f71917ee143046f6cc152ddc88"
   },
-  "total": 11,
-  "passed": 8,
-  "pass_rate": 0.7272727272727273,
-  "decision": "REVISE",
-  "adoption_allowed": false,
+  "total": 21,
+  "passed": 21,
+  "pass_rate": 1.0,
+  "decision": "PASS",
+  "adoption_allowed": true,
   "execution_errors": false,
   "cases": [
     {
@@ -336,7 +336,7 @@
           },
           {
             "selected": 1,
-            "current": 0,
+            "current": 1,
             "count": 2
           }
         ]
@@ -354,17 +354,436 @@
           "path": "steps.3.current",
           "op": "eq",
           "value": 1,
-          "actual": 0,
+          "actual": 1,
           "expected": 1,
-          "passed": false
+          "passed": true
         }
       ],
-      "passed": false
+      "passed": true
     },
     {
       "id": "semantic-alias",
       "reason": "字面が異なる同義の工作機械話題を継続",
       "critical": false,
+      "observed": {
+        "steps": [
+          {
+            "selected": 0,
+            "current": 0,
+            "count": 1
+          },
+          {
+            "selected": 0,
+            "current": 0,
+            "count": 1
+          }
+        ]
+      },
+      "checks": [
+        {
+          "path": "steps.1.selected",
+          "op": "eq",
+          "value": 0,
+          "actual": 0,
+          "expected": 0,
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "no-overmerge",
+      "reason": "共通の作るという語だけで別製作物を統合しない",
+      "critical": true,
+      "observed": {
+        "steps": [
+          {
+            "selected": 0,
+            "current": 0,
+            "count": 1
+          },
+          {
+            "selected": 1,
+            "current": 1,
+            "count": 2
+          }
+        ]
+      },
+      "checks": [
+        {
+          "path": "steps.1.count",
+          "op": "eq",
+          "value": 2,
+          "actual": 2,
+          "expected": 2,
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "additional-board-aliases",
+      "reason": "追加の同義語と動詞表現でも基板の同一話題へ戻る",
+      "critical": true,
+      "observed": {
+        "steps": [
+          {
+            "selected": 0,
+            "current": 0,
+            "count": 1
+          },
+          {
+            "selected": 0,
+            "current": 0,
+            "count": 1
+          },
+          {
+            "selected": 0,
+            "current": 0,
+            "count": 1
+          }
+        ]
+      },
+      "checks": [
+        {
+          "path": "steps.2.selected",
+          "op": "eq",
+          "value": 0,
+          "actual": 0,
+          "expected": 0,
+          "passed": true
+        },
+        {
+          "path": "steps.2.count",
+          "op": "eq",
+          "value": 1,
+          "actual": 1,
+          "expected": 1,
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "unknown-subjects-shared-action",
+      "reason": "辞書にない椅子と机も共通の作るだけでは統合しない",
+      "critical": true,
+      "observed": {
+        "steps": [
+          {
+            "selected": 0,
+            "current": 0,
+            "count": 1
+          },
+          {
+            "selected": 1,
+            "current": 1,
+            "count": 2
+          },
+          {
+            "selected": 0,
+            "current": 0,
+            "count": 2
+          }
+        ]
+      },
+      "checks": [
+        {
+          "path": "steps.1.count",
+          "op": "eq",
+          "value": 2,
+          "actual": 2,
+          "expected": 2,
+          "passed": true
+        },
+        {
+          "path": "steps.2.selected",
+          "op": "eq",
+          "value": 0,
+          "actual": 0,
+          "expected": 0,
+          "passed": true
+        },
+        {
+          "path": "steps.2.count",
+          "op": "eq",
+          "value": 2,
+          "actual": 2,
+          "expected": 2,
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "shared-tool-different-objects",
+      "reason": "CNCという共通道具があっても基板と時計を分離",
+      "critical": true,
+      "observed": {
+        "steps": [
+          {
+            "selected": 0,
+            "current": 0,
+            "count": 1
+          },
+          {
+            "selected": 1,
+            "current": 1,
+            "count": 2
+          }
+        ]
+      },
+      "checks": [
+        {
+          "path": "steps.1.count",
+          "op": "eq",
+          "value": 2,
+          "actual": 2,
+          "expected": 2,
+          "passed": true
+        },
+        {
+          "path": "steps.1.current",
+          "op": "eq",
+          "value": 1,
+          "actual": 1,
+          "expected": 1,
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "comparison-not-a-bridge",
+      "reason": "基板と時計の比較を独立させ元の単独話題の対象語を汚染しない",
+      "critical": true,
+      "observed": {
+        "steps": [
+          {
+            "selected": 0,
+            "current": 0,
+            "count": 1
+          },
+          {
+            "selected": 1,
+            "current": 1,
+            "count": 2
+          },
+          {
+            "selected": 2,
+            "current": 2,
+            "count": 3
+          },
+          {
+            "selected": 1,
+            "current": 1,
+            "count": 3
+          },
+          {
+            "selected": 0,
+            "current": 0,
+            "count": 3
+          }
+        ]
+      },
+      "checks": [
+        {
+          "path": "steps.2.selected",
+          "op": "eq",
+          "value": 2,
+          "actual": 2,
+          "expected": 2,
+          "passed": true
+        },
+        {
+          "path": "steps.3.selected",
+          "op": "eq",
+          "value": 1,
+          "actual": 1,
+          "expected": 1,
+          "passed": true
+        },
+        {
+          "path": "steps.4.selected",
+          "op": "eq",
+          "value": 0,
+          "actual": 0,
+          "expected": 0,
+          "passed": true
+        },
+        {
+          "path": "steps.4.count",
+          "op": "eq",
+          "value": 3,
+          "actual": 3,
+          "expected": 3,
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "generic-content-keeps-focus",
+      "reason": "対象語がない仕組みや作るだけの発言は新話題にしない",
+      "critical": true,
+      "observed": {
+        "steps": [
+          {
+            "selected": 0,
+            "current": 0,
+            "count": 1
+          },
+          {
+            "selected": 0,
+            "current": 0,
+            "count": 1
+          },
+          {
+            "selected": 0,
+            "current": 0,
+            "count": 1
+          }
+        ]
+      },
+      "checks": [
+        {
+          "path": "steps.2.selected",
+          "op": "eq",
+          "value": 0,
+          "actual": 0,
+          "expected": 0,
+          "passed": true
+        },
+        {
+          "path": "steps.2.current",
+          "op": "eq",
+          "value": 0,
+          "actual": 0,
+          "expected": 0,
+          "passed": true
+        },
+        {
+          "path": "steps.2.count",
+          "op": "eq",
+          "value": 1,
+          "actual": 1,
+          "expected": 1,
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "punctuation-keeps-focus",
+      "reason": "記号だけの発言では現在話題と話題数を維持",
+      "critical": true,
+      "observed": {
+        "steps": [
+          {
+            "selected": 0,
+            "current": 0,
+            "count": 1
+          },
+          {
+            "selected": 1,
+            "current": 1,
+            "count": 2
+          },
+          {
+            "selected": 1,
+            "current": 1,
+            "count": 2
+          }
+        ]
+      },
+      "checks": [
+        {
+          "path": "steps.2.selected",
+          "op": "eq",
+          "value": 1,
+          "actual": 1,
+          "expected": 1,
+          "passed": true
+        },
+        {
+          "path": "steps.2.current",
+          "op": "eq",
+          "value": 1,
+          "actual": 1,
+          "expected": 1,
+          "passed": true
+        },
+        {
+          "path": "steps.2.count",
+          "op": "eq",
+          "value": 2,
+          "actual": 2,
+          "expected": 2,
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "switch-after-paraphrase",
+      "reason": "言い換え継続を重ねた基板から寿司への切替でもcurrentを即座に変更",
+      "critical": true,
+      "observed": {
+        "steps": [
+          {
+            "selected": 0,
+            "current": 0,
+            "count": 1
+          },
+          {
+            "selected": 0,
+            "current": 0,
+            "count": 1
+          },
+          {
+            "selected": 0,
+            "current": 0,
+            "count": 1
+          },
+          {
+            "selected": 1,
+            "current": 1,
+            "count": 2
+          }
+        ]
+      },
+      "checks": [
+        {
+          "path": "steps.3.selected",
+          "op": "eq",
+          "value": 1,
+          "actual": 1,
+          "expected": 1,
+          "passed": true
+        },
+        {
+          "path": "steps.3.current",
+          "op": "eq",
+          "value": 1,
+          "actual": 1,
+          "expected": 1,
+          "passed": true
+        },
+        {
+          "path": "steps.3.count",
+          "op": "eq",
+          "value": 2,
+          "actual": 2,
+          "expected": 2,
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "ascii-alias-boundary",
+      "reason": "PCBの別名をpcbackupなど別の識別子内部へ誤適用しない",
+      "critical": true,
       "observed": {
         "steps": [
           {
@@ -383,17 +802,25 @@
         {
           "path": "steps.1.selected",
           "op": "eq",
-          "value": 0,
+          "value": 1,
           "actual": 1,
-          "expected": 0,
-          "passed": false
+          "expected": 1,
+          "passed": true
+        },
+        {
+          "path": "steps.1.count",
+          "op": "eq",
+          "value": 2,
+          "actual": 2,
+          "expected": 2,
+          "passed": true
         }
       ],
-      "passed": false
+      "passed": true
     },
     {
-      "id": "no-overmerge",
-      "reason": "共通の作るという語だけで別製作物を統合しない",
+      "id": "sushi-alias-return",
+      "reason": "寿司から時計を経てすしへ戻ると元のIDに復帰",
       "critical": true,
       "observed": {
         "steps": [
@@ -401,6 +828,57 @@
             "selected": 0,
             "current": 0,
             "count": 1
+          },
+          {
+            "selected": 1,
+            "current": 1,
+            "count": 2
+          },
+          {
+            "selected": 0,
+            "current": 0,
+            "count": 2
+          }
+        ]
+      },
+      "checks": [
+        {
+          "path": "steps.2.selected",
+          "op": "eq",
+          "value": 0,
+          "actual": 0,
+          "expected": 0,
+          "passed": true
+        },
+        {
+          "path": "steps.2.current",
+          "op": "eq",
+          "value": 0,
+          "actual": 0,
+          "expected": 0,
+          "passed": true
+        },
+        {
+          "path": "steps.2.count",
+          "op": "eq",
+          "value": 2,
+          "actual": 2,
+          "expected": 2,
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "generic-cold-start",
+      "reason": "対象のない動詞だけでは空の初期状態から話題を作らない",
+      "critical": true,
+      "observed": {
+        "steps": [
+          {
+            "selected": null,
+            "current": null,
+            "count": 0
           },
           {
             "selected": 0,
@@ -411,15 +889,39 @@
       },
       "checks": [
         {
+          "path": "steps.0.selected",
+          "op": "eq",
+          "value": null,
+          "actual": null,
+          "expected": null,
+          "passed": true
+        },
+        {
+          "path": "steps.0.count",
+          "op": "eq",
+          "value": 0,
+          "actual": 0,
+          "expected": 0,
+          "passed": true
+        },
+        {
+          "path": "steps.1.selected",
+          "op": "eq",
+          "value": 0,
+          "actual": 0,
+          "expected": 0,
+          "passed": true
+        },
+        {
           "path": "steps.1.count",
           "op": "eq",
-          "value": 2,
+          "value": 1,
           "actual": 1,
-          "expected": 2,
-          "passed": false
+          "expected": 1,
+          "passed": true
         }
       ],
-      "passed": false
+      "passed": true
     }
   ]
 }
