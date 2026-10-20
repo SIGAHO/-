@@ -3,6 +3,7 @@ import re
 import time
 from .models import Topic
 from .textmath import normalize_text, jaccard_sets
+from .topic_evidence import analyze, Evidence
 
 
 class TopicTracker:
@@ -25,14 +26,21 @@ class TopicTracker:
     }
 
     def __init__(self, decay: float = 0.82, new_topic_threshold: float = 0.18,
-                 *, aliases: dict[str, tuple[str, ...]] | None = None):
+                 *, aliases: dict[str, tuple[str, ...]] | None = None,
+                 policy: str = "evidence", use_default_aliases: bool = True):
+        if policy not in {"legacy", "evidence"}:
+            raise ValueError("Unknown topic policy")
+        self.policy = policy
         self.decay = decay
         self.new_topic_threshold = new_topic_threshold
         self.topics: list[Topic] = []
         self._current: Topic | None = None
         self._aliases: dict[str, str] = {}
         self._subjects: set[str] = set()
-        for canonical, variants in {**self.DEFAULT_ALIASES, **(aliases or {})}.items():
+        self._anchors: dict[int, Evidence] = {}
+        self._pending: tuple[str, set[str], Evidence] | None = None
+        self.last_decision = "empty"
+        for canonical, variants in {**(self.DEFAULT_ALIASES if use_default_aliases else {}), **(aliases or {})}.items():
             canonical = normalize_text(canonical)
             if not canonical:
                 raise ValueError("Topic aliases require a nonempty canonical noun")
@@ -46,16 +54,99 @@ class TopicTracker:
         alternatives = [rf"(?<![a-z0-9_]){re.escape(term)}(?![a-z0-9_])"
                         if re.fullmatch(r"[a-z0-9_]+", term) else re.escape(term)
                         for term in sorted(self._aliases, key=lambda x: (-len(x), x))]
-        self._alias_pattern = re.compile("|".join(alternatives))
+        self._alias_pattern = re.compile("|".join(alternatives)) if alternatives else None
         self._generic_pattern = re.compile("|".join(map(re.escape, self.GENERIC_PHRASES)))
 
     def _signature(self, text: str) -> set[str]:
-        normalized = self._alias_pattern.sub(lambda m: " " + self._aliases[m[0]] + " ", normalize_text(text))
+        normalized = self._canonical(text)
         normalized = self._generic_pattern.sub(" ", normalized)
         words = re.findall(r"[一-龯々]+|[ァ-ヺー]+|[a-z0-9_]+|[ぁ-ゖ]+", normalized)
         return set(words) - self.GENERIC_WORDS
 
+    def _canonical(self, text: str) -> str:
+        normalized = normalize_text(text)
+        return self._alias_pattern.sub(lambda m: " " + self._aliases[m[0]] + " ", normalized) if self._alias_pattern else normalized
+
     def update(self, text: str) -> Topic | None:
+        if self.policy == "legacy":
+            return self._update_legacy(text)
+        sig = self._signature(text)
+        evidence = analyze(self._canonical(text))
+        if not sig or not evidence.heads:
+            self._pending = None
+            self.last_decision = "dependent" if sig else "no_content"
+            return self.current()
+        if self._current is None:
+            return self._new_topic(text, sig, evidence)
+        subjects = sig & self._subjects
+        current_subjects = self._current.signature & self._subjects
+        anchor = self._anchors[id(self._current)]
+        # A fresh, explicitly case-marked object plus a predicate is a new
+        # independent request even when the predicate differs or it is phrased
+        # as a question. A question mark alone must not erase that evidence.
+        object_replacement = bool(evidence.predicate and evidence.objects
+                                  and evidence.objects.isdisjoint(anchor.heads)
+                                  and (evidence.request or not evidence.progressive or evidence.predicate == anchor.predicate))
+        explicit = evidence.nominal or evidence.contrast or object_replacement
+        best, best_sim = None, 0.0
+        for topic in self.topics:
+            old_subjects = topic.signature & self._subjects
+            if subjects and old_subjects:
+                if subjects != old_subjects:
+                    continue
+                sim = 1.0
+            else:
+                sim = jaccard_sets(set(evidence.heads), set(self._anchors[id(topic)].heads))
+            # Elliptical questions may mention an old attribute without returning
+            # to that topic. Require independent evidence to leave current focus.
+            if topic is not self._current and evidence.dependent and not explicit and not subjects:
+                continue
+            if sim > best_sim:
+                best, best_sim = topic, sim
+        if best is not None and best_sim >= self.new_topic_threshold:
+            self._pending = None
+            return self._activate(best, sig, best_sim, "matched")
+        if self._pending and (not evidence.dependent or explicit):
+            previous_text, previous_sig, previous_evidence = self._pending
+            if jaccard_sets(set(evidence.heads), set(previous_evidence.heads)) >= self.new_topic_threshold:
+                self._pending = None
+                return self._new_topic(previous_text, previous_sig | sig, previous_evidence)
+        if explicit or (subjects and current_subjects and subjects != current_subjects):
+            self._pending = None
+            return self._new_topic(text, sig, evidence)
+        if evidence.dependent:
+            self._pending = None
+            self.last_decision = "dependent"
+            return self.current()
+        # Low overlap alone cannot create a topic. Independent consecutive
+        # support is the minimum confirmation, fixed independently of corpora.
+        self._pending = (text, sig, evidence)
+        self.last_decision = "pending"
+        # In particular, don't union unrelated pending vocabulary into the
+        # current anchor: doing so would cause gradual, untraceable topic drift.
+        return self.current()
+
+    def _new_topic(self, text: str, sig: set[str], evidence: Evidence) -> Topic:
+        for topic in self.topics:
+            topic.score *= self.decay
+        topic = Topic(label=text[:32], signature=set(sig), score=1.0)
+        self.topics.append(topic)
+        self._anchors[id(topic)] = evidence
+        self._current = topic
+        self.last_decision = "new"
+        return topic
+
+    def _activate(self, topic: Topic, sig: set[str], similarity: float, decision: str) -> Topic:
+        for previous in self.topics:
+            previous.score *= self.decay
+        topic.signature |= sig
+        topic.score += 1.0 + similarity
+        topic.last_seen = time.time()
+        self._current = topic
+        self.last_decision = decision
+        return topic
+
+    def _update_legacy(self, text: str) -> Topic | None:
         sig = self._signature(text)
         if not sig:
             return self.current()

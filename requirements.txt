@@ -1,0 +1,2 @@
+# Deterministic linguistic features; no generative model or training runtime.
+Janome==0.5.0

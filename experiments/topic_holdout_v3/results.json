@@ -1,0 +1,383 @@
+{
+  "baseline_commit": "3fad90f8e1384a594b32c55509a727d4e5263889",
+  "freeze": {
+    "candidate": {
+      "src/companion_core/__init__.py": "abdcc143bd5c08a5517662903dc5835525b70c8408647c5fe2da5d177e4238a6",
+      "src/companion_core/context.py": "a63a993c85bf028a92a1b7797df4805c689ec8402a1a05c0764fdeb7740f7533",
+      "src/companion_core/core.py": "0b100ba1eaa68302075130c0656be22f1cbe3ed7e05a6dfaef26d876651bc5fb",
+      "src/companion_core/correction.py": "47d3e10230f85d942dbbf034a90bac28a2c88e0c317f3340b3bc02e339e4ab10",
+      "src/companion_core/emotion.py": "dc4be48a6b29888ef94df92c145edc613371438e98f407774dec6914b3eaa0ee",
+      "src/companion_core/event_store.py": "99c78f134d17510c9e4e15dc652b571ba26b1671433bf148f827b54cdfcbca9f",
+      "src/companion_core/memory.py": "c9e670e6de025042510f3e27fe8735c40bc3418cd2bfcec783309a175a61685e",
+      "src/companion_core/models.py": "95398965e6e6850031ea0001ea04a18c40e1744dfd6d7c860e113b7159fd5f83",
+      "src/companion_core/open_loops.py": "2784cfe7a365029c0451028510ae91feafdc0824c847c464e1017d5aa56771c6",
+      "src/companion_core/state.py": "70486108084c1f378eab86104aa900f7ccfd52e000efb39535cc24e62a7179fb",
+      "src/companion_core/textmath.py": "f11d648c6dcdb0f01122093578881fb54553fb6dd387a2e8e40e36f0f1b661e4",
+      "src/companion_core/time_engine.py": "9e24afdc648ae7d8111b85a8ce31e0e997b87643c89c4058709e85533aa9179b",
+      "src/companion_core/topic.py": "e62bb92134aec84f707021163a7319789bc04d635b2d85e025d3a90510966bae",
+      "src/companion_core/topic_evidence.py": "78bec1f292d26565aeec417c708c3f0661d599c45a14651eecbbc3251fdd2de5",
+      "experiments/topic_holdout_v3/run.py": "e6b584c06015dde301dde60dcfb4d4f78cfebd6fca0e7e2d55bf9391586b6920",
+      "experiments/topic_holdout_v3/PROTOCOL.md": "9cfac4127a925ee4251ee9a1a7743e282c36da9f2a8fd60e0951962e11b14d89",
+      "experiments/topic_holdout/run.py": "3a6c1ff4251fbb07e9a4272b676d343f3753dc90e1f9c1774f3c2786b1a0561f"
+    },
+    "manifest_sha256": "356682365df61153f6ea4d4a541a740050e7138c33414e2cb48e8135a192b36d",
+    "baseline": "3fad90f8e1384a594b32c55509a727d4e5263889",
+    "janome": "0.5.0"
+  },
+  "utterances": 2000,
+  "training_examples": 0,
+  "model_generated_texts": 0,
+  "model_generated_labels": 0,
+  "adoption_checks": {
+    "fewer_within_domain_splits": true,
+    "strict_switch_f1_improved": true,
+    "switch_recall_at_least_half": true,
+    "dictionary_disabled_improves_splits": true,
+    "other_corpus_improves_splits": true,
+    "all_invariants_and_replays": true
+  },
+  "candidate_passes_fixed_checks": true,
+  "decision": "PASS",
+  "general_semantic_accuracy": null,
+  "results": {
+    "jmultiwoz": {
+      "baseline": {
+        "utterances": 1000,
+        "dialogues": 135,
+        "replay_passed": 135,
+        "invariants_passed": 1000,
+        "metrics": {
+          "eligible_transitions": 803,
+          "abstained": 0,
+          "scored_transitions": 803,
+          "coverage": 1.0,
+          "confusion": {
+            "tp": 123,
+            "fp": 654,
+            "tn": 23,
+            "fn": 3
+          },
+          "accuracy": 0.18181818181818182,
+          "switch_precision": 0.1583011583011583,
+          "switch_recall": 0.9761904761904762,
+          "switch_f1": 0.2724252491694352,
+          "continuation_retention": 0.033973412112259974,
+          "always_continue_accuracy": 0.8430884184308842,
+          "always_split_accuracy": 0.1569115815691158,
+          "return_events": 0,
+          "return_correct": 0,
+          "return_accuracy": null,
+          "proxy_errors_by_domain": {
+            "attraction->attraction:fp": 92,
+            "attraction->shopping:fn": 2,
+            "hotel->hotel:fp": 125,
+            "restaurant->restaurant:fp": 154,
+            "shopping->attraction:fn": 1,
+            "shopping->shopping:fp": 122,
+            "taxi->taxi:fp": 136,
+            "weather->weather:fp": 25
+          },
+          "within_domain_split_rate": 0.96602658788774
+        }
+      },
+      "candidate": {
+        "utterances": 1000,
+        "dialogues": 135,
+        "replay_passed": 135,
+        "invariants_passed": 1000,
+        "metrics": {
+          "eligible_transitions": 803,
+          "abstained": 0,
+          "scored_transitions": 803,
+          "coverage": 1.0,
+          "confusion": {
+            "tp": 89,
+            "fp": 261,
+            "tn": 416,
+            "fn": 37
+          },
+          "accuracy": 0.6288916562889165,
+          "switch_precision": 0.2542857142857143,
+          "switch_recall": 0.7063492063492064,
+          "switch_f1": 0.3739495798319328,
+          "continuation_retention": 0.6144756277695717,
+          "always_continue_accuracy": 0.8430884184308842,
+          "always_split_accuracy": 0.1569115815691158,
+          "return_events": 0,
+          "return_correct": 0,
+          "return_accuracy": null,
+          "proxy_errors_by_domain": {
+            "attraction->attraction:fp": 47,
+            "attraction->hotel:fn": 1,
+            "attraction->restaurant:fn": 4,
+            "attraction->shopping:fn": 2,
+            "hotel->attraction:fn": 2,
+            "hotel->hotel:fp": 56,
+            "hotel->restaurant:fn": 2,
+            "hotel->shopping:fn": 3,
+            "restaurant->attraction:fn": 2,
+            "restaurant->hotel:fn": 4,
+            "restaurant->restaurant:fp": 63,
+            "restaurant->shopping:fn": 4,
+            "restaurant->taxi:fn": 1,
+            "shopping->attraction:fn": 3,
+            "shopping->hotel:fn": 2,
+            "shopping->restaurant:fn": 2,
+            "shopping->shopping:fp": 52,
+            "shopping->taxi:fn": 2,
+            "shopping->weather:fn": 1,
+            "taxi->taxi:fp": 40,
+            "taxi->weather:fn": 1,
+            "weather->taxi:fn": 1,
+            "weather->weather:fp": 3
+          },
+          "within_domain_split_rate": 0.38552437223042835
+        }
+      },
+      "baseline_neutral": {
+        "utterances": 1000,
+        "dialogues": 135,
+        "replay_passed": 135,
+        "invariants_passed": 1000,
+        "metrics": {
+          "eligible_transitions": 803,
+          "abstained": 0,
+          "scored_transitions": 803,
+          "coverage": 1.0,
+          "confusion": {
+            "tp": 123,
+            "fp": 654,
+            "tn": 23,
+            "fn": 3
+          },
+          "accuracy": 0.18181818181818182,
+          "switch_precision": 0.1583011583011583,
+          "switch_recall": 0.9761904761904762,
+          "switch_f1": 0.2724252491694352,
+          "continuation_retention": 0.033973412112259974,
+          "always_continue_accuracy": 0.8430884184308842,
+          "always_split_accuracy": 0.1569115815691158,
+          "return_events": 0,
+          "return_correct": 0,
+          "return_accuracy": null,
+          "proxy_errors_by_domain": {
+            "attraction->attraction:fp": 92,
+            "attraction->shopping:fn": 2,
+            "hotel->hotel:fp": 125,
+            "restaurant->restaurant:fp": 154,
+            "shopping->attraction:fn": 1,
+            "shopping->shopping:fp": 122,
+            "taxi->taxi:fp": 136,
+            "weather->weather:fp": 25
+          },
+          "within_domain_split_rate": 0.96602658788774
+        }
+      },
+      "candidate_neutral": {
+        "utterances": 1000,
+        "dialogues": 135,
+        "replay_passed": 135,
+        "invariants_passed": 1000,
+        "metrics": {
+          "eligible_transitions": 803,
+          "abstained": 0,
+          "scored_transitions": 803,
+          "coverage": 1.0,
+          "confusion": {
+            "tp": 89,
+            "fp": 261,
+            "tn": 416,
+            "fn": 37
+          },
+          "accuracy": 0.6288916562889165,
+          "switch_precision": 0.2542857142857143,
+          "switch_recall": 0.7063492063492064,
+          "switch_f1": 0.3739495798319328,
+          "continuation_retention": 0.6144756277695717,
+          "always_continue_accuracy": 0.8430884184308842,
+          "always_split_accuracy": 0.1569115815691158,
+          "return_events": 0,
+          "return_correct": 0,
+          "return_accuracy": null,
+          "proxy_errors_by_domain": {
+            "attraction->attraction:fp": 47,
+            "attraction->hotel:fn": 1,
+            "attraction->restaurant:fn": 4,
+            "attraction->shopping:fn": 2,
+            "hotel->attraction:fn": 2,
+            "hotel->hotel:fp": 56,
+            "hotel->restaurant:fn": 2,
+            "hotel->shopping:fn": 3,
+            "restaurant->attraction:fn": 2,
+            "restaurant->hotel:fn": 4,
+            "restaurant->restaurant:fp": 63,
+            "restaurant->shopping:fn": 4,
+            "restaurant->taxi:fn": 1,
+            "shopping->attraction:fn": 3,
+            "shopping->hotel:fn": 2,
+            "shopping->restaurant:fn": 2,
+            "shopping->shopping:fp": 52,
+            "shopping->taxi:fn": 2,
+            "shopping->weather:fn": 1,
+            "taxi->taxi:fp": 40,
+            "taxi->weather:fn": 1,
+            "weather->taxi:fn": 1,
+            "weather->weather:fp": 3
+          },
+          "within_domain_split_rate": 0.38552437223042835
+        }
+      }
+    },
+    "bsd": {
+      "baseline": {
+        "utterances": 1000,
+        "dialogues": 33,
+        "replay_passed": 33,
+        "invariants_passed": 1000,
+        "metrics": {
+          "eligible_transitions": 967,
+          "abstained": 0,
+          "scored_transitions": 967,
+          "coverage": 1.0,
+          "confusion": {
+            "tp": 0,
+            "fp": 942,
+            "tn": 25,
+            "fn": 0
+          },
+          "accuracy": 0.025853154084798345,
+          "switch_precision": 0.0,
+          "switch_recall": null,
+          "switch_f1": 0.0,
+          "continuation_retention": 0.025853154084798345,
+          "always_continue_accuracy": 1.0,
+          "always_split_accuracy": 0.0,
+          "return_events": 0,
+          "return_correct": 0,
+          "return_accuracy": null,
+          "proxy_errors_by_domain": {
+            "face-to-face conversation->face-to-face conversation:fp": 344,
+            "general chatting->general chatting:fp": 233,
+            "meeting->meeting:fp": 84,
+            "phone call->phone call:fp": 204,
+            "training->training:fp": 77
+          },
+          "within_domain_split_rate": 0.9741468459152016
+        }
+      },
+      "candidate": {
+        "utterances": 1000,
+        "dialogues": 33,
+        "replay_passed": 33,
+        "invariants_passed": 1000,
+        "metrics": {
+          "eligible_transitions": 967,
+          "abstained": 15,
+          "scored_transitions": 952,
+          "coverage": 0.984488107549121,
+          "confusion": {
+            "tp": 0,
+            "fp": 294,
+            "tn": 658,
+            "fn": 0
+          },
+          "accuracy": 0.6911764705882353,
+          "switch_precision": 0.0,
+          "switch_recall": null,
+          "switch_f1": 0.0,
+          "continuation_retention": 0.6911764705882353,
+          "always_continue_accuracy": 1.0,
+          "always_split_accuracy": 0.0,
+          "return_events": 0,
+          "return_correct": 0,
+          "return_accuracy": null,
+          "proxy_errors_by_domain": {
+            "face-to-face conversation->face-to-face conversation:fp": 107,
+            "general chatting->general chatting:fp": 68,
+            "meeting->meeting:fp": 40,
+            "phone call->phone call:fp": 40,
+            "training->training:fp": 39
+          },
+          "within_domain_split_rate": 0.3088235294117647
+        }
+      },
+      "baseline_neutral": {
+        "utterances": 1000,
+        "dialogues": 33,
+        "replay_passed": 33,
+        "invariants_passed": 1000,
+        "metrics": {
+          "eligible_transitions": 967,
+          "abstained": 0,
+          "scored_transitions": 967,
+          "coverage": 1.0,
+          "confusion": {
+            "tp": 0,
+            "fp": 942,
+            "tn": 25,
+            "fn": 0
+          },
+          "accuracy": 0.025853154084798345,
+          "switch_precision": 0.0,
+          "switch_recall": null,
+          "switch_f1": 0.0,
+          "continuation_retention": 0.025853154084798345,
+          "always_continue_accuracy": 1.0,
+          "always_split_accuracy": 0.0,
+          "return_events": 0,
+          "return_correct": 0,
+          "return_accuracy": null,
+          "proxy_errors_by_domain": {
+            "face-to-face conversation->face-to-face conversation:fp": 344,
+            "general chatting->general chatting:fp": 233,
+            "meeting->meeting:fp": 84,
+            "phone call->phone call:fp": 204,
+            "training->training:fp": 77
+          },
+          "within_domain_split_rate": 0.9741468459152016
+        }
+      },
+      "candidate_neutral": {
+        "utterances": 1000,
+        "dialogues": 33,
+        "replay_passed": 33,
+        "invariants_passed": 1000,
+        "metrics": {
+          "eligible_transitions": 967,
+          "abstained": 15,
+          "scored_transitions": 952,
+          "coverage": 0.984488107549121,
+          "confusion": {
+            "tp": 0,
+            "fp": 294,
+            "tn": 658,
+            "fn": 0
+          },
+          "accuracy": 0.6911764705882353,
+          "switch_precision": 0.0,
+          "switch_recall": null,
+          "switch_f1": 0.0,
+          "continuation_retention": 0.6911764705882353,
+          "always_continue_accuracy": 1.0,
+          "always_split_accuracy": 0.0,
+          "return_events": 0,
+          "return_correct": 0,
+          "return_accuracy": null,
+          "proxy_errors_by_domain": {
+            "face-to-face conversation->face-to-face conversation:fp": 107,
+            "general chatting->general chatting:fp": 68,
+            "meeting->meeting:fp": 40,
+            "phone call->phone call:fp": 40,
+            "training->training:fp": 39
+          },
+          "within_domain_split_rate": 0.3088235294117647
+        }
+      }
+    }
+  },
+  "limits": [
+    "Domain/scene labels are original human metadata, not conversational topic-boundary ground truth.",
+    "No full semantic generalization claim; BSD scenes may contain genuine subtopics.",
+    "No coefficient search or word additions after observing this holdout; no training."
+  ]
+}
