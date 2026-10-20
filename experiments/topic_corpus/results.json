@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "source": {
+    "name": "JMultiWOZ 1.0",
+    "repository": "https://github.com/nu-dialogue/jmultiwoz",
+    "revision": "a78dd334b907e12318b76bb23d0a9ed1498b8d15",
+    "archive_sha256": "283dea36f5abeea8f016fea2bd4df4dfba67a40f89c4600e47ed701c57ea2bc2",
+    "license": "CC-BY-SA-4.0",
+    "paper": "https://arxiv.org/abs/2403.17319",
+    "authors": "Atsumoto Ohashi, Ryu Hirai, Shinya Iizuka, Ryuichiro Higashinaka",
+    "text_provenance": "Human USER and human wizard; original corpus, not model inference outputs",
+    "label_provenance": "Released SYSTEM-turn belief_state.general.active_domain; human-operated/annotated corpus state"
+  },
+  "model_commit": "51cecfdf0ec794ee78e328877f75dc6bc96dcbfe",
+  "src_sha256": {
+    "src/companion_core/__init__.py": "3f13daea6411d553c4704acda9ba7db671e28aeefeebfbf29d51fb2d849c77ed",
+    "src/companion_core/context.py": "bd5eb128946a173455538fcf0ff4eb57f2127fbd10dcf13f8f9ff88b0cdfc192",
+    "src/companion_core/core.py": "fab4d0ae4f405f5e76b0ad3fd1a3cf4a3d13655f88b812a178c969a0d96fcdb0",
+    "src/companion_core/correction.py": "a603ca7c17489dc0be367cc21f06a3e5410062abcdda68b443c8b2f5d6738b96",
+    "src/companion_core/emotion.py": "d0cdebadcf770256ce9ea3c5f192d72fc8992f485b8801a6fc03decd00b10200",
+    "src/companion_core/event_store.py": "224f8d2916e5f4bb457b41bd0c236818ea1c7ff68b9cf5233fc313182eafd84a",
+    "src/companion_core/memory.py": "d15138c3fa63164f68a67441b6a25c852281304aff4736aafa85a5b99b4a6a39",
+    "src/companion_core/models.py": "4438fbee49b045cc6b3c5c763bd8011d6f746abe4062a4102d876e303917c87a",
+    "src/companion_core/open_loops.py": "f4002c424251a46455025fdd4112de20beab81181ad95ba948913287e3e5bcb8",
+    "src/companion_core/state.py": "22c52c2522c840f90690e3a0c93db5c8ce9be5f2db785bf9262385c6db5dc273",
+    "src/companion_core/textmath.py": "a4b49e51a95f909a9d19dce430bf8200a0aaf059b85ddd25caf9aa2ce321696f",
+    "src/companion_core/time_engine.py": "0e913e6ef8b965c90c714085d24f8e46be8b1fa4ca0be571c6b41099e860ae9e",
+    "src/companion_core/topic.py": "b6728675c31a73d382a967c6bf4bc511b20b0759254a324d158c6185634dc439"
+  },
+  "evaluator_sha256": "a8f5acefccc117570460e1a2a612cade2a295b7765d292f6df96d066329b7f8a",
+  "manifest_sha256": "44f91e3f88aac52875671da746e8bab1e6ddf07133601af33361e9fc79e5441f",
+  "utterances": 1000,
+  "unique_texts": 916,
+  "dialogues": 128,
+  "domain_counts": {
+    "attraction": 134,
+    "hotel": 170,
+    "restaurant": 223,
+    "shopping": 155,
+    "taxi": 174,
+    "unlabeled": 61,
+    "weather": 83
+  },
+  "model_generated_texts": 0,
+  "model_generated_labels": 0,
+  "training_examples": 0,
+  "invariant_totals": {
+    "one_active_fact_per_key": 1000,
+    "no_assistant_fact_source": 1000,
+    "memory_budget": 1000,
+    "emotion_bounds": 1000,
+    "context_focus": 1000
+  },
+  "replay_passed": 128,
+  "metrics": {
+    "eligible_transitions": 811,
+    "abstained": 0,
+    "scored_transitions": 811,
+    "coverage": 1.0,
+    "confusion": {
+      "tp": 139,
+      "fp": 637,
+      "tn": 32,
+      "fn": 3
+    },
+    "accuracy": 0.21085080147965474,
+    "switch_precision": 0.1791237113402062,
+    "switch_recall": 0.9788732394366197,
+    "switch_f1": 0.3028322440087146,
+    "continuation_retention": 0.04783258594917788,
+    "always_continue_accuracy": 0.8249075215782984,
+    "always_split_accuracy": 0.17509247842170161,
+    "return_events": 0,
+    "return_correct": 0,
+    "return_accuracy": null,
+    "proxy_errors_by_domain": {
+      "attraction->attraction:fp": 89,
+      "hotel->hotel:fp": 115,
+      "hotel->weather:fn": 1,
+      "restaurant->restaurant:fp": 159,
+      "restaurant->weather:fn": 1,
+      "shopping->shopping:fp": 102,
+      "shopping->weather:fn": 1,
+      "taxi->taxi:fp": 126,
+      "weather->weather:fp": 46
+    }
+  },
+  "decision": "REVISE",
+  "adoption_allowed": false,
+  "semantic_topic_accuracy": null,
+  "limitations": [
+    "Active task-domain changes are an external proxy, not human-annotated conversational topic boundaries.",
+    "Only USER utterances are input; wizard responses and all annotations are withheld from Core.",
+    "Travel-related task dialogue is not a broad everyday-conversation benchmark.",
+    "No manual relabeling or human adjudication of these 1000 rows has been performed.",
+    "This observed evaluation sample must not be repurposed for training or benchmark-specific tuning."
+  ]
+}
