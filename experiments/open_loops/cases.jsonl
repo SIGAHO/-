@@ -1,0 +1,12 @@
+{"id":"later-done","reason":"あとでやる→終わった: 唯一の未完了事項を閉じる","texts":["あとでやる","終わった"],"checks":[{"path":"steps.0.active","op":"eq","value":["あとでやる"]},{"path":"steps.1.active","op":"eq","value":[]},{"path":"steps.1.done","op":"eq","value":1}],"critical":true}
+{"id":"named-done","reason":"対象を示した完了で閉じる","texts":["CNC基板を実装する","CNC基板の実装が終わった"],"checks":[{"path":"steps.1.active","op":"eq","value":[]},{"path":"steps.1.done","op":"eq","value":1}],"critical":false}
+{"id":"duplicate","reason":"同一タスクの反復で重複しない","texts":["あとで基板を作る","あとで基板を作る"],"checks":[{"path":"steps.1.total","op":"eq","value":1}],"critical":false}
+{"id":"empty","reason":"空入力でタスクを作らない","texts":[""],"checks":[{"path":"steps.0.total","op":"eq","value":0}],"critical":false}
+{"id":"smalltalk","reason":"学校へ行ったという報告はタスクではない","texts":["今日学校行ってきた"],"checks":[{"path":"steps.0.total","op":"eq","value":0}],"critical":false}
+{"id":"not-done","reason":"まだ終わっていないタスクを完了扱いしない","texts":["基板を実装する","基板の実装はまだ終わったわけじゃない"],"checks":[{"path":"steps.1.active","op":"eq","value":["基板を実装する"]}],"critical":true}
+{"id":"negative-task","reason":"やる予定がないという否定で新規タスクを作らない","texts":["それはやる予定がない"],"checks":[{"path":"steps.0.total","op":"eq","value":0}],"critical":true}
+{"id":"ambiguous-done","reason":"複数タスクに曖昧な完了発言が来ても勝手に閉じない","texts":["基板を実装する","時計を調べる","終わった"],"checks":[{"path":"steps.2.active","op":"eq","value":["基板を実装する","時計を調べる"]}],"critical":true}
+{"id":"unrelated-done","reason":"寿司の報告は基板作業を閉じない","texts":["基板を実装する","寿司を食べ終わった"],"checks":[{"path":"steps.1.active","op":"eq","value":["基板を実装する"]}],"critical":true}
+{"id":"choose-target","reason":"時計だけの完了で基板を残す","texts":["基板を実装する","時計を調べる","時計を調べるのが終わった"],"checks":[{"path":"steps.2.active","op":"eq","value":["基板を実装する"]},{"path":"steps.2.done","op":"eq","value":1}],"critical":true}
+{"id":"completion-alone","reason":"未完了事項なしの完了発言は無害","texts":["終わった"],"checks":[{"path":"steps.0.total","op":"eq","value":0}],"critical":false}
+{"id":"reopen","reason":"完了後の同じ計画は新たな未完了事項","texts":["基板を実装する","基板を実装する作業が完了","基板を実装する"],"checks":[{"path":"steps.2.total","op":"eq","value":2},{"path":"steps.2.active","op":"eq","value":["基板を実装する"]}],"critical":false}

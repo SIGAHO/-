@@ -1,0 +1,2 @@
+# zoneinfo uses OS data on Unix; Windows needs the IANA database package.
+tzdata==2026.5; sys_platform == 'win32'

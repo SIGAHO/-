@@ -1,0 +1,383 @@
+{
+  "schema_version": 1,
+  "suite": "correction",
+  "fixture_time": "2026-10-21T09:00:00+09:00",
+  "source_commit": "fd1973e0a43e6917ab4e79835ba11689277d485f",
+  "sha256": {
+    "src/companion_core/__init__.py": "3f13daea6411d553c4704acda9ba7db671e28aeefeebfbf29d51fb2d849c77ed",
+    "src/companion_core/context.py": "bd5eb128946a173455538fcf0ff4eb57f2127fbd10dcf13f8f9ff88b0cdfc192",
+    "src/companion_core/core.py": "6813abd3668863fcd7e5ff11ecb21f7bccc652a5a973cb4a3d107b11bb1b1648",
+    "src/companion_core/correction.py": "07f9c98bd797552d312bac1bf1e42a532a2cc4e659b6486e6930e57420dc4f91",
+    "src/companion_core/emotion.py": "d0cdebadcf770256ce9ea3c5f192d72fc8992f485b8801a6fc03decd00b10200",
+    "src/companion_core/event_store.py": "224f8d2916e5f4bb457b41bd0c236818ea1c7ff68b9cf5233fc313182eafd84a",
+    "src/companion_core/memory.py": "1f4ca00a6884d52cb679159c26e235b77ccc8e1e497c099345de0245b995b220",
+    "src/companion_core/models.py": "4438fbee49b045cc6b3c5c763bd8011d6f746abe4062a4102d876e303917c87a",
+    "src/companion_core/open_loops.py": "90bb74bdd58d62c7802376d2971a3e46c7ff7be217a7aaa02035d0f6f8d0cb22",
+    "src/companion_core/state.py": "8dd517995dabcf9e65aac2aaf409f565f0d67f61171feb656ab7b067b2af2f87",
+    "src/companion_core/textmath.py": "a4b49e51a95f909a9d19dce430bf8200a0aaf059b85ddd25caf9aa2ce321696f",
+    "src/companion_core/time_engine.py": "24580d882f518f08400d78d32ae7c3bb7aa5302d690df60c67ec9f23f1a99610",
+    "src/companion_core/topic.py": "2d4397f6579c7dc30606df9574fba8285a1139c0eba77fd39a1cdf76f83f41ef",
+    "experiments/runner.py": "1c8f2657be91b131a6466b945c5a7e4707a57c107041ffa9edefe3708c31ad0d",
+    "experiments/correction/cases.jsonl": "17bbab88a2f719d84e8a0bf18c9e801f2b4fe8acc45b7835d1f6bd55833b705b",
+    "experiments/correction/hypothesis.md": "6feed2e0edf6cca4913cc735f54a8f9a927e0a422111b9c5152a50cecae6ec2f"
+  },
+  "total": 12,
+  "passed": 8,
+  "pass_rate": 0.6666666666666666,
+  "decision": "REVISE",
+  "adoption_allowed": false,
+  "execution_errors": false,
+  "cases": [
+    {
+      "id": "name-regression",
+      "reason": "君じゃなくてルクルアを正確に分解",
+      "critical": true,
+      "observed": {
+        "corrections": [
+          {
+            "old": "君",
+            "new": "ルクルア",
+            "confidence": 0.98,
+            "pattern": "not_a_but_b"
+          }
+        ],
+        "count": 1
+      },
+      "checks": [
+        {
+          "path": "count",
+          "op": "eq",
+          "value": 1,
+          "actual": 1,
+          "expected": 1,
+          "passed": true
+        },
+        {
+          "path": "corrections.0.old",
+          "op": "eq",
+          "value": "君",
+          "actual": "君",
+          "expected": "君",
+          "passed": true
+        },
+        {
+          "path": "corrections.0.new",
+          "op": "eq",
+          "value": "ルクルア",
+          "actual": "ルクルア",
+          "expected": "ルクルア",
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "meaning-regression",
+      "reason": "自然にの意味を違和感がないへ訂正",
+      "critical": true,
+      "observed": {
+        "corrections": [
+          {
+            "old": "自然に",
+            "new": "違和感がない",
+            "confidence": 0.98,
+            "pattern": "means"
+          }
+        ],
+        "count": 1
+      },
+      "checks": [
+        {
+          "path": "count",
+          "op": "eq",
+          "value": 1,
+          "actual": 1,
+          "expected": 1,
+          "passed": true
+        },
+        {
+          "path": "corrections.0.old",
+          "op": "eq",
+          "value": "自然に",
+          "actual": "自然に",
+          "expected": "自然に",
+          "passed": true
+        },
+        {
+          "path": "corrections.0.new",
+          "op": "eq",
+          "value": "違和感がない",
+          "actual": "違和感がない",
+          "expected": "違和感がない",
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "formal-replacement",
+      "reason": "丁寧な置換も検出",
+      "critical": false,
+      "observed": {
+        "corrections": [
+          {
+            "old": "時計",
+            "new": "基板",
+            "confidence": 0.98,
+            "pattern": "not_a_but_b"
+          }
+        ],
+        "count": 1
+      },
+      "checks": [
+        {
+          "path": "count",
+          "op": "eq",
+          "value": 1,
+          "actual": 1,
+          "expected": 1,
+          "passed": true
+        },
+        {
+          "path": "corrections.0.new",
+          "op": "eq",
+          "value": "基板",
+          "actual": "基板",
+          "expected": "基板",
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "explicit-year",
+      "reason": "明確な否定と代替年を検出",
+      "critical": false,
+      "observed": {
+        "corrections": [
+          {
+            "old": null,
+            "new": "2026",
+            "confidence": 0.75,
+            "pattern": "no_it_is"
+          }
+        ],
+        "count": 1
+      },
+      "checks": [
+        {
+          "path": "count",
+          "op": "eq",
+          "value": 1,
+          "actual": 1,
+          "expected": 1,
+          "passed": true
+        },
+        {
+          "path": "corrections.0.new",
+          "op": "eq",
+          "value": "2026",
+          "actual": "2026",
+          "expected": "2026",
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "plain-year",
+      "reason": "今年は2026は単独では訂正と断定しない",
+      "critical": false,
+      "observed": {
+        "corrections": [],
+        "count": 0
+      },
+      "checks": [
+        {
+          "path": "count",
+          "op": "eq",
+          "value": 0,
+          "actual": 0,
+          "expected": 0,
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "ordinary-negative",
+      "reason": "普通の否定を訂正と誤検出しない",
+      "critical": true,
+      "observed": {
+        "corrections": [],
+        "count": 0
+      },
+      "checks": [
+        {
+          "path": "count",
+          "op": "eq",
+          "value": 0,
+          "actual": 0,
+          "expected": 0,
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "different-colors",
+      "reason": "違う色という記述は訂正ではない",
+      "critical": true,
+      "observed": {
+        "corrections": [
+          {
+            "old": null,
+            "new": "色の時計が好き",
+            "confidence": 0.75,
+            "pattern": "no_it_is"
+          }
+        ],
+        "count": 1
+      },
+      "checks": [
+        {
+          "path": "count",
+          "op": "eq",
+          "value": 0,
+          "actual": 1,
+          "expected": 0,
+          "passed": false
+        }
+      ],
+      "passed": false
+    },
+    {
+      "id": "empty",
+      "reason": "空入力を訂正と扱わない",
+      "critical": false,
+      "observed": {
+        "corrections": [],
+        "count": 0
+      },
+      "checks": [
+        {
+          "path": "count",
+          "op": "eq",
+          "value": 0,
+          "actual": 0,
+          "expected": 0,
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "no-replacement",
+      "reason": "置換先なしの否定は確定しない",
+      "critical": true,
+      "observed": {
+        "corrections": [
+          {
+            "old": "君",
+            "new": "て",
+            "confidence": 0.98,
+            "pattern": "not_a_but_b"
+          }
+        ],
+        "count": 1
+      },
+      "checks": [
+        {
+          "path": "count",
+          "op": "eq",
+          "value": 0,
+          "actual": 1,
+          "expected": 0,
+          "passed": false
+        }
+      ],
+      "passed": false
+    },
+    {
+      "id": "punctuation",
+      "reason": "句点以降を置換先へ混ぜない",
+      "critical": false,
+      "observed": {
+        "corrections": [
+          {
+            "old": "君",
+            "new": "ルクルア",
+            "confidence": 0.98,
+            "pattern": "not_a_but_b"
+          }
+        ],
+        "count": 1
+      },
+      "checks": [
+        {
+          "path": "corrections.0.new",
+          "op": "eq",
+          "value": "ルクルア",
+          "actual": "ルクルア",
+          "expected": "ルクルア",
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "vague-correction",
+      "reason": "違う、そこじゃないは代替値が不明なので確定候補を作らない",
+      "critical": true,
+      "observed": {
+        "corrections": [
+          {
+            "old": null,
+            "new": "そこじゃない",
+            "confidence": 0.75,
+            "pattern": "no_it_is"
+          }
+        ],
+        "count": 1
+      },
+      "checks": [
+        {
+          "path": "count",
+          "op": "eq",
+          "value": 0,
+          "actual": 1,
+          "expected": 0,
+          "passed": false
+        }
+      ],
+      "passed": false
+    },
+    {
+      "id": "multiple",
+      "reason": "独立した二つの明示訂正を両方保持",
+      "critical": true,
+      "observed": {
+        "corrections": [
+          {
+            "old": "君",
+            "new": "ルクルア",
+            "confidence": 0.98,
+            "pattern": "not_a_but_b"
+          }
+        ],
+        "count": 1
+      },
+      "checks": [
+        {
+          "path": "count",
+          "op": "eq",
+          "value": 2,
+          "actual": 1,
+          "expected": 2,
+          "passed": false
+        }
+      ],
+      "passed": false
+    }
+  ]
+}

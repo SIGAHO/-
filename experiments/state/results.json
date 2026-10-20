@@ -1,0 +1,622 @@
+{
+  "schema_version": 1,
+  "suite": "state",
+  "fixture_time": "2026-10-21T09:00:00+09:00",
+  "source_commit": "fd1973e0a43e6917ab4e79835ba11689277d485f",
+  "sha256": {
+    "src/companion_core/__init__.py": "3f13daea6411d553c4704acda9ba7db671e28aeefeebfbf29d51fb2d849c77ed",
+    "src/companion_core/context.py": "bd5eb128946a173455538fcf0ff4eb57f2127fbd10dcf13f8f9ff88b0cdfc192",
+    "src/companion_core/core.py": "6813abd3668863fcd7e5ff11ecb21f7bccc652a5a973cb4a3d107b11bb1b1648",
+    "src/companion_core/correction.py": "07f9c98bd797552d312bac1bf1e42a532a2cc4e659b6486e6930e57420dc4f91",
+    "src/companion_core/emotion.py": "d0cdebadcf770256ce9ea3c5f192d72fc8992f485b8801a6fc03decd00b10200",
+    "src/companion_core/event_store.py": "224f8d2916e5f4bb457b41bd0c236818ea1c7ff68b9cf5233fc313182eafd84a",
+    "src/companion_core/memory.py": "1f4ca00a6884d52cb679159c26e235b77ccc8e1e497c099345de0245b995b220",
+    "src/companion_core/models.py": "4438fbee49b045cc6b3c5c763bd8011d6f746abe4062a4102d876e303917c87a",
+    "src/companion_core/open_loops.py": "90bb74bdd58d62c7802376d2971a3e46c7ff7be217a7aaa02035d0f6f8d0cb22",
+    "src/companion_core/state.py": "8dd517995dabcf9e65aac2aaf409f565f0d67f61171feb656ab7b067b2af2f87",
+    "src/companion_core/textmath.py": "a4b49e51a95f909a9d19dce430bf8200a0aaf059b85ddd25caf9aa2ce321696f",
+    "src/companion_core/time_engine.py": "24580d882f518f08400d78d32ae7c3bb7aa5302d690df60c67ec9f23f1a99610",
+    "src/companion_core/topic.py": "2d4397f6579c7dc30606df9574fba8285a1139c0eba77fd39a1cdf76f83f41ef",
+    "experiments/runner.py": "1c8f2657be91b131a6466b945c5a7e4707a57c107041ffa9edefe3708c31ad0d",
+    "experiments/state/cases.jsonl": "a2d69fbf54589975ee35de56ea0183c7e905a6a69bc01d4cc36a9194f464b5be",
+    "experiments/state/hypothesis.md": "1c05dd6642f04be2070318418e4e3145727dc47acd20fdd58243b432ba2580ad"
+  },
+  "total": 12,
+  "passed": 10,
+  "pass_rate": 0.8333333333333334,
+  "decision": "REVISE",
+  "adoption_allowed": false,
+  "execution_errors": false,
+  "cases": [
+    {
+      "id": "assistant-denied",
+      "reason": "AI生成文を世界の事実へ昇格させない",
+      "critical": true,
+      "observed": {
+        "accepted": [
+          false
+        ],
+        "values": {},
+        "sources": {},
+        "scopes": {},
+        "blocked": {},
+        "history": {},
+        "active_history_count": {},
+        "linked": {}
+      },
+      "checks": [
+        {
+          "path": "accepted",
+          "op": "eq",
+          "value": [
+            false
+          ],
+          "actual": [
+            false
+          ],
+          "expected": [
+            false
+          ],
+          "passed": true
+        },
+        {
+          "path": "values",
+          "op": "eq",
+          "value": {},
+          "actual": {},
+          "expected": {},
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "year-correction",
+      "reason": "今年は2026: 明示訂正が旧年を無効化し再提案も拒否",
+      "critical": true,
+      "observed": {
+        "accepted": [
+          true,
+          true,
+          false
+        ],
+        "values": {
+          "year": 2026
+        },
+        "sources": {
+          "year": "user_correction"
+        },
+        "scopes": {
+          "year": "session"
+        },
+        "blocked": {
+          "year": [
+            "2023"
+          ]
+        },
+        "history": {
+          "year": [
+            "invalidated",
+            "active"
+          ]
+        },
+        "active_history_count": {
+          "year": 1
+        },
+        "linked": {
+          "year": true
+        }
+      },
+      "checks": [
+        {
+          "path": "values.year",
+          "op": "eq",
+          "value": 2026,
+          "actual": 2026,
+          "expected": 2026,
+          "passed": true
+        },
+        {
+          "path": "accepted",
+          "op": "eq",
+          "value": [
+            true,
+            true,
+            false
+          ],
+          "actual": [
+            true,
+            true,
+            false
+          ],
+          "expected": [
+            true,
+            true,
+            false
+          ],
+          "passed": true
+        },
+        {
+          "path": "history.year",
+          "op": "eq",
+          "value": [
+            "invalidated",
+            "active"
+          ],
+          "actual": [
+            "invalidated",
+            "active"
+          ],
+          "expected": [
+            "invalidated",
+            "active"
+          ],
+          "passed": true
+        },
+        {
+          "path": "linked.year",
+          "op": "eq",
+          "value": true,
+          "actual": true,
+          "expected": true,
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "runtime-authority",
+      "reason": "通常発言より実行時時計を優先",
+      "critical": true,
+      "observed": {
+        "accepted": [
+          true,
+          false
+        ],
+        "values": {
+          "hour": 16
+        },
+        "sources": {
+          "hour": "runtime"
+        },
+        "scopes": {
+          "hour": "session"
+        },
+        "blocked": {
+          "hour": []
+        },
+        "history": {
+          "hour": [
+            "active"
+          ]
+        },
+        "active_history_count": {
+          "hour": 1
+        },
+        "linked": {
+          "hour": true
+        }
+      },
+      "checks": [
+        {
+          "path": "values.hour",
+          "op": "eq",
+          "value": 16,
+          "actual": 16,
+          "expected": 16,
+          "passed": true
+        },
+        {
+          "path": "accepted",
+          "op": "eq",
+          "value": [
+            true,
+            false
+          ],
+          "actual": [
+            true,
+            false
+          ],
+          "expected": [
+            true,
+            false
+          ],
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "correction-priority",
+      "reason": "通常発言は訂正済みの値を上書きしない",
+      "critical": true,
+      "observed": {
+        "accepted": [
+          true,
+          false
+        ],
+        "values": {
+          "name": "ルクルア"
+        },
+        "sources": {
+          "name": "user_correction"
+        },
+        "scopes": {
+          "name": "session"
+        },
+        "blocked": {
+          "name": []
+        },
+        "history": {
+          "name": [
+            "active"
+          ]
+        },
+        "active_history_count": {
+          "name": 1
+        },
+        "linked": {
+          "name": true
+        }
+      },
+      "checks": [
+        {
+          "path": "values.name",
+          "op": "eq",
+          "value": "ルクルア",
+          "actual": "ルクルア",
+          "expected": "ルクルア",
+          "passed": true
+        },
+        {
+          "path": "sources.name",
+          "op": "eq",
+          "value": "user_correction",
+          "actual": "user_correction",
+          "expected": "user_correction",
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "recorrect-old-value",
+      "reason": "明示的な再訂正で過去の値へ戻せる",
+      "critical": false,
+      "observed": {
+        "accepted": [
+          true,
+          true,
+          true
+        ],
+        "values": {
+          "name": "A"
+        },
+        "sources": {
+          "name": "user_correction"
+        },
+        "scopes": {
+          "name": "session"
+        },
+        "blocked": {
+          "name": [
+            "A",
+            "B"
+          ]
+        },
+        "history": {
+          "name": [
+            "invalidated",
+            "invalidated",
+            "active"
+          ]
+        },
+        "active_history_count": {
+          "name": 1
+        },
+        "linked": {
+          "name": true
+        }
+      },
+      "checks": [
+        {
+          "path": "values.name",
+          "op": "eq",
+          "value": "A",
+          "actual": "A",
+          "expected": "A",
+          "passed": true
+        },
+        {
+          "path": "linked.name",
+          "op": "eq",
+          "value": true,
+          "actual": true,
+          "expected": true,
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "independent-keys",
+      "reason": "同じ値の訂正禁止が別キーへ漏れない",
+      "critical": true,
+      "observed": {
+        "accepted": [
+          true,
+          true,
+          true
+        ],
+        "values": {
+          "a": "new",
+          "b": "old"
+        },
+        "sources": {
+          "a": "user_correction",
+          "b": "user_statement"
+        },
+        "scopes": {
+          "a": "session",
+          "b": "session"
+        },
+        "blocked": {
+          "a": [
+            "old"
+          ],
+          "b": []
+        },
+        "history": {
+          "a": [
+            "invalidated",
+            "active"
+          ],
+          "b": [
+            "active"
+          ]
+        },
+        "active_history_count": {
+          "a": 1,
+          "b": 1
+        },
+        "linked": {
+          "a": true,
+          "b": true
+        }
+      },
+      "checks": [
+        {
+          "path": "values.b",
+          "op": "eq",
+          "value": "old",
+          "actual": "old",
+          "expected": "old",
+          "passed": true
+        },
+        {
+          "path": "values.a",
+          "op": "eq",
+          "value": "new",
+          "actual": "new",
+          "expected": "new",
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "source-order",
+      "reason": "検証済み記憶より本人発言を優先",
+      "critical": false,
+      "observed": {
+        "accepted": [
+          true,
+          true
+        ],
+        "values": {
+          "name": "B"
+        },
+        "sources": {
+          "name": "user_statement"
+        },
+        "scopes": {
+          "name": "session"
+        },
+        "blocked": {
+          "name": []
+        },
+        "history": {
+          "name": [
+            "invalidated",
+            "active"
+          ]
+        },
+        "active_history_count": {
+          "name": 1
+        },
+        "linked": {
+          "name": true
+        }
+      },
+      "checks": [
+        {
+          "path": "values.name",
+          "op": "eq",
+          "value": "B",
+          "actual": "B",
+          "expected": "B",
+          "passed": true
+        },
+        {
+          "path": "history.name",
+          "op": "eq",
+          "value": [
+            "invalidated",
+            "active"
+          ],
+          "actual": [
+            "invalidated",
+            "active"
+          ],
+          "expected": [
+            "invalidated",
+            "active"
+          ],
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "same-value-history",
+      "reason": "同値再提案でも履歴にactiveが二重に残らない",
+      "critical": false,
+      "observed": {
+        "accepted": [
+          true,
+          true
+        ],
+        "values": {
+          "name": "A"
+        },
+        "sources": {
+          "name": "user_statement"
+        },
+        "scopes": {
+          "name": "session"
+        },
+        "blocked": {
+          "name": []
+        },
+        "history": {
+          "name": [
+            "active",
+            "active"
+          ]
+        },
+        "active_history_count": {
+          "name": 2
+        },
+        "linked": {
+          "name": false
+        }
+      },
+      "checks": [
+        {
+          "path": "active_history_count.name",
+          "op": "eq",
+          "value": 1,
+          "actual": 2,
+          "expected": 1,
+          "passed": false
+        }
+      ],
+      "passed": false
+    },
+    {
+      "id": "scope-preserved",
+      "reason": "明示した長期スコープを保持",
+      "critical": false,
+      "observed": {
+        "accepted": [
+          true
+        ],
+        "values": {
+          "name": "ルクルア"
+        },
+        "sources": {
+          "name": "user_statement"
+        },
+        "scopes": {
+          "name": "long_term"
+        },
+        "blocked": {
+          "name": []
+        },
+        "history": {
+          "name": [
+            "active"
+          ]
+        },
+        "active_history_count": {
+          "name": 1
+        },
+        "linked": {
+          "name": true
+        }
+      },
+      "checks": [
+        {
+          "path": "scopes.name",
+          "op": "eq",
+          "value": "long_term",
+          "actual": "long_term",
+          "expected": "long_term",
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "core-no-target",
+      "reason": "対象未指定の名前訂正は確定しない",
+      "critical": true,
+      "observed": {
+        "values": {}
+      },
+      "checks": [
+        {
+          "path": "values",
+          "op": "eq",
+          "value": {},
+          "actual": {},
+          "expected": {},
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "core-target",
+      "reason": "名前訂正を指定されたキーだけへ反映",
+      "critical": true,
+      "observed": {
+        "values": {
+          "name": "ルクルア"
+        }
+      },
+      "checks": [
+        {
+          "path": "values.name",
+          "op": "eq",
+          "value": "ルクルア",
+          "actual": "ルクルア",
+          "expected": "ルクルア",
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "core-year-statement",
+      "reason": "今年は2026: 対象キーが指定された明示年訂正を反映",
+      "critical": true,
+      "observed": {
+        "values": {
+          "year": "2023"
+        }
+      },
+      "checks": [
+        {
+          "path": "values.year",
+          "op": "eq",
+          "value": "2026",
+          "actual": "2023",
+          "expected": "2026",
+          "passed": false
+        }
+      ],
+      "passed": false
+    }
+  ]
+}

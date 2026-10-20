@@ -1,0 +1,1027 @@
+{
+  "schema_version": 1,
+  "suite": "emotion",
+  "fixture_time": "2026-10-21T09:00:00+09:00",
+  "source_commit": "fd1973e0a43e6917ab4e79835ba11689277d485f",
+  "sha256": {
+    "src/companion_core/__init__.py": "3f13daea6411d553c4704acda9ba7db671e28aeefeebfbf29d51fb2d849c77ed",
+    "src/companion_core/context.py": "bd5eb128946a173455538fcf0ff4eb57f2127fbd10dcf13f8f9ff88b0cdfc192",
+    "src/companion_core/core.py": "6813abd3668863fcd7e5ff11ecb21f7bccc652a5a973cb4a3d107b11bb1b1648",
+    "src/companion_core/correction.py": "07f9c98bd797552d312bac1bf1e42a532a2cc4e659b6486e6930e57420dc4f91",
+    "src/companion_core/emotion.py": "d0cdebadcf770256ce9ea3c5f192d72fc8992f485b8801a6fc03decd00b10200",
+    "src/companion_core/event_store.py": "224f8d2916e5f4bb457b41bd0c236818ea1c7ff68b9cf5233fc313182eafd84a",
+    "src/companion_core/memory.py": "1f4ca00a6884d52cb679159c26e235b77ccc8e1e497c099345de0245b995b220",
+    "src/companion_core/models.py": "4438fbee49b045cc6b3c5c763bd8011d6f746abe4062a4102d876e303917c87a",
+    "src/companion_core/open_loops.py": "90bb74bdd58d62c7802376d2971a3e46c7ff7be217a7aaa02035d0f6f8d0cb22",
+    "src/companion_core/state.py": "8dd517995dabcf9e65aac2aaf409f565f0d67f61171feb656ab7b067b2af2f87",
+    "src/companion_core/textmath.py": "a4b49e51a95f909a9d19dce430bf8200a0aaf059b85ddd25caf9aa2ce321696f",
+    "src/companion_core/time_engine.py": "24580d882f518f08400d78d32ae7c3bb7aa5302d690df60c67ec9f23f1a99610",
+    "src/companion_core/topic.py": "2d4397f6579c7dc30606df9574fba8285a1139c0eba77fd39a1cdf76f83f41ef",
+    "experiments/runner.py": "1c8f2657be91b131a6466b945c5a7e4707a57c107041ffa9edefe3708c31ad0d",
+    "experiments/emotion/cases.jsonl": "91eb6ea4f32f9d1820cdfdc260dba15c32de29181ee9dc63b9535bcd94fab2da",
+    "experiments/emotion/hypothesis.md": "6511bc9559b532260047baab63144a2f8f6c36fe1a608c4ff1f429f764dfd2ea"
+  },
+  "total": 13,
+  "passed": 9,
+  "pass_rate": 0.6923076923076923,
+  "decision": "REVISE",
+  "adoption_allowed": false,
+  "execution_errors": false,
+  "cases": [
+    {
+      "id": "correction-regression",
+      "reason": "違う、そこじゃない: 苛立ち微増・自信微減・覚醒微増・愛着維持",
+      "critical": true,
+      "observed": {
+        "states": [
+          {
+            "valence": 0.0,
+            "arousal": 0.2,
+            "attachment": 0.2,
+            "irritation": 0.0,
+            "curiosity": 0.3,
+            "confidence": 0.5
+          },
+          {
+            "valence": 0.0,
+            "arousal": 0.1944,
+            "attachment": 0.2056,
+            "irritation": 0.039200000000000006,
+            "curiosity": 0.28600000000000003,
+            "confidence": 0.4776
+          }
+        ],
+        "delta": {
+          "valence": 0.0,
+          "arousal": -0.005600000000000022,
+          "attachment": 0.005599999999999994,
+          "irritation": 0.039200000000000006,
+          "curiosity": -0.013999999999999957,
+          "confidence": -0.022399999999999975
+        },
+        "max_step": 0.039200000000000006,
+        "bounded": true,
+        "profile": {
+          "positive_rate": 0.375,
+          "correction_rate": 0.25,
+          "question_rate": 0.0,
+          "high_arousal_rate": 0.0,
+          "n": 1
+        }
+      },
+      "checks": [
+        {
+          "path": "delta.irritation",
+          "op": "range",
+          "value": [
+            0.001,
+            0.1
+          ],
+          "actual": 0.039200000000000006,
+          "expected": [
+            0.001,
+            0.1
+          ],
+          "passed": true
+        },
+        {
+          "path": "delta.confidence",
+          "op": "range",
+          "value": [
+            -0.1,
+            -0.001
+          ],
+          "actual": -0.022399999999999975,
+          "expected": [
+            -0.1,
+            -0.001
+          ],
+          "passed": true
+        },
+        {
+          "path": "delta.arousal",
+          "op": "gt",
+          "value": 0,
+          "actual": -0.005600000000000022,
+          "expected": 0,
+          "passed": false
+        },
+        {
+          "path": "delta.attachment",
+          "op": "ge",
+          "value": -0.03,
+          "actual": 0.005599999999999994,
+          "expected": -0.03,
+          "passed": true
+        }
+      ],
+      "passed": false
+    },
+    {
+      "id": "praise",
+      "reason": "感謝で快と愛着が上がる",
+      "critical": false,
+      "observed": {
+        "states": [
+          {
+            "valence": 0.0,
+            "arousal": 0.2,
+            "attachment": 0.2,
+            "irritation": 0.0,
+            "curiosity": 0.3,
+            "confidence": 0.5
+          },
+          {
+            "valence": 0.12320000000000002,
+            "arousal": 0.1944,
+            "attachment": 0.22799999999999998,
+            "irritation": 0.0,
+            "curiosity": 0.28600000000000003,
+            "confidence": 0.5056
+          }
+        ],
+        "delta": {
+          "valence": 0.12320000000000002,
+          "arousal": -0.005600000000000022,
+          "attachment": 0.02799999999999997,
+          "irritation": 0.0,
+          "curiosity": -0.013999999999999957,
+          "confidence": 0.005600000000000049
+        },
+        "max_step": 0.12320000000000002,
+        "bounded": true,
+        "profile": {
+          "positive_rate": 0.625,
+          "correction_rate": 0.0,
+          "question_rate": 0.0,
+          "high_arousal_rate": 0.0,
+          "n": 1
+        }
+      },
+      "checks": [
+        {
+          "path": "delta.valence",
+          "op": "gt",
+          "value": 0,
+          "actual": 0.12320000000000002,
+          "expected": 0,
+          "passed": true
+        },
+        {
+          "path": "delta.attachment",
+          "op": "gt",
+          "value": 0,
+          "actual": 0.02799999999999997,
+          "expected": 0,
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "hostility",
+      "reason": "敵対発言で快低下・苛立ち増加",
+      "critical": false,
+      "observed": {
+        "states": [
+          {
+            "valence": 0.0,
+            "arousal": 0.2,
+            "attachment": 0.2,
+            "irritation": 0.0,
+            "curiosity": 0.3,
+            "confidence": 0.5
+          },
+          {
+            "valence": -0.12320000000000002,
+            "arousal": 0.1944,
+            "attachment": 0.2056,
+            "irritation": 0.11200000000000002,
+            "curiosity": 0.28600000000000003,
+            "confidence": 0.5056
+          }
+        ],
+        "delta": {
+          "valence": -0.12320000000000002,
+          "arousal": -0.005600000000000022,
+          "attachment": 0.005599999999999994,
+          "irritation": 0.11200000000000002,
+          "curiosity": -0.013999999999999957,
+          "confidence": 0.005600000000000049
+        },
+        "max_step": 0.12320000000000002,
+        "bounded": true,
+        "profile": {
+          "positive_rate": 0.375,
+          "correction_rate": 0.0,
+          "question_rate": 0.0,
+          "high_arousal_rate": 0.0,
+          "n": 1
+        }
+      },
+      "checks": [
+        {
+          "path": "delta.valence",
+          "op": "lt",
+          "value": 0,
+          "actual": -0.12320000000000002,
+          "expected": 0,
+          "passed": true
+        },
+        {
+          "path": "delta.irritation",
+          "op": "gt",
+          "value": 0,
+          "actual": 0.11200000000000002,
+          "expected": 0,
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "question",
+      "reason": "仕組みの質問で好奇心が上がる",
+      "critical": false,
+      "observed": {
+        "states": [
+          {
+            "valence": 0.0,
+            "arousal": 0.2,
+            "attachment": 0.2,
+            "irritation": 0.0,
+            "curiosity": 0.3,
+            "confidence": 0.5
+          },
+          {
+            "valence": 0.0,
+            "arousal": 0.2168,
+            "attachment": 0.2056,
+            "irritation": 0.0,
+            "curiosity": 0.356,
+            "confidence": 0.5056
+          }
+        ],
+        "delta": {
+          "valence": 0.0,
+          "arousal": 0.01679999999999998,
+          "attachment": 0.005599999999999994,
+          "irritation": 0.0,
+          "curiosity": 0.055999999999999994,
+          "confidence": 0.005600000000000049
+        },
+        "max_step": 0.055999999999999994,
+        "bounded": true,
+        "profile": {
+          "positive_rate": 0.375,
+          "correction_rate": 0.0,
+          "question_rate": 0.25,
+          "high_arousal_rate": 0.0,
+          "n": 1
+        }
+      },
+      "checks": [
+        {
+          "path": "delta.curiosity",
+          "op": "gt",
+          "value": 0,
+          "actual": 0.055999999999999994,
+          "expected": 0,
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "accumulation",
+      "reason": "訂正反復で緩やかに苛立ちが蓄積",
+      "critical": false,
+      "observed": {
+        "states": [
+          {
+            "valence": 0.0,
+            "arousal": 0.2,
+            "attachment": 0.2,
+            "irritation": 0.0,
+            "curiosity": 0.3,
+            "confidence": 0.5
+          },
+          {
+            "valence": 0.0,
+            "arousal": 0.1944,
+            "attachment": 0.2056,
+            "irritation": 0.039200000000000006,
+            "curiosity": 0.28600000000000003,
+            "confidence": 0.4776
+          },
+          {
+            "valence": 0.0,
+            "arousal": 0.19036799999999998,
+            "attachment": 0.209632,
+            "irritation": 0.06742400000000001,
+            "curiosity": 0.27592000000000005,
+            "confidence": 0.46147200000000005
+          },
+          {
+            "valence": 0.0,
+            "arousal": 0.18746495999999999,
+            "attachment": 0.21253504,
+            "irritation": 0.08774528000000001,
+            "curiosity": 0.2686624000000001,
+            "confidence": 0.44985984000000007
+          }
+        ],
+        "delta": {
+          "valence": 0.0,
+          "arousal": -0.012535040000000025,
+          "attachment": 0.012535039999999997,
+          "irritation": 0.08774528000000001,
+          "curiosity": -0.03133759999999991,
+          "confidence": -0.050140159999999934
+        },
+        "max_step": 0.039200000000000006,
+        "bounded": true,
+        "profile": {
+          "positive_rate": 0.2109375,
+          "correction_rate": 0.578125,
+          "question_rate": 0.0,
+          "high_arousal_rate": 0.0,
+          "n": 3
+        }
+      },
+      "checks": [
+        {
+          "path": "states.2.irritation",
+          "op": "gt",
+          "other": "states.1.irritation",
+          "actual": 0.06742400000000001,
+          "expected": 0.039200000000000006,
+          "passed": true
+        },
+        {
+          "path": "states.3.irritation",
+          "op": "gt",
+          "other": "states.2.irritation",
+          "actual": 0.08774528000000001,
+          "expected": 0.06742400000000001,
+          "passed": true
+        },
+        {
+          "path": "max_step",
+          "op": "le",
+          "value": 0.3,
+          "actual": 0.039200000000000006,
+          "expected": 0.3,
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "recovery",
+      "reason": "敵対後の中立ターンで苛立ちが回復",
+      "critical": false,
+      "observed": {
+        "states": [
+          {
+            "valence": 0.0,
+            "arousal": 0.2,
+            "attachment": 0.2,
+            "irritation": 0.0,
+            "curiosity": 0.3,
+            "confidence": 0.5
+          },
+          {
+            "valence": -0.06160000000000001,
+            "arousal": 0.1944,
+            "attachment": 0.2056,
+            "irritation": 0.05600000000000001,
+            "curiosity": 0.28600000000000003,
+            "confidence": 0.5056
+          },
+          {
+            "valence": -0.044352,
+            "arousal": 0.19036799999999998,
+            "attachment": 0.209632,
+            "irritation": 0.04032,
+            "curiosity": 0.27592000000000005,
+            "confidence": 0.5096320000000001
+          },
+          {
+            "valence": -0.03193344,
+            "arousal": 0.18746495999999999,
+            "attachment": 0.21253504,
+            "irritation": 0.0290304,
+            "curiosity": 0.2686624000000001,
+            "confidence": 0.51253504
+          }
+        ],
+        "delta": {
+          "valence": -0.03193344,
+          "arousal": -0.012535040000000025,
+          "attachment": 0.012535039999999997,
+          "irritation": 0.0290304,
+          "curiosity": -0.03133759999999991,
+          "confidence": 0.012535040000000053
+        },
+        "max_step": 0.06160000000000001,
+        "bounded": true,
+        "profile": {
+          "positive_rate": 0.2109375,
+          "correction_rate": 0.0,
+          "question_rate": 0.0,
+          "high_arousal_rate": 0.0,
+          "n": 3
+        }
+      },
+      "checks": [
+        {
+          "path": "states.3.irritation",
+          "op": "lt",
+          "other": "states.1.irritation",
+          "actual": 0.0290304,
+          "expected": 0.05600000000000001,
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "saturation",
+      "reason": "強い反復でも全軸範囲内・一度で振り切れない",
+      "critical": false,
+      "observed": {
+        "states": [
+          {
+            "valence": 0.0,
+            "arousal": 0.2,
+            "attachment": 0.2,
+            "irritation": 0.0,
+            "curiosity": 0.3,
+            "confidence": 0.5
+          },
+          {
+            "valence": -0.18480000000000002,
+            "arousal": 0.3288,
+            "attachment": 0.2056,
+            "irritation": 0.16800000000000004,
+            "curiosity": 0.28600000000000003,
+            "confidence": 0.5056
+          },
+          {
+            "valence": -0.317856,
+            "arousal": 0.42153599999999997,
+            "attachment": 0.209632,
+            "irritation": 0.28896000000000005,
+            "curiosity": 0.27592000000000005,
+            "confidence": 0.5096320000000001
+          },
+          {
+            "valence": -0.41365632,
+            "arousal": 0.48830591999999995,
+            "attachment": 0.21253504,
+            "irritation": 0.37605120000000003,
+            "curiosity": 0.2686624000000001,
+            "confidence": 0.51253504
+          },
+          {
+            "valence": -0.4826325504,
+            "arousal": 0.5363802623999999,
+            "attachment": 0.2146252288,
+            "irritation": 0.438756864,
+            "curiosity": 0.26343692800000007,
+            "confidence": 0.5146252288000001
+          },
+          {
+            "valence": -0.532295436288,
+            "arousal": 0.5709937889279999,
+            "attachment": 0.21613016473600002,
+            "irritation": 0.48390494208000007,
+            "curiosity": 0.25967458816000005,
+            "confidence": 0.516130164736
+          },
+          {
+            "valence": -0.56805271412736,
+            "arousal": 0.59591552802816,
+            "attachment": 0.21721371860992003,
+            "irritation": 0.5164115582976001,
+            "curiosity": 0.25696570347520004,
+            "confidence": 0.51721371860992
+          },
+          {
+            "valence": -0.5937979541716992,
+            "arousal": 0.6138591801802752,
+            "attachment": 0.21799387739914244,
+            "irritation": 0.5398163219742721,
+            "curiosity": 0.255015306502144,
+            "confidence": 0.5179938773991424
+          },
+          {
+            "valence": -0.6123345270036235,
+            "arousal": 0.6267786097297982,
+            "attachment": 0.21855559172738256,
+            "irritation": 0.556667751821476,
+            "curiosity": 0.2536110206815437,
+            "confidence": 0.5185555917273825
+          },
+          {
+            "valence": -0.6256808594426089,
+            "arousal": 0.6360805990054547,
+            "attachment": 0.21896002604371545,
+            "irritation": 0.5688007813114627,
+            "curiosity": 0.2525999348907114,
+            "confidence": 0.5189600260437155
+          },
+          {
+            "valence": -0.6352902187986784,
+            "arousal": 0.6427780312839273,
+            "attachment": 0.21925121875147513,
+            "irritation": 0.5775365625442532,
+            "curiosity": 0.2518719531213122,
+            "confidence": 0.5192512187514752
+          },
+          {
+            "valence": -0.6422089575350485,
+            "arousal": 0.6476001825244276,
+            "attachment": 0.2194608775010621,
+            "irritation": 0.5838263250318623,
+            "curiosity": 0.25134780624734476,
+            "confidence": 0.5194608775010621
+          },
+          {
+            "valence": -0.647190449425235,
+            "arousal": 0.6510721314175879,
+            "attachment": 0.21961183180076474,
+            "irritation": 0.5883549540229409,
+            "curiosity": 0.25097042049808826,
+            "confidence": 0.5196118318007648
+          },
+          {
+            "valence": -0.6507771235861692,
+            "arousal": 0.6535719346206633,
+            "attachment": 0.21972051889655062,
+            "irritation": 0.5916155668965175,
+            "curiosity": 0.25069870275862355,
+            "confidence": 0.5197205188965506
+          },
+          {
+            "valence": -0.6533595289820419,
+            "arousal": 0.6553717929268775,
+            "attachment": 0.21979877360551645,
+            "irritation": 0.5939632081654926,
+            "curiosity": 0.250503065986209,
+            "confidence": 0.5197987736055164
+          },
+          {
+            "valence": -0.6552188608670702,
+            "arousal": 0.6566676909073518,
+            "attachment": 0.21985511699597185,
+            "irritation": 0.5956535098791547,
+            "curiosity": 0.25036220751007043,
+            "confidence": 0.5198551169959718
+          },
+          {
+            "valence": -0.6565575798242905,
+            "arousal": 0.6576007374532933,
+            "attachment": 0.21989568423709974,
+            "irritation": 0.5968705271129914,
+            "curiosity": 0.2502607894072507,
+            "confidence": 0.5198956842370996
+          },
+          {
+            "valence": -0.6575214574734891,
+            "arousal": 0.6582725309663712,
+            "attachment": 0.21992489265071183,
+            "irritation": 0.5977467795213538,
+            "curiosity": 0.25018776837322054,
+            "confidence": 0.5199248926507117
+          },
+          {
+            "valence": -0.6582154493809121,
+            "arousal": 0.6587562222957872,
+            "attachment": 0.21994592270851251,
+            "irritation": 0.5983776812553747,
+            "curiosity": 0.2501351932287188,
+            "confidence": 0.5199459227085124
+          },
+          {
+            "valence": -0.6587151235542568,
+            "arousal": 0.6591044800529667,
+            "attachment": 0.21996106435012902,
+            "irritation": 0.5988319305038698,
+            "curiosity": 0.2500973391246776,
+            "confidence": 0.5199610643501289
+          },
+          {
+            "valence": -0.6590748889590649,
+            "arousal": 0.659355225638136,
+            "attachment": 0.2199719663320929,
+            "irritation": 0.5991589899627863,
+            "curiosity": 0.25007008416976784,
+            "confidence": 0.5199719663320927
+          }
+        ],
+        "delta": {
+          "valence": -0.6590748889590649,
+          "arousal": 0.45935522563813597,
+          "attachment": 0.01997196633209289,
+          "irritation": 0.5991589899627863,
+          "curiosity": -0.04992991583023215,
+          "confidence": 0.01997196633209275
+        },
+        "max_step": 0.18480000000000002,
+        "bounded": true,
+        "profile": {
+          "positive_rate": 0.031640625,
+          "correction_rate": 0.0,
+          "question_rate": 0.0,
+          "high_arousal_rate": 0.9367187500000002,
+          "n": 20
+        }
+      },
+      "checks": [
+        {
+          "path": "bounded",
+          "op": "eq",
+          "value": true,
+          "actual": true,
+          "expected": true,
+          "passed": true
+        },
+        {
+          "path": "max_step",
+          "op": "le",
+          "value": 0.3,
+          "actual": 0.18480000000000002,
+          "expected": 0.3,
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "neutral",
+      "reason": "日常報告では感情を大きく変えない",
+      "critical": false,
+      "observed": {
+        "states": [
+          {
+            "valence": 0.0,
+            "arousal": 0.2,
+            "attachment": 0.2,
+            "irritation": 0.0,
+            "curiosity": 0.3,
+            "confidence": 0.5
+          },
+          {
+            "valence": 0.0,
+            "arousal": 0.1944,
+            "attachment": 0.2056,
+            "irritation": 0.0,
+            "curiosity": 0.28600000000000003,
+            "confidence": 0.5056
+          }
+        ],
+        "delta": {
+          "valence": 0.0,
+          "arousal": -0.005600000000000022,
+          "attachment": 0.005599999999999994,
+          "irritation": 0.0,
+          "curiosity": -0.013999999999999957,
+          "confidence": 0.005600000000000049
+        },
+        "max_step": 0.013999999999999957,
+        "bounded": true,
+        "profile": {
+          "positive_rate": 0.375,
+          "correction_rate": 0.0,
+          "question_rate": 0.0,
+          "high_arousal_rate": 0.0,
+          "n": 1
+        }
+      },
+      "checks": [
+        {
+          "path": "delta.valence",
+          "op": "range",
+          "value": [
+            -0.03,
+            0.03
+          ],
+          "actual": 0.0,
+          "expected": [
+            -0.03,
+            0.03
+          ],
+          "passed": true
+        },
+        {
+          "path": "max_step",
+          "op": "le",
+          "value": 0.05,
+          "actual": 0.013999999999999957,
+          "expected": 0.05,
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "empty",
+      "reason": "空入力で感情・学習観測を更新しない",
+      "critical": false,
+      "observed": {
+        "states": [
+          {
+            "valence": 0.0,
+            "arousal": 0.2,
+            "attachment": 0.2,
+            "irritation": 0.0,
+            "curiosity": 0.3,
+            "confidence": 0.5
+          },
+          {
+            "valence": 0.0,
+            "arousal": 0.1944,
+            "attachment": 0.2056,
+            "irritation": 0.0,
+            "curiosity": 0.28600000000000003,
+            "confidence": 0.5056
+          }
+        ],
+        "delta": {
+          "valence": 0.0,
+          "arousal": -0.005600000000000022,
+          "attachment": 0.005599999999999994,
+          "irritation": 0.0,
+          "curiosity": -0.013999999999999957,
+          "confidence": 0.005600000000000049
+        },
+        "max_step": 0.013999999999999957,
+        "bounded": true,
+        "profile": {
+          "positive_rate": 0.375,
+          "correction_rate": 0.0,
+          "question_rate": 0.0,
+          "high_arousal_rate": 0.0,
+          "n": 1
+        }
+      },
+      "checks": [
+        {
+          "path": "max_step",
+          "op": "eq",
+          "value": 0,
+          "actual": 0.013999999999999957,
+          "expected": 0,
+          "passed": false
+        },
+        {
+          "path": "profile.n",
+          "op": "eq",
+          "value": 0,
+          "actual": 1,
+          "expected": 0,
+          "passed": false
+        }
+      ],
+      "passed": false
+    },
+    {
+      "id": "negated-praise",
+      "reason": "すごくない・好きじゃないを肯定的評価へ数えない",
+      "critical": true,
+      "observed": {
+        "states": [
+          {
+            "valence": 0.0,
+            "arousal": 0.2,
+            "attachment": 0.2,
+            "irritation": 0.0,
+            "curiosity": 0.3,
+            "confidence": 0.5
+          },
+          {
+            "valence": 0.12320000000000002,
+            "arousal": 0.1944,
+            "attachment": 0.22799999999999998,
+            "irritation": 0.0,
+            "curiosity": 0.28600000000000003,
+            "confidence": 0.5056
+          }
+        ],
+        "delta": {
+          "valence": 0.12320000000000002,
+          "arousal": -0.005600000000000022,
+          "attachment": 0.02799999999999997,
+          "irritation": 0.0,
+          "curiosity": -0.013999999999999957,
+          "confidence": 0.005600000000000049
+        },
+        "max_step": 0.12320000000000002,
+        "bounded": true,
+        "profile": {
+          "positive_rate": 0.625,
+          "correction_rate": 0.0,
+          "question_rate": 0.0,
+          "high_arousal_rate": 0.0,
+          "n": 1
+        }
+      },
+      "checks": [
+        {
+          "path": "delta.valence",
+          "op": "le",
+          "value": 0,
+          "actual": 0.12320000000000002,
+          "expected": 0,
+          "passed": false
+        }
+      ],
+      "passed": false
+    },
+    {
+      "id": "quoted-hostility",
+      "reason": "他者の発言の引用だけでAIへの苛立ちを増やさない",
+      "critical": true,
+      "observed": {
+        "states": [
+          {
+            "valence": 0.0,
+            "arousal": 0.2,
+            "attachment": 0.2,
+            "irritation": 0.0,
+            "curiosity": 0.3,
+            "confidence": 0.5
+          },
+          {
+            "valence": -0.06160000000000001,
+            "arousal": 0.1944,
+            "attachment": 0.2056,
+            "irritation": 0.05600000000000001,
+            "curiosity": 0.28600000000000003,
+            "confidence": 0.5056
+          }
+        ],
+        "delta": {
+          "valence": -0.06160000000000001,
+          "arousal": -0.005600000000000022,
+          "attachment": 0.005599999999999994,
+          "irritation": 0.05600000000000001,
+          "curiosity": -0.013999999999999957,
+          "confidence": 0.005600000000000049
+        },
+        "max_step": 0.06160000000000001,
+        "bounded": true,
+        "profile": {
+          "positive_rate": 0.375,
+          "correction_rate": 0.0,
+          "question_rate": 0.0,
+          "high_arousal_rate": 0.0,
+          "n": 1
+        }
+      },
+      "checks": [
+        {
+          "path": "delta.irritation",
+          "op": "eq",
+          "value": 0,
+          "actual": 0.05600000000000001,
+          "expected": 0,
+          "passed": false
+        }
+      ],
+      "passed": false
+    },
+    {
+      "id": "arousal",
+      "reason": "驚きの反復と感嘆符で覚醒上昇",
+      "critical": false,
+      "observed": {
+        "states": [
+          {
+            "valence": 0.0,
+            "arousal": 0.2,
+            "attachment": 0.2,
+            "irritation": 0.0,
+            "curiosity": 0.3,
+            "confidence": 0.5
+          },
+          {
+            "valence": 0.0,
+            "arousal": 0.3792,
+            "attachment": 0.2056,
+            "irritation": 0.0,
+            "curiosity": 0.28600000000000003,
+            "confidence": 0.5056
+          }
+        ],
+        "delta": {
+          "valence": 0.0,
+          "arousal": 0.17919999999999997,
+          "attachment": 0.005599999999999994,
+          "irritation": 0.0,
+          "curiosity": -0.013999999999999957,
+          "confidence": 0.005600000000000049
+        },
+        "max_step": 0.17919999999999997,
+        "bounded": true,
+        "profile": {
+          "positive_rate": 0.375,
+          "correction_rate": 0.0,
+          "question_rate": 0.0,
+          "high_arousal_rate": 0.25,
+          "n": 1
+        }
+      },
+      "checks": [
+        {
+          "path": "delta.arousal",
+          "op": "gt",
+          "value": 0,
+          "actual": 0.17919999999999997,
+          "expected": 0,
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "attachment-stable",
+      "reason": "穏当な訂正3回で愛着を大きく下げない",
+      "critical": false,
+      "observed": {
+        "states": [
+          {
+            "valence": 0.0,
+            "arousal": 0.2,
+            "attachment": 0.2,
+            "irritation": 0.0,
+            "curiosity": 0.3,
+            "confidence": 0.5
+          },
+          {
+            "valence": 0.0,
+            "arousal": 0.1944,
+            "attachment": 0.2056,
+            "irritation": 0.039200000000000006,
+            "curiosity": 0.28600000000000003,
+            "confidence": 0.4776
+          },
+          {
+            "valence": 0.0,
+            "arousal": 0.19036799999999998,
+            "attachment": 0.209632,
+            "irritation": 0.06742400000000001,
+            "curiosity": 0.27592000000000005,
+            "confidence": 0.46147200000000005
+          },
+          {
+            "valence": 0.0,
+            "arousal": 0.18746495999999999,
+            "attachment": 0.21253504,
+            "irritation": 0.08774528000000001,
+            "curiosity": 0.2686624000000001,
+            "confidence": 0.44985984000000007
+          }
+        ],
+        "delta": {
+          "valence": 0.0,
+          "arousal": -0.012535040000000025,
+          "attachment": 0.012535039999999997,
+          "irritation": 0.08774528000000001,
+          "curiosity": -0.03133759999999991,
+          "confidence": -0.050140159999999934
+        },
+        "max_step": 0.039200000000000006,
+        "bounded": true,
+        "profile": {
+          "positive_rate": 0.2109375,
+          "correction_rate": 0.578125,
+          "question_rate": 0.0,
+          "high_arousal_rate": 0.0,
+          "n": 3
+        }
+      },
+      "checks": [
+        {
+          "path": "delta.attachment",
+          "op": "ge",
+          "value": -0.03,
+          "actual": 0.012535039999999997,
+          "expected": -0.03,
+          "passed": true
+        },
+        {
+          "path": "profile.n",
+          "op": "eq",
+          "value": 3,
+          "actual": 3,
+          "expected": 3,
+          "passed": true
+        }
+      ],
+      "passed": true
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{"id":"repeat","reason":"同じ話題の反復は同一ID","texts":["CNC基板","CNC基板"],"checks":[{"path":"steps.1.selected","op":"eq","value":0},{"path":"steps.1.count","op":"eq","value":1}],"critical":false}
+{"id":"cnc-watch-sushi","reason":"CNC基板 vs 時計 vs 寿司を分離","texts":["CNC基板","時計","寿司"],"checks":[{"path":"steps.2.count","op":"eq","value":3},{"path":"steps.2.selected","op":"eq","value":2}],"critical":true}
+{"id":"return","reason":"時計を挟んだCNCへの復帰で元IDへ戻す","texts":["CNC基板","時計","CNC基板"],"checks":[{"path":"steps.2.selected","op":"eq","value":0},{"path":"steps.2.count","op":"eq","value":2}],"critical":true}
+{"id":"continuation","reason":"CNCの基板加工という言い換えで継続","texts":["CNCで基板を削る","CNCで基板を加工する"],"checks":[{"path":"steps.1.selected","op":"eq","value":0}],"critical":false}
+{"id":"empty","reason":"空入力から話題を作らない","texts":[""],"checks":[{"path":"steps.0.selected","op":"eq","value":null},{"path":"steps.0.count","op":"eq","value":0}],"critical":true}
+{"id":"whitespace","reason":"空白発言では現在の話題を保持","texts":["時計","   "],"checks":[{"path":"steps.1.selected","op":"eq","value":0},{"path":"steps.1.count","op":"eq","value":1}],"critical":false}
+{"id":"single-character","reason":"一文字でも同一語を保持","texts":["猫","猫"],"checks":[{"path":"steps.1.count","op":"eq","value":1}],"critical":false}
+{"id":"case-fold","reason":"ASCII大文字小文字の差で分裂しない","texts":["CNC基板","cnc基板"],"checks":[{"path":"steps.1.count","op":"eq","value":1}],"critical":false}
+{"id":"current-switch","reason":"長く話したCNCから明示的に時計へ移った直後はcurrentも時計","texts":["CNC基板","CNC基板","CNC基板","時計"],"checks":[{"path":"steps.3.selected","op":"eq","value":1},{"path":"steps.3.current","op":"eq","value":1}],"critical":true}
+{"id":"semantic-alias","reason":"字面が異なる同義の工作機械話題を継続","texts":["CNCで基板を削る","プリント配線板を切削加工する"],"checks":[{"path":"steps.1.selected","op":"eq","value":0}],"critical":false}
+{"id":"no-overmerge","reason":"共通の作るという語だけで別製作物を統合しない","texts":["時計を作る","寿司を作る"],"checks":[{"path":"steps.1.count","op":"eq","value":2}],"critical":true}

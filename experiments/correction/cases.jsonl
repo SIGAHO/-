@@ -1,0 +1,12 @@
+{"id":"name-regression","reason":"君じゃなくてルクルアを正確に分解","text":"君じゃなくてルクルア","checks":[{"path":"count","op":"eq","value":1},{"path":"corrections.0.old","op":"eq","value":"君"},{"path":"corrections.0.new","op":"eq","value":"ルクルア"}],"critical":true}
+{"id":"meaning-regression","reason":"自然にの意味を違和感がないへ訂正","text":"自然にっていうのは違和感がないという意味","checks":[{"path":"count","op":"eq","value":1},{"path":"corrections.0.old","op":"eq","value":"自然に"},{"path":"corrections.0.new","op":"eq","value":"違和感がない"}],"critical":true}
+{"id":"formal-replacement","reason":"丁寧な置換も検出","text":"時計ではなく基板","checks":[{"path":"count","op":"eq","value":1},{"path":"corrections.0.new","op":"eq","value":"基板"}],"critical":false}
+{"id":"explicit-year","reason":"明確な否定と代替年を検出","text":"違う、2026","checks":[{"path":"count","op":"eq","value":1},{"path":"corrections.0.new","op":"eq","value":"2026"}],"critical":false}
+{"id":"plain-year","reason":"今年は2026は単独では訂正と断定しない","text":"今年は2026","checks":[{"path":"count","op":"eq","value":0}],"critical":false}
+{"id":"ordinary-negative","reason":"普通の否定を訂正と誤検出しない","text":"今日は学校に行かない","checks":[{"path":"count","op":"eq","value":0}],"critical":true}
+{"id":"different-colors","reason":"違う色という記述は訂正ではない","text":"違う色の時計が好き","checks":[{"path":"count","op":"eq","value":0}],"critical":true}
+{"id":"empty","reason":"空入力を訂正と扱わない","text":"","checks":[{"path":"count","op":"eq","value":0}],"critical":false}
+{"id":"no-replacement","reason":"置換先なしの否定は確定しない","text":"君じゃなくて","checks":[{"path":"count","op":"eq","value":0}],"critical":true}
+{"id":"punctuation","reason":"句点以降を置換先へ混ぜない","text":"君じゃなくてルクルア。よろしく","checks":[{"path":"corrections.0.new","op":"eq","value":"ルクルア"}],"critical":false}
+{"id":"vague-correction","reason":"違う、そこじゃないは代替値が不明なので確定候補を作らない","text":"違う、そこじゃない","checks":[{"path":"count","op":"eq","value":0}],"critical":true}
+{"id":"multiple","reason":"独立した二つの明示訂正を両方保持","text":"君じゃなくてルクルア。2023じゃなくて2026","checks":[{"path":"count","op":"eq","value":2}],"critical":true}

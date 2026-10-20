@@ -1,0 +1,683 @@
+{
+  "schema_version": 1,
+  "suite": "memory",
+  "fixture_time": "2026-10-21T09:00:00+09:00",
+  "source_commit": "fd1973e0a43e6917ab4e79835ba11689277d485f",
+  "sha256": {
+    "src/companion_core/__init__.py": "3f13daea6411d553c4704acda9ba7db671e28aeefeebfbf29d51fb2d849c77ed",
+    "src/companion_core/context.py": "bd5eb128946a173455538fcf0ff4eb57f2127fbd10dcf13f8f9ff88b0cdfc192",
+    "src/companion_core/core.py": "6813abd3668863fcd7e5ff11ecb21f7bccc652a5a973cb4a3d107b11bb1b1648",
+    "src/companion_core/correction.py": "07f9c98bd797552d312bac1bf1e42a532a2cc4e659b6486e6930e57420dc4f91",
+    "src/companion_core/emotion.py": "d0cdebadcf770256ce9ea3c5f192d72fc8992f485b8801a6fc03decd00b10200",
+    "src/companion_core/event_store.py": "224f8d2916e5f4bb457b41bd0c236818ea1c7ff68b9cf5233fc313182eafd84a",
+    "src/companion_core/memory.py": "1f4ca00a6884d52cb679159c26e235b77ccc8e1e497c099345de0245b995b220",
+    "src/companion_core/models.py": "4438fbee49b045cc6b3c5c763bd8011d6f746abe4062a4102d876e303917c87a",
+    "src/companion_core/open_loops.py": "90bb74bdd58d62c7802376d2971a3e46c7ff7be217a7aaa02035d0f6f8d0cb22",
+    "src/companion_core/state.py": "8dd517995dabcf9e65aac2aaf409f565f0d67f61171feb656ab7b067b2af2f87",
+    "src/companion_core/textmath.py": "a4b49e51a95f909a9d19dce430bf8200a0aaf059b85ddd25caf9aa2ce321696f",
+    "src/companion_core/time_engine.py": "24580d882f518f08400d78d32ae7c3bb7aa5302d690df60c67ec9f23f1a99610",
+    "src/companion_core/topic.py": "2d4397f6579c7dc30606df9574fba8285a1139c0eba77fd39a1cdf76f83f41ef",
+    "experiments/runner.py": "1c8f2657be91b131a6466b945c5a7e4707a57c107041ffa9edefe3708c31ad0d",
+    "experiments/memory/cases.jsonl": "b6be18122130c073b8f14fc52228b2da7da830ba88ffb8e62c3f0024f7add628",
+    "experiments/memory/hypothesis.md": "1889994631211e21d6e7f4c2a29eca1a0cba604d5188f578b3cd66cd3a5678c9"
+  },
+  "total": 14,
+  "passed": 12,
+  "pass_rate": 0.8571428571428571,
+  "decision": "REVISE",
+  "adoption_allowed": false,
+  "execution_errors": false,
+  "cases": [
+    {
+      "id": "ranking-regression",
+      "reason": "CNC基板を時計と寿司より上へ順位付け",
+      "critical": true,
+      "observed": {
+        "accepted": [
+          true,
+          true,
+          true,
+          true
+        ],
+        "ranked": [
+          "CNCで基板を削る",
+          "CNC買おうかな",
+          "時計の脱進機を作った",
+          "寿司食った"
+        ],
+        "cost": 32,
+        "count": 4,
+        "mentions": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "importance": [
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "status": [
+          "active",
+          "active",
+          "active",
+          "active"
+        ]
+      },
+      "checks": [
+        {
+          "path": "ranked.0",
+          "op": "eq",
+          "value": "CNCで基板を削る",
+          "actual": "CNCで基板を削る",
+          "expected": "CNCで基板を削る",
+          "passed": true
+        },
+        {
+          "path": "ranked.1",
+          "op": "eq",
+          "value": "CNC買おうかな",
+          "actual": "CNC買おうかな",
+          "expected": "CNC買おうかな",
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "assistant-denied",
+      "reason": "AI生成記憶を検索結果へ入れない",
+      "critical": true,
+      "observed": {
+        "accepted": [
+          false
+        ],
+        "ranked": [],
+        "cost": 0,
+        "count": 0,
+        "mentions": [],
+        "importance": [],
+        "status": []
+      },
+      "checks": [
+        {
+          "path": "accepted",
+          "op": "eq",
+          "value": [
+            false
+          ],
+          "actual": [
+            false
+          ],
+          "expected": [
+            false
+          ],
+          "passed": true
+        },
+        {
+          "path": "ranked",
+          "op": "eq",
+          "value": [],
+          "actual": [],
+          "expected": [],
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "empty-memory",
+      "reason": "空白だけの記憶を保存しない",
+      "critical": false,
+      "observed": {
+        "accepted": [
+          false
+        ],
+        "ranked": [],
+        "cost": 0,
+        "count": 0,
+        "mentions": [],
+        "importance": [],
+        "status": []
+      },
+      "checks": [
+        {
+          "path": "count",
+          "op": "eq",
+          "value": 0,
+          "actual": 0,
+          "expected": 0,
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "duplicate",
+      "reason": "完全重複を統合し言及回数を増やす",
+      "critical": false,
+      "observed": {
+        "accepted": [
+          true,
+          true
+        ],
+        "ranked": [
+          "CNC基板"
+        ],
+        "cost": 5,
+        "count": 1,
+        "mentions": [
+          2
+        ],
+        "importance": [
+          0.5
+        ],
+        "status": [
+          "active"
+        ]
+      },
+      "checks": [
+        {
+          "path": "count",
+          "op": "eq",
+          "value": 1,
+          "actual": 1,
+          "expected": 1,
+          "passed": true
+        },
+        {
+          "path": "mentions",
+          "op": "eq",
+          "value": [
+            2
+          ],
+          "actual": [
+            2
+          ],
+          "expected": [
+            2
+          ],
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "archive-excluded",
+      "reason": "アーカイブは検索へ混入しない",
+      "critical": true,
+      "observed": {
+        "accepted": [
+          true,
+          true
+        ],
+        "ranked": [
+          "時計"
+        ],
+        "cost": 2,
+        "count": 2,
+        "mentions": [
+          1,
+          1
+        ],
+        "importance": [
+          0.5,
+          0.5
+        ],
+        "status": [
+          "archived",
+          "active"
+        ]
+      },
+      "checks": [
+        {
+          "path": "ranked",
+          "op": "eq",
+          "value": [
+            "時計"
+          ],
+          "actual": [
+            "時計"
+          ],
+          "expected": [
+            "時計"
+          ],
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "budget",
+      "reason": "文字数予算に収まる関連項目だけを返す",
+      "critical": true,
+      "observed": {
+        "accepted": [
+          true,
+          true
+        ],
+        "ranked": [
+          "CNC基板"
+        ],
+        "cost": 5,
+        "count": 2,
+        "mentions": [
+          1,
+          1
+        ],
+        "importance": [
+          0.5,
+          0.5
+        ],
+        "status": [
+          "active",
+          "active"
+        ]
+      },
+      "checks": [
+        {
+          "path": "ranked",
+          "op": "eq",
+          "value": [
+            "CNC基板"
+          ],
+          "actual": [
+            "CNC基板"
+          ],
+          "expected": [
+            "CNC基板"
+          ],
+          "passed": true
+        },
+        {
+          "path": "cost",
+          "op": "le",
+          "value": 5,
+          "actual": 5,
+          "expected": 5,
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "limit",
+      "reason": "件数上限を守る",
+      "critical": false,
+      "observed": {
+        "accepted": [
+          true,
+          true,
+          true
+        ],
+        "ranked": [
+          "CNC基板"
+        ],
+        "cost": 5,
+        "count": 3,
+        "mentions": [
+          1,
+          1,
+          1
+        ],
+        "importance": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "status": [
+          "active",
+          "active",
+          "active"
+        ]
+      },
+      "checks": [
+        {
+          "path": "ranked",
+          "op": "eq",
+          "value": [
+            "CNC基板"
+          ],
+          "actual": [
+            "CNC基板"
+          ],
+          "expected": [
+            "CNC基板"
+          ],
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "zero-limit",
+      "reason": "limit=0で何も返さない",
+      "critical": true,
+      "observed": {
+        "accepted": [
+          true
+        ],
+        "ranked": [
+          "CNC基板"
+        ],
+        "cost": 5,
+        "count": 1,
+        "mentions": [
+          1
+        ],
+        "importance": [
+          0.5
+        ],
+        "status": [
+          "active"
+        ]
+      },
+      "checks": [
+        {
+          "path": "ranked",
+          "op": "eq",
+          "value": [],
+          "actual": [
+            "CNC基板"
+          ],
+          "expected": [],
+          "passed": false
+        }
+      ],
+      "passed": false
+    },
+    {
+      "id": "relevance-recency",
+      "reason": "古い完全一致を新しい無関係記憶より上へ",
+      "critical": false,
+      "observed": {
+        "accepted": [
+          true,
+          true
+        ],
+        "ranked": [
+          "CNC基板",
+          "寿司"
+        ],
+        "cost": 7,
+        "count": 2,
+        "mentions": [
+          1,
+          1
+        ],
+        "importance": [
+          0.5,
+          0.5
+        ],
+        "status": [
+          "active",
+          "active"
+        ]
+      },
+      "checks": [
+        {
+          "path": "ranked.0",
+          "op": "eq",
+          "value": "CNC基板",
+          "actual": "CNC基板",
+          "expected": "CNC基板",
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "importance-order",
+      "reason": "同じ関連性なら重要な記憶を優先",
+      "critical": false,
+      "observed": {
+        "accepted": [
+          true,
+          true
+        ],
+        "ranked": [
+          "寿司",
+          "時計"
+        ],
+        "cost": 4,
+        "count": 2,
+        "mentions": [
+          1,
+          1
+        ],
+        "importance": [
+          0.2,
+          0.9
+        ],
+        "status": [
+          "active",
+          "active"
+        ]
+      },
+      "checks": [
+        {
+          "path": "ranked.0",
+          "op": "eq",
+          "value": "寿司",
+          "actual": "寿司",
+          "expected": "寿司",
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "archive-preserves",
+      "reason": "古い低重要記憶は削除せずアーカイブ",
+      "critical": true,
+      "observed": {
+        "accepted": [
+          true
+        ],
+        "ranked": [],
+        "cost": 0,
+        "count": 1,
+        "mentions": [
+          1
+        ],
+        "importance": [
+          0.1
+        ],
+        "status": [
+          "archived"
+        ]
+      },
+      "checks": [
+        {
+          "path": "count",
+          "op": "eq",
+          "value": 1,
+          "actual": 1,
+          "expected": 1,
+          "passed": true
+        },
+        {
+          "path": "status",
+          "op": "eq",
+          "value": [
+            "archived"
+          ],
+          "actual": [
+            "archived"
+          ],
+          "expected": [
+            "archived"
+          ],
+          "passed": true
+        },
+        {
+          "path": "ranked",
+          "op": "eq",
+          "value": [],
+          "actual": [],
+          "expected": [],
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "fresh-important",
+      "reason": "新しい重要記憶は減衰処理後も残す",
+      "critical": false,
+      "observed": {
+        "accepted": [
+          true
+        ],
+        "ranked": [
+          "ルクルア"
+        ],
+        "cost": 4,
+        "count": 1,
+        "mentions": [
+          1
+        ],
+        "importance": [
+          1.0
+        ],
+        "status": [
+          "active"
+        ]
+      },
+      "checks": [
+        {
+          "path": "status",
+          "op": "eq",
+          "value": [
+            "active"
+          ],
+          "actual": [
+            "active"
+          ],
+          "expected": [
+            "active"
+          ],
+          "passed": true
+        },
+        {
+          "path": "ranked",
+          "op": "eq",
+          "value": [
+            "ルクルア"
+          ],
+          "actual": [
+            "ルクルア"
+          ],
+          "expected": [
+            "ルクルア"
+          ],
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "empty-query",
+      "reason": "空クエリで無関係記憶を文脈へ注入しない",
+      "critical": true,
+      "observed": {
+        "accepted": [
+          true,
+          true
+        ],
+        "ranked": [
+          "寿司",
+          "時計"
+        ],
+        "cost": 4,
+        "count": 2,
+        "mentions": [
+          1,
+          1
+        ],
+        "importance": [
+          0.5,
+          0.5
+        ],
+        "status": [
+          "active",
+          "active"
+        ]
+      },
+      "checks": [
+        {
+          "path": "ranked",
+          "op": "eq",
+          "value": [],
+          "actual": [
+            "寿司",
+            "時計"
+          ],
+          "expected": [],
+          "passed": false
+        }
+      ],
+      "passed": false
+    },
+    {
+      "id": "ranking-permuted",
+      "reason": "保存順を逆にしてもCNC関連の2件を時計・寿司より上位にする",
+      "critical": true,
+      "observed": {
+        "accepted": [
+          true,
+          true,
+          true,
+          true
+        ],
+        "ranked": [
+          "CNCで基板を削る",
+          "CNC買おうかな",
+          "寿司食った",
+          "時計の脱進機を作った"
+        ],
+        "cost": 32,
+        "count": 4,
+        "mentions": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "importance": [
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "status": [
+          "active",
+          "active",
+          "active",
+          "active"
+        ]
+      },
+      "checks": [
+        {
+          "path": "ranked.0",
+          "op": "eq",
+          "value": "CNCで基板を削る",
+          "actual": "CNCで基板を削る",
+          "expected": "CNCで基板を削る",
+          "passed": true
+        },
+        {
+          "path": "ranked.1",
+          "op": "eq",
+          "value": "CNC買おうかな",
+          "actual": "CNC買おうかな",
+          "expected": "CNC買おうかな",
+          "passed": true
+        }
+      ],
+      "passed": true
+    }
+  ]
+}

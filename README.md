@@ -23,6 +23,14 @@ python -m unittest discover -s tests -v
 python demo.py
 ```
 
+## 理論検証
+
+`experiments/` に state / correction / topic / open_loops / memory / emotion の
+仮説・振る舞いケース・実測結果・採用判断を保存しています。
+`python experiments/run_all.py` で全系統を評価します。
+未達ケースがあれば結果を保存して終了コード1、実行エラーは2となります。
+採用条件やWindowsの時刻データ準備は [実験ガイド](experiments/README.md) を参照してください。
+
 ## 後でLLMを挿す場所
 
 `CompanionCore.handle()` の返り値 `context` をLLMへ渡し、返答を生成するだけです。

@@ -1,0 +1,425 @@
+{
+  "schema_version": 1,
+  "suite": "topic",
+  "fixture_time": "2026-10-21T09:00:00+09:00",
+  "source_commit": "fd1973e0a43e6917ab4e79835ba11689277d485f",
+  "sha256": {
+    "src/companion_core/__init__.py": "3f13daea6411d553c4704acda9ba7db671e28aeefeebfbf29d51fb2d849c77ed",
+    "src/companion_core/context.py": "bd5eb128946a173455538fcf0ff4eb57f2127fbd10dcf13f8f9ff88b0cdfc192",
+    "src/companion_core/core.py": "6813abd3668863fcd7e5ff11ecb21f7bccc652a5a973cb4a3d107b11bb1b1648",
+    "src/companion_core/correction.py": "07f9c98bd797552d312bac1bf1e42a532a2cc4e659b6486e6930e57420dc4f91",
+    "src/companion_core/emotion.py": "d0cdebadcf770256ce9ea3c5f192d72fc8992f485b8801a6fc03decd00b10200",
+    "src/companion_core/event_store.py": "224f8d2916e5f4bb457b41bd0c236818ea1c7ff68b9cf5233fc313182eafd84a",
+    "src/companion_core/memory.py": "1f4ca00a6884d52cb679159c26e235b77ccc8e1e497c099345de0245b995b220",
+    "src/companion_core/models.py": "4438fbee49b045cc6b3c5c763bd8011d6f746abe4062a4102d876e303917c87a",
+    "src/companion_core/open_loops.py": "90bb74bdd58d62c7802376d2971a3e46c7ff7be217a7aaa02035d0f6f8d0cb22",
+    "src/companion_core/state.py": "8dd517995dabcf9e65aac2aaf409f565f0d67f61171feb656ab7b067b2af2f87",
+    "src/companion_core/textmath.py": "a4b49e51a95f909a9d19dce430bf8200a0aaf059b85ddd25caf9aa2ce321696f",
+    "src/companion_core/time_engine.py": "24580d882f518f08400d78d32ae7c3bb7aa5302d690df60c67ec9f23f1a99610",
+    "src/companion_core/topic.py": "2d4397f6579c7dc30606df9574fba8285a1139c0eba77fd39a1cdf76f83f41ef",
+    "experiments/runner.py": "1c8f2657be91b131a6466b945c5a7e4707a57c107041ffa9edefe3708c31ad0d",
+    "experiments/topic/cases.jsonl": "e7a4e8709122465709a513b9fd90eeaa83bf96edae7c36bf77b59e848a2e1a63",
+    "experiments/topic/hypothesis.md": "095f513f20eddff775f5f4f6281b0ff02980f9f71917ee143046f6cc152ddc88"
+  },
+  "total": 11,
+  "passed": 8,
+  "pass_rate": 0.7272727272727273,
+  "decision": "REVISE",
+  "adoption_allowed": false,
+  "execution_errors": false,
+  "cases": [
+    {
+      "id": "repeat",
+      "reason": "同じ話題の反復は同一ID",
+      "critical": false,
+      "observed": {
+        "steps": [
+          {
+            "selected": 0,
+            "current": 0,
+            "count": 1
+          },
+          {
+            "selected": 0,
+            "current": 0,
+            "count": 1
+          }
+        ]
+      },
+      "checks": [
+        {
+          "path": "steps.1.selected",
+          "op": "eq",
+          "value": 0,
+          "actual": 0,
+          "expected": 0,
+          "passed": true
+        },
+        {
+          "path": "steps.1.count",
+          "op": "eq",
+          "value": 1,
+          "actual": 1,
+          "expected": 1,
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "cnc-watch-sushi",
+      "reason": "CNC基板 vs 時計 vs 寿司を分離",
+      "critical": true,
+      "observed": {
+        "steps": [
+          {
+            "selected": 0,
+            "current": 0,
+            "count": 1
+          },
+          {
+            "selected": 1,
+            "current": 1,
+            "count": 2
+          },
+          {
+            "selected": 2,
+            "current": 2,
+            "count": 3
+          }
+        ]
+      },
+      "checks": [
+        {
+          "path": "steps.2.count",
+          "op": "eq",
+          "value": 3,
+          "actual": 3,
+          "expected": 3,
+          "passed": true
+        },
+        {
+          "path": "steps.2.selected",
+          "op": "eq",
+          "value": 2,
+          "actual": 2,
+          "expected": 2,
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "return",
+      "reason": "時計を挟んだCNCへの復帰で元IDへ戻す",
+      "critical": true,
+      "observed": {
+        "steps": [
+          {
+            "selected": 0,
+            "current": 0,
+            "count": 1
+          },
+          {
+            "selected": 1,
+            "current": 1,
+            "count": 2
+          },
+          {
+            "selected": 0,
+            "current": 0,
+            "count": 2
+          }
+        ]
+      },
+      "checks": [
+        {
+          "path": "steps.2.selected",
+          "op": "eq",
+          "value": 0,
+          "actual": 0,
+          "expected": 0,
+          "passed": true
+        },
+        {
+          "path": "steps.2.count",
+          "op": "eq",
+          "value": 2,
+          "actual": 2,
+          "expected": 2,
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "continuation",
+      "reason": "CNCの基板加工という言い換えで継続",
+      "critical": false,
+      "observed": {
+        "steps": [
+          {
+            "selected": 0,
+            "current": 0,
+            "count": 1
+          },
+          {
+            "selected": 0,
+            "current": 0,
+            "count": 1
+          }
+        ]
+      },
+      "checks": [
+        {
+          "path": "steps.1.selected",
+          "op": "eq",
+          "value": 0,
+          "actual": 0,
+          "expected": 0,
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "empty",
+      "reason": "空入力から話題を作らない",
+      "critical": true,
+      "observed": {
+        "steps": [
+          {
+            "selected": null,
+            "current": null,
+            "count": 0
+          }
+        ]
+      },
+      "checks": [
+        {
+          "path": "steps.0.selected",
+          "op": "eq",
+          "value": null,
+          "actual": null,
+          "expected": null,
+          "passed": true
+        },
+        {
+          "path": "steps.0.count",
+          "op": "eq",
+          "value": 0,
+          "actual": 0,
+          "expected": 0,
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "whitespace",
+      "reason": "空白発言では現在の話題を保持",
+      "critical": false,
+      "observed": {
+        "steps": [
+          {
+            "selected": 0,
+            "current": 0,
+            "count": 1
+          },
+          {
+            "selected": 0,
+            "current": 0,
+            "count": 1
+          }
+        ]
+      },
+      "checks": [
+        {
+          "path": "steps.1.selected",
+          "op": "eq",
+          "value": 0,
+          "actual": 0,
+          "expected": 0,
+          "passed": true
+        },
+        {
+          "path": "steps.1.count",
+          "op": "eq",
+          "value": 1,
+          "actual": 1,
+          "expected": 1,
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "single-character",
+      "reason": "一文字でも同一語を保持",
+      "critical": false,
+      "observed": {
+        "steps": [
+          {
+            "selected": 0,
+            "current": 0,
+            "count": 1
+          },
+          {
+            "selected": 0,
+            "current": 0,
+            "count": 1
+          }
+        ]
+      },
+      "checks": [
+        {
+          "path": "steps.1.count",
+          "op": "eq",
+          "value": 1,
+          "actual": 1,
+          "expected": 1,
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "case-fold",
+      "reason": "ASCII大文字小文字の差で分裂しない",
+      "critical": false,
+      "observed": {
+        "steps": [
+          {
+            "selected": 0,
+            "current": 0,
+            "count": 1
+          },
+          {
+            "selected": 0,
+            "current": 0,
+            "count": 1
+          }
+        ]
+      },
+      "checks": [
+        {
+          "path": "steps.1.count",
+          "op": "eq",
+          "value": 1,
+          "actual": 1,
+          "expected": 1,
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "current-switch",
+      "reason": "長く話したCNCから明示的に時計へ移った直後はcurrentも時計",
+      "critical": true,
+      "observed": {
+        "steps": [
+          {
+            "selected": 0,
+            "current": 0,
+            "count": 1
+          },
+          {
+            "selected": 0,
+            "current": 0,
+            "count": 1
+          },
+          {
+            "selected": 0,
+            "current": 0,
+            "count": 1
+          },
+          {
+            "selected": 1,
+            "current": 0,
+            "count": 2
+          }
+        ]
+      },
+      "checks": [
+        {
+          "path": "steps.3.selected",
+          "op": "eq",
+          "value": 1,
+          "actual": 1,
+          "expected": 1,
+          "passed": true
+        },
+        {
+          "path": "steps.3.current",
+          "op": "eq",
+          "value": 1,
+          "actual": 0,
+          "expected": 1,
+          "passed": false
+        }
+      ],
+      "passed": false
+    },
+    {
+      "id": "semantic-alias",
+      "reason": "字面が異なる同義の工作機械話題を継続",
+      "critical": false,
+      "observed": {
+        "steps": [
+          {
+            "selected": 0,
+            "current": 0,
+            "count": 1
+          },
+          {
+            "selected": 1,
+            "current": 1,
+            "count": 2
+          }
+        ]
+      },
+      "checks": [
+        {
+          "path": "steps.1.selected",
+          "op": "eq",
+          "value": 0,
+          "actual": 1,
+          "expected": 0,
+          "passed": false
+        }
+      ],
+      "passed": false
+    },
+    {
+      "id": "no-overmerge",
+      "reason": "共通の作るという語だけで別製作物を統合しない",
+      "critical": true,
+      "observed": {
+        "steps": [
+          {
+            "selected": 0,
+            "current": 0,
+            "count": 1
+          },
+          {
+            "selected": 0,
+            "current": 0,
+            "count": 1
+          }
+        ]
+      },
+      "checks": [
+        {
+          "path": "steps.1.count",
+          "op": "eq",
+          "value": 2,
+          "actual": 1,
+          "expected": 2,
+          "passed": false
+        }
+      ],
+      "passed": false
+    }
+  ]
+}
