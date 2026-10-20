@@ -3,7 +3,7 @@ import time
 from .models import Event, SourceType, Scope
 from .event_store import EventStore
 from .state import StateEngine
-from .correction import CorrectionEngine
+from .correction import CorrectionEngine, Correction
 from .time_engine import TimeEngine
 from .topic import TopicTracker
 from .open_loops import OpenLoopTracker
@@ -38,6 +38,13 @@ class CompanionCore:
         self._trace("runtime", tf)
 
         detected = self.corrections.detect(text)
+        # An explicit year assertion can correct a user-year fact only when
+        # its target is supplied. Keep runtime time.year authoritative and
+        # do not reinterpret year statements as names or generic corrections.
+        if not detected and correction_key in {"year", "time.user_year"}:
+            year = self.time.parse_user_year_statement(text)
+            if year is not None:
+                detected = [Correction(old=None, new=year, confidence=1.0, pattern="explicit_year_statement")]
         # A target key alone does not identify which of several corrections
         # belongs to it. Never choose the first candidate arbitrarily.
         if correction_key and len(detected) == 1:

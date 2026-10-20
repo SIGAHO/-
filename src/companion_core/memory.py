@@ -24,7 +24,12 @@ class MemoryEngine:
         if not text.strip():
             return False
         for x in self.items:
-            if x.status == Status.ACTIVE and cosine_text(text, x.text) > 0.92:
+            # A one-character change in a correction can change its fact value
+            # (time.user_year = 2023 vs 2026). Never merge these approximately
+            # or collapse their source into an ordinary user statement.
+            protected = source == SourceType.USER_CORRECTION or x.source == SourceType.USER_CORRECTION
+            duplicate = (text.strip() == x.text and source == x.source) if protected else cosine_text(text, x.text) > 0.92
+            if x.status == Status.ACTIVE and duplicate:
                 x.mentions += 1
                 x.importance = min(1.0, max(x.importance, importance))
                 return True

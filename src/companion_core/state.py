@@ -28,16 +28,26 @@ class StateEngine:
         self.active: dict[str, Fact] = {}
         self.blocked: dict[str, set[str]] = defaultdict(set)
 
+    @staticmethod
+    def _unchanged(current: Fact | None, value, source: SourceType, scope: Scope) -> bool:
+        return (current is not None and current.status == Status.ACTIVE
+                and type(current.value) is type(value) and current.value == value
+                and current.source == source and current.scope == scope)
+
     def propose(self, key: str, value, source: SourceType, scope: Scope = Scope.SESSION) -> bool:
         if source not in ALLOWED_STATE_SOURCES:
             return False
         if str(value) in self.blocked[key]:
             return False
-        candidate = Fact(key=key, value=value, source=source, scope=scope)
         current = self.active.get(key)
         if current and SOURCE_PRIORITY[current.source] > SOURCE_PRIORITY[source]:
             return False
-        if current and current.value != value:
+        # Reobserving the same assertion is accepted without a new version.
+        # Authority/scope changes remain distinct, linked history entries.
+        if self._unchanged(current, value, source, scope):
+            return True
+        candidate = Fact(key=key, value=value, source=source, scope=scope)
+        if current:
             current.status = Status.INVALIDATED
             current.superseded_by = candidate.id
             current.updated_at = time.time()
@@ -51,6 +61,8 @@ class StateEngine:
             old_value = current.value
         if old_value is not None and str(old_value) != str(new_value):
             self.blocked[key].add(str(old_value))
+        if self._unchanged(current, new_value, SourceType.USER_CORRECTION, scope):
+            return current
         fact = Fact(
             key=key,
             value=new_value,
