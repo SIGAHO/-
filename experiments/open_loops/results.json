@@ -2,7 +2,7 @@
   "schema_version": 1,
   "suite": "open_loops",
   "fixture_time": "2026-10-21T09:00:00+09:00",
-  "source_commit": "fb3205395e18d443208b1c908c14814c0c494a55",
+  "source_commit": "244844a3e06ad5b3731097143ca73553d284ca1e",
   "sha256": {
     "src/companion_core/__init__.py": "3f13daea6411d553c4704acda9ba7db671e28aeefeebfbf29d51fb2d849c77ed",
     "src/companion_core/context.py": "bd5eb128946a173455538fcf0ff4eb57f2127fbd10dcf13f8f9ff88b0cdfc192",
@@ -12,20 +12,20 @@
     "src/companion_core/event_store.py": "224f8d2916e5f4bb457b41bd0c236818ea1c7ff68b9cf5233fc313182eafd84a",
     "src/companion_core/memory.py": "1f4ca00a6884d52cb679159c26e235b77ccc8e1e497c099345de0245b995b220",
     "src/companion_core/models.py": "4438fbee49b045cc6b3c5c763bd8011d6f746abe4062a4102d876e303917c87a",
-    "src/companion_core/open_loops.py": "90bb74bdd58d62c7802376d2971a3e46c7ff7be217a7aaa02035d0f6f8d0cb22",
+    "src/companion_core/open_loops.py": "f4002c424251a46455025fdd4112de20beab81181ad95ba948913287e3e5bcb8",
     "src/companion_core/state.py": "8dd517995dabcf9e65aac2aaf409f565f0d67f61171feb656ab7b067b2af2f87",
     "src/companion_core/textmath.py": "a4b49e51a95f909a9d19dce430bf8200a0aaf059b85ddd25caf9aa2ce321696f",
     "src/companion_core/time_engine.py": "24580d882f518f08400d78d32ae7c3bb7aa5302d690df60c67ec9f23f1a99610",
     "src/companion_core/topic.py": "2d4397f6579c7dc30606df9574fba8285a1139c0eba77fd39a1cdf76f83f41ef",
     "experiments/runner.py": "1c8f2657be91b131a6466b945c5a7e4707a57c107041ffa9edefe3708c31ad0d",
-    "experiments/open_loops/cases.jsonl": "2ca96619fc01bba1f17b45d6623c38547debeb0835fa3b04b7a9a3abb97f222f",
+    "experiments/open_loops/cases.jsonl": "96f5c50b909043e16bc5ad3bb0a11323eca45551595b8db8bd2d90be7e68c5d4",
     "experiments/open_loops/hypothesis.md": "8fee2d12546bb5e6b9c764958bae3331fd172b1c95b53765ce5203782643fd18"
   },
-  "total": 12,
-  "passed": 9,
-  "pass_rate": 0.75,
-  "decision": "REVISE",
-  "adoption_allowed": false,
+  "total": 22,
+  "passed": 22,
+  "pass_rate": 1.0,
+  "decision": "PASS",
+  "adoption_allowed": true,
   "execution_errors": false,
   "cases": [
     {
@@ -42,10 +42,8 @@
             "total": 1
           },
           {
-            "active": [
-              "あとでやる"
-            ],
-            "done": 0,
+            "active": [],
+            "done": 1,
             "total": 1
           }
         ]
@@ -69,22 +67,20 @@
           "path": "steps.1.active",
           "op": "eq",
           "value": [],
-          "actual": [
-            "あとでやる"
-          ],
+          "actual": [],
           "expected": [],
-          "passed": false
+          "passed": true
         },
         {
           "path": "steps.1.done",
           "op": "eq",
           "value": 1,
-          "actual": 0,
+          "actual": 1,
           "expected": 1,
-          "passed": false
+          "passed": true
         }
       ],
-      "passed": false
+      "passed": true
     },
     {
       "id": "named-done",
@@ -224,8 +220,10 @@
             "total": 1
           },
           {
-            "active": [],
-            "done": 1,
+            "active": [
+              "基板を実装する"
+            ],
+            "done": 0,
             "total": 1
           }
         ]
@@ -237,14 +235,16 @@
           "value": [
             "基板を実装する"
           ],
-          "actual": [],
+          "actual": [
+            "基板を実装する"
+          ],
           "expected": [
             "基板を実装する"
           ],
-          "passed": false
+          "passed": true
         }
       ],
-      "passed": false
+      "passed": true
     },
     {
       "id": "negative-task",
@@ -253,11 +253,9 @@
       "observed": {
         "steps": [
           {
-            "active": [
-              "それはやる予定がない"
-            ],
+            "active": [],
             "done": 0,
-            "total": 1
+            "total": 0
           }
         ]
       },
@@ -266,12 +264,12 @@
           "path": "steps.0.total",
           "op": "eq",
           "value": 0,
-          "actual": 1,
+          "actual": 0,
           "expected": 0,
-          "passed": false
+          "passed": true
         }
       ],
-      "passed": false
+      "passed": true
     },
     {
       "id": "ambiguous-done",
@@ -494,6 +492,476 @@
           "expected": [
             "基板を実装する"
           ],
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "unfinished-short",
+      "reason": "まだ終わってないでは唯一のタスクを閉じず重複も作らない",
+      "critical": true,
+      "observed": {
+        "steps": [
+          {
+            "active": [
+              "あとでやる"
+            ],
+            "done": 0,
+            "total": 1
+          },
+          {
+            "active": [
+              "あとでやる"
+            ],
+            "done": 0,
+            "total": 1
+          }
+        ]
+      },
+      "checks": [
+        {
+          "path": "steps.1.active",
+          "op": "eq",
+          "value": [
+            "あとでやる"
+          ],
+          "actual": [
+            "あとでやる"
+          ],
+          "expected": [
+            "あとでやる"
+          ],
+          "passed": true
+        },
+        {
+          "path": "steps.1.total",
+          "op": "eq",
+          "value": 1,
+          "actual": 1,
+          "expected": 1,
+          "passed": true
+        },
+        {
+          "path": "steps.1.done",
+          "op": "eq",
+          "value": 0,
+          "actual": 0,
+          "expected": 0,
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "unfinished-named",
+      "reason": "未完了報告に実装という語があってもタスクを重複生成しない",
+      "critical": true,
+      "observed": {
+        "steps": [
+          {
+            "active": [
+              "基板を実装する"
+            ],
+            "done": 0,
+            "total": 1
+          },
+          {
+            "active": [
+              "基板を実装する"
+            ],
+            "done": 0,
+            "total": 1
+          }
+        ]
+      },
+      "checks": [
+        {
+          "path": "steps.1.active",
+          "op": "eq",
+          "value": [
+            "基板を実装する"
+          ],
+          "actual": [
+            "基板を実装する"
+          ],
+          "expected": [
+            "基板を実装する"
+          ],
+          "passed": true
+        },
+        {
+          "path": "steps.1.total",
+          "op": "eq",
+          "value": 1,
+          "actual": 1,
+          "expected": 1,
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "unfinished-polite",
+      "reason": "完了していませんの完了という部分文字列で閉じない",
+      "critical": true,
+      "observed": {
+        "steps": [
+          {
+            "active": [
+              "基板を実装する"
+            ],
+            "done": 0,
+            "total": 1
+          },
+          {
+            "active": [
+              "基板を実装する"
+            ],
+            "done": 0,
+            "total": 1
+          }
+        ]
+      },
+      "checks": [
+        {
+          "path": "steps.1.active",
+          "op": "eq",
+          "value": [
+            "基板を実装する"
+          ],
+          "actual": [
+            "基板を実装する"
+          ],
+          "expected": [
+            "基板を実装する"
+          ],
+          "passed": true
+        },
+        {
+          "path": "steps.1.done",
+          "op": "eq",
+          "value": 0,
+          "actual": 0,
+          "expected": 0,
+          "passed": true
+        },
+        {
+          "path": "steps.1.total",
+          "op": "eq",
+          "value": 1,
+          "actual": 1,
+          "expected": 1,
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "no-plan-named",
+      "reason": "実装する予定がないという発言を新規タスクへ変えない",
+      "critical": true,
+      "observed": {
+        "steps": [
+          {
+            "active": [],
+            "done": 0,
+            "total": 0
+          }
+        ]
+      },
+      "checks": [
+        {
+          "path": "steps.0.total",
+          "op": "eq",
+          "value": 0,
+          "actual": 0,
+          "expected": 0,
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "obligation",
+      "reason": "確認しないとは義務を示すので否定予定と混同しない",
+      "critical": true,
+      "observed": {
+        "steps": [
+          {
+            "active": [
+              "基板を確認しないと"
+            ],
+            "done": 0,
+            "total": 1
+          }
+        ]
+      },
+      "checks": [
+        {
+          "path": "steps.0.active",
+          "op": "eq",
+          "value": [
+            "基板を確認しないと"
+          ],
+          "actual": [
+            "基板を確認しないと"
+          ],
+          "expected": [
+            "基板を確認しないと"
+          ],
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "tied-targets",
+      "reason": "対象を特定できない同率の完了候補を先頭から勝手に閉じない",
+      "critical": true,
+      "observed": {
+        "steps": [
+          {
+            "active": [
+              "基板を確認する"
+            ],
+            "done": 0,
+            "total": 1
+          },
+          {
+            "active": [
+              "基板を確認する",
+              "時計を確認する"
+            ],
+            "done": 0,
+            "total": 2
+          },
+          {
+            "active": [
+              "基板を確認する",
+              "時計を確認する"
+            ],
+            "done": 0,
+            "total": 2
+          }
+        ]
+      },
+      "checks": [
+        {
+          "path": "steps.2.active",
+          "op": "eq",
+          "value": [
+            "基板を確認する",
+            "時計を確認する"
+          ],
+          "actual": [
+            "基板を確認する",
+            "時計を確認する"
+          ],
+          "expected": [
+            "基板を確認する",
+            "時計を確認する"
+          ],
+          "passed": true
+        },
+        {
+          "path": "steps.2.done",
+          "op": "eq",
+          "value": 0,
+          "actual": 0,
+          "expected": 0,
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "completion-question",
+      "reason": "完了したかという質問を完了報告にしない",
+      "critical": true,
+      "observed": {
+        "steps": [
+          {
+            "active": [
+              "基板を実装する"
+            ],
+            "done": 0,
+            "total": 1
+          },
+          {
+            "active": [
+              "基板を実装する"
+            ],
+            "done": 0,
+            "total": 1
+          }
+        ]
+      },
+      "checks": [
+        {
+          "path": "steps.1.active",
+          "op": "eq",
+          "value": [
+            "基板を実装する"
+          ],
+          "actual": [
+            "基板を実装する"
+          ],
+          "expected": [
+            "基板を実装する"
+          ],
+          "passed": true
+        },
+        {
+          "path": "steps.1.total",
+          "op": "eq",
+          "value": 1,
+          "actual": 1,
+          "expected": 1,
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "future-completion",
+      "reason": "終わったらという未来条件で閉じたり新規タスクを作ったりしない",
+      "critical": true,
+      "observed": {
+        "steps": [
+          {
+            "active": [
+              "基板を実装する"
+            ],
+            "done": 0,
+            "total": 1
+          },
+          {
+            "active": [
+              "基板を実装する"
+            ],
+            "done": 0,
+            "total": 1
+          }
+        ]
+      },
+      "checks": [
+        {
+          "path": "steps.1.active",
+          "op": "eq",
+          "value": [
+            "基板を実装する"
+          ],
+          "actual": [
+            "基板を実装する"
+          ],
+          "expected": [
+            "基板を実装する"
+          ],
+          "passed": true
+        },
+        {
+          "path": "steps.1.total",
+          "op": "eq",
+          "value": 1,
+          "actual": 1,
+          "expected": 1,
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "bare-punctuation",
+      "reason": "空白や感嘆符付きの短い完了報告も唯一のタスクへ対応する",
+      "critical": true,
+      "observed": {
+        "steps": [
+          {
+            "active": [
+              "あとでやる"
+            ],
+            "done": 0,
+            "total": 1
+          },
+          {
+            "active": [],
+            "done": 1,
+            "total": 1
+          }
+        ]
+      },
+      "checks": [
+        {
+          "path": "steps.1.active",
+          "op": "eq",
+          "value": [],
+          "actual": [],
+          "expected": [],
+          "passed": true
+        },
+        {
+          "path": "steps.1.done",
+          "op": "eq",
+          "value": 1,
+          "actual": 1,
+          "expected": 1,
+          "passed": true
+        },
+        {
+          "path": "steps.1.total",
+          "op": "eq",
+          "value": 1,
+          "actual": 1,
+          "expected": 1,
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "no-plan-preserves-existing",
+      "reason": "別の予定の否定で既存タスクを完了扱いせず新規タスクも作らない",
+      "critical": true,
+      "observed": {
+        "steps": [
+          {
+            "active": [
+              "基板を実装する"
+            ],
+            "done": 0,
+            "total": 1
+          },
+          {
+            "active": [
+              "基板を実装する"
+            ],
+            "done": 0,
+            "total": 1
+          }
+        ]
+      },
+      "checks": [
+        {
+          "path": "steps.1.active",
+          "op": "eq",
+          "value": [
+            "基板を実装する"
+          ],
+          "actual": [
+            "基板を実装する"
+          ],
+          "expected": [
+            "基板を実装する"
+          ],
+          "passed": true
+        },
+        {
+          "path": "steps.1.total",
+          "op": "eq",
+          "value": 1,
+          "actual": 1,
+          "expected": 1,
           "passed": true
         }
       ],
