@@ -2,12 +2,12 @@
   "schema_version": 1,
   "suite": "correction",
   "fixture_time": "2026-10-21T09:00:00+09:00",
-  "source_commit": "fd1973e0a43e6917ab4e79835ba11689277d485f",
+  "source_commit": "fb3205395e18d443208b1c908c14814c0c494a55",
   "sha256": {
     "src/companion_core/__init__.py": "3f13daea6411d553c4704acda9ba7db671e28aeefeebfbf29d51fb2d849c77ed",
     "src/companion_core/context.py": "bd5eb128946a173455538fcf0ff4eb57f2127fbd10dcf13f8f9ff88b0cdfc192",
-    "src/companion_core/core.py": "6813abd3668863fcd7e5ff11ecb21f7bccc652a5a973cb4a3d107b11bb1b1648",
-    "src/companion_core/correction.py": "07f9c98bd797552d312bac1bf1e42a532a2cc4e659b6486e6930e57420dc4f91",
+    "src/companion_core/core.py": "05e8cc0a2f87ed9c2abbe10acd38cd94ac51e1054150bd167e1c90ba05f12ce5",
+    "src/companion_core/correction.py": "a603ca7c17489dc0be367cc21f06a3e5410062abcdda68b443c8b2f5d6738b96",
     "src/companion_core/emotion.py": "d0cdebadcf770256ce9ea3c5f192d72fc8992f485b8801a6fc03decd00b10200",
     "src/companion_core/event_store.py": "224f8d2916e5f4bb457b41bd0c236818ea1c7ff68b9cf5233fc313182eafd84a",
     "src/companion_core/memory.py": "1f4ca00a6884d52cb679159c26e235b77ccc8e1e497c099345de0245b995b220",
@@ -22,10 +22,10 @@
     "experiments/correction/hypothesis.md": "6feed2e0edf6cca4913cc735f54a8f9a927e0a422111b9c5152a50cecae6ec2f"
   },
   "total": 12,
-  "passed": 8,
-  "pass_rate": 0.6666666666666666,
-  "decision": "REVISE",
-  "adoption_allowed": false,
+  "passed": 12,
+  "pass_rate": 1.0,
+  "decision": "PASS",
+  "adoption_allowed": true,
   "execution_errors": false,
   "cases": [
     {
@@ -229,27 +229,20 @@
       "reason": "違う色という記述は訂正ではない",
       "critical": true,
       "observed": {
-        "corrections": [
-          {
-            "old": null,
-            "new": "色の時計が好き",
-            "confidence": 0.75,
-            "pattern": "no_it_is"
-          }
-        ],
-        "count": 1
+        "corrections": [],
+        "count": 0
       },
       "checks": [
         {
           "path": "count",
           "op": "eq",
           "value": 0,
-          "actual": 1,
+          "actual": 0,
           "expected": 0,
-          "passed": false
+          "passed": true
         }
       ],
-      "passed": false
+      "passed": true
     },
     {
       "id": "empty",
@@ -276,27 +269,20 @@
       "reason": "置換先なしの否定は確定しない",
       "critical": true,
       "observed": {
-        "corrections": [
-          {
-            "old": "君",
-            "new": "て",
-            "confidence": 0.98,
-            "pattern": "not_a_but_b"
-          }
-        ],
-        "count": 1
+        "corrections": [],
+        "count": 0
       },
       "checks": [
         {
           "path": "count",
           "op": "eq",
           "value": 0,
-          "actual": 1,
+          "actual": 0,
           "expected": 0,
-          "passed": false
+          "passed": true
         }
       ],
-      "passed": false
+      "passed": true
     },
     {
       "id": "punctuation",
@@ -330,27 +316,20 @@
       "reason": "違う、そこじゃないは代替値が不明なので確定候補を作らない",
       "critical": true,
       "observed": {
-        "corrections": [
-          {
-            "old": null,
-            "new": "そこじゃない",
-            "confidence": 0.75,
-            "pattern": "no_it_is"
-          }
-        ],
-        "count": 1
+        "corrections": [],
+        "count": 0
       },
       "checks": [
         {
           "path": "count",
           "op": "eq",
           "value": 0,
-          "actual": 1,
+          "actual": 0,
           "expected": 0,
-          "passed": false
+          "passed": true
         }
       ],
-      "passed": false
+      "passed": true
     },
     {
       "id": "multiple",
@@ -363,21 +342,27 @@
             "new": "ルクルア",
             "confidence": 0.98,
             "pattern": "not_a_but_b"
+          },
+          {
+            "old": "2023",
+            "new": "2026",
+            "confidence": 0.98,
+            "pattern": "not_a_but_b"
           }
         ],
-        "count": 1
+        "count": 2
       },
       "checks": [
         {
           "path": "count",
           "op": "eq",
           "value": 2,
-          "actual": 1,
+          "actual": 2,
           "expected": 2,
-          "passed": false
+          "passed": true
         }
       ],
-      "passed": false
+      "passed": true
     }
   ]
 }

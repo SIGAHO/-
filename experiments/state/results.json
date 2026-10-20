@@ -2,12 +2,12 @@
   "schema_version": 1,
   "suite": "state",
   "fixture_time": "2026-10-21T09:00:00+09:00",
-  "source_commit": "fd1973e0a43e6917ab4e79835ba11689277d485f",
+  "source_commit": "fb3205395e18d443208b1c908c14814c0c494a55",
   "sha256": {
     "src/companion_core/__init__.py": "3f13daea6411d553c4704acda9ba7db671e28aeefeebfbf29d51fb2d849c77ed",
     "src/companion_core/context.py": "bd5eb128946a173455538fcf0ff4eb57f2127fbd10dcf13f8f9ff88b0cdfc192",
-    "src/companion_core/core.py": "6813abd3668863fcd7e5ff11ecb21f7bccc652a5a973cb4a3d107b11bb1b1648",
-    "src/companion_core/correction.py": "07f9c98bd797552d312bac1bf1e42a532a2cc4e659b6486e6930e57420dc4f91",
+    "src/companion_core/core.py": "05e8cc0a2f87ed9c2abbe10acd38cd94ac51e1054150bd167e1c90ba05f12ce5",
+    "src/companion_core/correction.py": "a603ca7c17489dc0be367cc21f06a3e5410062abcdda68b443c8b2f5d6738b96",
     "src/companion_core/emotion.py": "d0cdebadcf770256ce9ea3c5f192d72fc8992f485b8801a6fc03decd00b10200",
     "src/companion_core/event_store.py": "224f8d2916e5f4bb457b41bd0c236818ea1c7ff68b9cf5233fc313182eafd84a",
     "src/companion_core/memory.py": "1f4ca00a6884d52cb679159c26e235b77ccc8e1e497c099345de0245b995b220",
@@ -18,12 +18,12 @@
     "src/companion_core/time_engine.py": "24580d882f518f08400d78d32ae7c3bb7aa5302d690df60c67ec9f23f1a99610",
     "src/companion_core/topic.py": "2d4397f6579c7dc30606df9574fba8285a1139c0eba77fd39a1cdf76f83f41ef",
     "experiments/runner.py": "1c8f2657be91b131a6466b945c5a7e4707a57c107041ffa9edefe3708c31ad0d",
-    "experiments/state/cases.jsonl": "a2d69fbf54589975ee35de56ea0183c7e905a6a69bc01d4cc36a9194f464b5be",
+    "experiments/state/cases.jsonl": "e4807682351a8ccb833b31dab30e2f2656dbf958f3fa00faa902de6047575806",
     "experiments/state/hypothesis.md": "1c05dd6642f04be2070318418e4e3145727dc47acd20fdd58243b432ba2580ad"
   },
-  "total": 12,
-  "passed": 10,
-  "pass_rate": 0.8333333333333334,
+  "total": 15,
+  "passed": 13,
+  "pass_rate": 0.8666666666666667,
   "decision": "REVISE",
   "adoption_allowed": false,
   "execution_errors": false,
@@ -617,6 +617,67 @@
         }
       ],
       "passed": false
+    },
+    {
+      "id": "core-vague-with-target",
+      "reason": "対象キー指定済みでも『違う、そこじゃない』は確定済みの名前を上書きしない",
+      "critical": true,
+      "observed": {
+        "values": {
+          "name": "ルクルア"
+        }
+      },
+      "checks": [
+        {
+          "path": "values.name",
+          "op": "eq",
+          "value": "ルクルア",
+          "actual": "ルクルア",
+          "expected": "ルクルア",
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "core-vague-no-prior-fact",
+      "reason": "代替値不明の訂正から新規の事実を作らない",
+      "critical": true,
+      "observed": {
+        "values": {}
+      },
+      "checks": [
+        {
+          "path": "values",
+          "op": "eq",
+          "value": {},
+          "actual": {},
+          "expected": {},
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "core-multiple-with-target",
+      "reason": "一つの対象キーに複数訂正が来ても先頭を勝手に確定しない",
+      "critical": true,
+      "observed": {
+        "values": {
+          "name": "ルクルア"
+        }
+      },
+      "checks": [
+        {
+          "path": "values.name",
+          "op": "eq",
+          "value": "ルクルア",
+          "actual": "ルクルア",
+          "expected": "ルクルア",
+          "passed": true
+        }
+      ],
+      "passed": true
     }
   ]
 }

@@ -38,7 +38,9 @@ class CompanionCore:
         self._trace("runtime", tf)
 
         detected = self.corrections.detect(text)
-        if correction_key and detected:
+        # A target key alone does not identify which of several corrections
+        # belongs to it. Never choose the first candidate arbitrarily.
+        if correction_key and len(detected) == 1:
             c = detected[0]
             self.state.correct(correction_key, c.new, c.old, Scope.SESSION)
             self.events.append(Event(
@@ -51,7 +53,10 @@ class CompanionCore:
                 "key": correction_key, "old": c.old, "new": c.new, "pattern": c.pattern
             })
         elif detected:
-            self._trace("correction_proposal", {"items": [c.__dict__ for c in detected]})
+            self._trace("correction_proposal", {
+                "items": [c.__dict__ for c in detected],
+                "reason": "multiple_candidates" if correction_key else "missing_target",
+            })
 
         topic = self.topic.update(text)
         self.open_loops.observe(text)

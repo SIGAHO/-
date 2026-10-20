@@ -10,3 +10,6 @@
 {"id":"core-no-target","reason":"対象未指定の名前訂正は確定しない","turns":[{"text":"君じゃなくてルクルア"}],"keys":["name"],"checks":[{"path":"values","op":"eq","value":{}}],"critical":true}
 {"id":"core-target","reason":"名前訂正を指定されたキーだけへ反映","turns":[{"text":"君じゃなくてルクルア","key":"name"},{"text":"今年は2023です","assistant":true}],"keys":["name"],"checks":[{"path":"values.name","op":"eq","value":"ルクルア"}],"critical":true}
 {"id":"core-year-statement","reason":"今年は2026: 対象キーが指定された明示年訂正を反映","turns":[{"text":"違う、2023","key":"year"},{"text":"今年は2026","key":"year"}],"keys":["year"],"checks":[{"path":"values.year","op":"eq","value":"2026"}],"critical":true}
+{"id":"core-vague-with-target","reason":"対象キー指定済みでも『違う、そこじゃない』は確定済みの名前を上書きしない","turns":[{"text":"君じゃなくてルクルア","key":"name"},{"text":"違う、そこじゃない","key":"name"}],"keys":["name"],"checks":[{"path":"values.name","op":"eq","value":"ルクルア"}],"critical":true}
+{"id":"core-vague-no-prior-fact","reason":"代替値不明の訂正から新規の事実を作らない","turns":[{"text":"違う、そこじゃない","key":"name"}],"keys":["name"],"checks":[{"path":"values","op":"eq","value":{}}],"critical":true}
+{"id":"core-multiple-with-target","reason":"一つの対象キーに複数訂正が来ても先頭を勝手に確定しない","turns":[{"text":"君じゃなくてルクルア","key":"name"},{"text":"君じゃなくて別名。2023じゃなくて2026","key":"name"}],"keys":["name"],"checks":[{"path":"values.name","op":"eq","value":"ルクルア"}],"critical":true}
