@@ -66,9 +66,7 @@ class CompanionDaemon:
                 ctx = self.session.core.handle(text, correction_key=correction_key)
                 ctx["runtime"]["pc_observation"] = self.session.core.last_runtime
                 messages = self.session.prompts.build(ctx, self.session.core.events.events)
-            reply = self.session.adapter.generate(messages)
-            if not isinstance(reply, str) or not reply.strip():
-                raise ModelError("モデルが空の応答を返しました")
+            reply = self.session.generate_reply(ctx, messages)
             with self.lock:
                 self.session.core.record_assistant_output(reply)
             return reply

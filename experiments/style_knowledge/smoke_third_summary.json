@@ -1,0 +1,62 @@
+{
+  "model": "qwen2.5:14b",
+  "baseline_commit": "ac7fcca",
+  "source_sha256": {
+    "src/companion_core/__init__.py": "3f13daea6411d553c4704acda9ba7db671e28aeefeebfbf29d51fb2d849c77ed",
+    "src/companion_core/chat.py": "a9e793a962c26c71084246afd4ebdd19747c200ab944c98257b03ae4313906ff",
+    "src/companion_core/context.py": "bd5eb128946a173455538fcf0ff4eb57f2127fbd10dcf13f8f9ff88b0cdfc192",
+    "src/companion_core/core.py": "6ec0d5a54aa93364a82dd2d5862f8d06e094b6054d338c0a2bba28af4b87eda7",
+    "src/companion_core/correction.py": "a603ca7c17489dc0be367cc21f06a3e5410062abcdda68b443c8b2f5d6738b96",
+    "src/companion_core/daemon.py": "1f798b0ab2921f7675fa51b3d412bbaa8d2b3fdb3f67684d0d683d7b9bfcdcf5",
+    "src/companion_core/emotion.py": "9e377b4dff37001c7a917be76428458aaa65378f09fc01108d76a739cad0c8b7",
+    "src/companion_core/event_store.py": "4a0ebd78b1ad7484b006e09019d8d4b73c8a79740a7b9fb71ff1bb295c61454a",
+    "src/companion_core/knowledge.py": "6ec52d488691c8a1ae5233239e41d4c30fb6b0bb0e317c0bcb827dc0ca4b9995",
+    "src/companion_core/memory.py": "05e76dfffeecf779d79d38fe769058b495fbcfe10621d9899a3f3677d8797b13",
+    "src/companion_core/model_adapter.py": "17cf8b9abe86d3515da8effa0076405da31d9868025d0f4ab234b5579e502025",
+    "src/companion_core/models.py": "4438fbee49b045cc6b3c5c763bd8011d6f746abe4062a4102d876e303917c87a",
+    "src/companion_core/open_loops.py": "f4002c424251a46455025fdd4112de20beab81181ad95ba948913287e3e5bcb8",
+    "src/companion_core/ownership.py": "e80a46e37641d444e00b386049bcbce9e621ec66c09b6b69a67891e5e35f1c9f",
+    "src/companion_core/prompt.py": "ac8f4fc2f41c2c150f78af35fc79899cebb04c162d73eed83101e497499da4dc",
+    "src/companion_core/runtime.py": "d1cfa49bfeb35156e36fcd6bba0cf87e64681d5b136926b7c2d6abb9ac5a76fa",
+    "src/companion_core/state.py": "22c52c2522c840f90690e3a0c93db5c8ce9be5f2db785bf9262385c6db5dc273",
+    "src/companion_core/style.py": "52afb248f372b02d26b545e4d634ecb4f99482fa0bc48907918f12153af90a23",
+    "src/companion_core/textmath.py": "a4b49e51a95f909a9d19dce430bf8200a0aaf059b85ddd25caf9aa2ce321696f",
+    "src/companion_core/time_engine.py": "0e913e6ef8b965c90c714085d24f8e46be8b1fa4ca0be571c6b41099e860ae9e",
+    "src/companion_core/topic.py": "ab40c267182636bb9a695107aafe5222d43e301ea3a71fb24bbd253b7205f619",
+    "src/companion_core/topic_evidence.py": "9ef50a568f8ca21cda91025705c0b77ff4f4d88640e820df7d1a411f66409b81"
+  },
+  "training_examples": 0,
+  "model_generated_labels": 0,
+  "baseline": {
+    "turns": 12,
+    "banned_phrase_turns": 5,
+    "polite_marker_count": 38,
+    "question_ending_turns": 5,
+    "mean_chars": 128.6
+  },
+  "revised_paired": {
+    "turns": 8,
+    "banned_phrase_turns": 0,
+    "polite_marker_count": 0,
+    "question_ending_turns": 4,
+    "mean_chars": 33.6
+  },
+  "revised_initial_raw": {
+    "turns": 12,
+    "banned_phrase_turns": 3,
+    "polite_marker_count": 6,
+    "question_ending_turns": 6,
+    "mean_chars": 37.3
+  },
+  "revised_errors": [
+    "口調の再生成後もルール違反が残りました。入力は保存済みです",
+    "口調の再生成後もルール違反が残りました。入力は保存済みです",
+    "口調の再生成後もルール違反が残りました。入力は保存済みです",
+    "口調の再生成後もルール違反が残りました。入力は保存済みです"
+  ],
+  "style_regenerations": 0,
+  "unverified_replies": 2,
+  "trusted_memory_no_external": true,
+  "revised_model_calls": 17,
+  "elapsed_seconds": 60.5
+}

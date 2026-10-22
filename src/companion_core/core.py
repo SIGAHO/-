@@ -10,6 +10,7 @@ from .open_loops import OpenLoopTracker
 from .memory import MemoryEngine
 from .emotion import EmotionEngine
 from .context import ContextAssembler
+from .knowledge import KnowledgeGate
 
 
 class CompanionCore:
@@ -25,6 +26,8 @@ class CompanionCore:
         self.context = ContextAssembler()
         self.trace: list[dict] = []
         self.last_runtime = None
+        self.knowledge = KnowledgeGate()
+        self.knowledge_subjects = ()
         if self.events.events:
             self.replay()
 
@@ -91,6 +94,13 @@ class CompanionCore:
         self._trace("emotion", emo.to_dict())
 
         memories = self.memory.retrieve(text)
+        decision = self.knowledge.evaluate(text, self.memory, self.state, self.knowledge_subjects)
+        # Replace the referent on each substantive new user topic; AI output
+        # never supplies or resolves a referent.
+        if decision.subjects:
+            self.knowledge_subjects = decision.subjects
+        elif self.topic.last_decision == "new":
+            self.knowledge_subjects = ()
         self.memory.add(text, SourceType.USER_STATEMENT, importance=0.35,
                         now=user_event.ts)
 
@@ -104,6 +114,7 @@ class CompanionCore:
             emotion=emo,
             trace_tail=self.trace,
         )
+        ctx["knowledge"] = decision.to_dict()
         self._trace("context_assembled", {
             "memory_count": len(memories),
             "open_loop_count": len(self.open_loops.active()),
@@ -145,6 +156,7 @@ class CompanionCore:
         self.emotion = EmotionEngine()
         self.trace = []
         self.last_runtime = None
+        self.knowledge_subjects = ()
 
         pending_memory = None
         for e in old:
@@ -159,7 +171,12 @@ class CompanionCore:
                 self._remember_correction(p["key"], p["new"], e.ts)
             elif e.kind == "user_input" and e.source == SourceType.USER_STATEMENT:
                 text = e.payload.get("text", "")
+                decision = self.knowledge.evaluate(text, self.memory, self.state, self.knowledge_subjects)
                 self._observe_user(text, e.ts)
+                if decision.subjects:
+                    self.knowledge_subjects = decision.subjects
+                elif self.topic.last_decision == "new":
+                    self.knowledge_subjects = ()
                 pending_memory = e
             elif e.kind == "assistant_output":
                 pass

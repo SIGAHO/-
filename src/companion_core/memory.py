@@ -28,7 +28,7 @@ class MemoryEngine:
             # (time.user_year = 2023 vs 2026). Never merge these approximately
             # or collapse their source into an ordinary user statement.
             protected = source == SourceType.USER_CORRECTION or x.source == SourceType.USER_CORRECTION
-            duplicate = (text.strip() == x.text and source == x.source) if protected else cosine_text(text, x.text) > 0.92
+            duplicate = source == x.source and ((text.strip() == x.text) if protected else cosine_text(text, x.text) > 0.92)
             if x.status == Status.ACTIVE and duplicate:
                 x.mentions += 1
                 x.importance = min(1.0, max(x.importance, importance))
@@ -41,6 +41,21 @@ class MemoryEngine:
             last_used_at=time.time() if now is None else now,
         ))
         return True
+
+    def reliable_context(self, query: str, *, subjects=()) -> list[str]:
+        """Only explicitly trusted evidence, never user mentions or AI output.
+
+        Reliability is separate from retrieval's recency/importance ranking.
+        All query content terms and requested facets must be covered.
+        """
+        from .knowledge import entities, supports
+        subjects = subjects or tuple(entities(query))
+        trusted = {SourceType.VERIFIED_MEMORY, SourceType.RUNTIME, SourceType.SYSTEM}
+        return [x.text for x in self.items if x.status == Status.ACTIVE
+                and x.source in trusted and supports(query, x.text, subjects)]
+
+    def has_reliable_context(self, query: str) -> bool:
+        return bool(self.reliable_context(query))
 
     def archive_old(self, now: float | None = None, tau_days: float = 60.0, epsilon: float = 0.08) -> None:
         now = now or time.time()
