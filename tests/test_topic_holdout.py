@@ -70,6 +70,10 @@ class HoldoutIntegrityTests(unittest.TestCase):
                 path = root / relative
                 if snapshot and relative in ("src/companion_core/topic.py", "src/companion_core/topic_evidence.py"):
                     path = directory / snapshot / (Path(relative).name + ".txt")
+                # Historical candidate hashes remain immutable as live Core evolves.
+                archived = root / "experiments/frozen_core" / (Path(relative).name + ".txt")
+                if relative.startswith("src/companion_core/") and archived.exists():
+                    path = archived
                 self.assertEqual(holdout.prior.sha(path.read_text(encoding="utf-8").encode()), expected, relative)
 
 

@@ -1,0 +1,15 @@
+{
+  "model": "qwen2.5:14b",
+  "model_id": "7cdf5a0187d5",
+  "turns": 4,
+  "restart_reference_checked": true,
+  "cli_utf8_smoke_passed": true,
+  "seconds": [
+    21.84,
+    3.8,
+    1.23,
+    1.73
+  ],
+  "transcript_published": false,
+  "purpose": "local integration smoke only; not a quality benchmark or teacher data"
+}

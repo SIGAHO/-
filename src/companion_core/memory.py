@@ -18,7 +18,7 @@ class MemoryEngine:
     def __init__(self):
         self.items: list[MemoryItem] = []
 
-    def add(self, text: str, source: SourceType, importance: float = 0.5) -> bool:
+    def add(self, text: str, source: SourceType, importance: float = 0.5, *, now: float | None = None) -> bool:
         if source not in ALLOWED_MEMORY_SOURCES:
             return False
         if not text.strip():
@@ -37,6 +37,8 @@ class MemoryEngine:
             text=text.strip(),
             source=source,
             importance=max(0.0, min(1.0, importance)),
+            created_at=time.time() if now is None else now,
+            last_used_at=time.time() if now is None else now,
         ))
         return True
 
@@ -52,6 +54,8 @@ class MemoryEngine:
                 x.status = Status.ARCHIVED
 
     def retrieve(self, query: str, budget_chars: int = 1200, limit: int = 8) -> list[MemoryItem]:
+        if not query.strip() or limit <= 0 or budget_chars <= 0:
+            return []
         now = time.time()
         scored = []
         for x in self.items:

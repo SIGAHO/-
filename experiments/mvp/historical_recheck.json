@@ -1,0 +1,26 @@
+{
+  "topic_corpus": {
+    "exit_code": 1,
+    "original_decision": "REVISE",
+    "rerun_decision": "REVISE",
+    "metrics_identical": true
+  },
+  "topic_holdout": {
+    "exit_code": 1,
+    "original_decision": "REVISE",
+    "rerun_decision": "REVISE",
+    "metrics_identical": true
+  },
+  "topic_holdout_v2": {
+    "exit_code": 1,
+    "original_decision": "REVISE",
+    "rerun_decision": "REVISE",
+    "metrics_identical": true
+  },
+  "topic_holdout_v3": {
+    "exit_code": 0,
+    "original_decision": "PASS",
+    "rerun_decision": "PASS",
+    "metrics_identical": true
+  }
+}

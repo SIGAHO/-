@@ -39,8 +39,21 @@ class EmotionEngine:
         }
 
     def observe_user(self, text: str) -> EmotionState:
-        pos = sum(text.count(w) for w in self.POS)
-        neg = sum(text.count(w) for w in self.NEG)
+        if not text.strip():
+            return self.state
+        # Quoted speech is not evidence of the speaker's affect toward us.
+        text = re.sub(r'「[^」]*」|『[^』]*』|"[^"]*"|“[^”]*”', '', text)
+        # Exclude locally negated evaluations, independent of subject/domain.
+        def count_unnegated(words):
+            count = 0
+            for word in words:
+                for match in re.finditer(re.escape(word), text):
+                    suffix = text[match.end():]
+                    if not re.match(r'(?:く|い|だ|です)?(?:は|も)?(?:じゃ|では)?(?:ない|なかった|ありません)', suffix):
+                        count += 1
+            return count
+        pos = count_unnegated(self.POS)
+        neg = count_unnegated(self.NEG)
         corr = int(any(w in text for w in self.CORRECTION))
         question = int(any(w in text for w in self.CURIOUS))
         exclaim = min(3, text.count("!") + text.count("！"))
@@ -48,7 +61,7 @@ class EmotionEngine:
 
         impulse = EmotionState(
             valence=max(-1, min(1, 0.22*pos - 0.22*neg)),
-            arousal=min(1, 0.18 + 0.16*exclaim + 0.18*repeated + 0.08*question),
+            arousal=min(1, 0.18 + 0.16*exclaim + 0.18*repeated + 0.08*question + 0.08*corr),
             attachment=min(1, 0.22 + 0.04*pos),
             irritation=min(1, 0.20*neg + 0.14*corr),
             curiosity=min(1, 0.25 + 0.25*question),
