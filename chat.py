@@ -1,11 +1,12 @@
 """Run from checkout: python chat.py"""
 import argparse
+import json
 import os
 from pathlib import Path
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
-from companion_core.chat import ChatSession
+from companion_core.daemon import DaemonClient, connect_session
 from companion_core.model_adapter import FakeModelAdapter, OllamaAdapter, ModelError
 
 
@@ -23,17 +24,21 @@ def main(argv=None):
     args = parser.parse_args(argv)
     try:
         adapter = FakeModelAdapter() if args.fake else OllamaAdapter(args.model, args.host, args.timeout)
-        session = ChatSession(adapter, args.event_log)
+        session = connect_session(adapter, args.event_log, args.timeout + 10)
     except (OSError, ValueError, KeyError) as exc:
         print(f"起動できません: {exc}", file=sys.stderr)
         return 1
-    print("Breaktail v2" + (" [Fake接続テスト]" if args.fake else "") + " — /exit で終了。/correct キー 訂正文 で対象を指定して訂正。")
+    mode = " [daemon接続: モデル設定はdaemon側]" if isinstance(session, DaemonClient) else (" [Fake接続テスト]" if args.fake else " [単独動作]")
+    print("Breaktail v2" + mode + " — /exit で終了。/status で状態表示。/correct キー 訂正文 で対象を指定して訂正。")
     while True:
         try:
             text = input("you> ").strip()
             if text in {"/exit", "/quit"}:
                 break
             if not text:
+                continue
+            if text == "/status":
+                print(json.dumps(session.status(), ensure_ascii=False, indent=2))
                 continue
             key = None
             if text.startswith("/correct "):
@@ -50,7 +55,9 @@ def main(argv=None):
             break
         except OSError as exc:
             print(f"ログ保存に失敗: {exc}", file=sys.stderr)
+            session.close()
             return 1
+    session.close()
     return 0
 
 

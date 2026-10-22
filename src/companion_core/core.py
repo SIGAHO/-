@@ -24,6 +24,7 @@ class CompanionCore:
         self.emotion = EmotionEngine()
         self.context = ContextAssembler()
         self.trace: list[dict] = []
+        self.last_runtime = None
         if self.events.events:
             self.replay()
 
@@ -117,6 +118,24 @@ class CompanionCore:
         ))
         self._trace("assistant_output", {"text": text, "state_admission": False})
 
+    def accept_runtime(self, event):
+        """Only the OS observation route may provide runtime metadata, never AI text."""
+        allowed = {"current_time", "uptime", "active_processes", "foreground_window_title"}
+        if (event.kind != "runtime_observation" or event.source != SourceType.RUNTIME
+                or not {"current_time", "uptime", "active_processes"} <= event.payload.keys()
+                or not event.payload.keys() <= allowed):
+            return False
+        self.last_runtime = dict(event.payload)
+        return True
+
+    def status(self):
+        topic = self.topic.current()
+        return {"current_time": self.time.now().isoformat(timespec="seconds"),
+                "open_loops": [x.text for x in self.open_loops.active()],
+                "topic": topic.label if topic else None,
+                "emotion": self.emotion.state.to_dict(),
+                "last_pc_observation": self.last_runtime}
+
     def replay(self) -> None:
         old = list(self.events.events)
         self.state = StateEngine()
@@ -125,6 +144,7 @@ class CompanionCore:
         self.memory = MemoryEngine()
         self.emotion = EmotionEngine()
         self.trace = []
+        self.last_runtime = None
 
         pending_memory = None
         for e in old:
@@ -143,6 +163,8 @@ class CompanionCore:
                 pending_memory = e
             elif e.kind == "assistant_output":
                 pass
+            elif e.kind == "runtime_observation":
+                self.accept_runtime(e)
         if pending_memory is not None:
             self.memory.add(pending_memory.payload.get("text", ""),
                             SourceType.USER_STATEMENT, 0.35, now=pending_memory.ts)

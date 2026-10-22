@@ -1,0 +1,8 @@
+{
+  "model": "qwen2.5:14b",
+  "ipc_reply_nonempty": true,
+  "windows_process_observation": true,
+  "replay_runtime_present": true,
+  "ai_promotion": false,
+  "conversation_quality_scored": false
+}
