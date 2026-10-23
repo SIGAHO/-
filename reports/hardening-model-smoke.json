@@ -1,0 +1,255 @@
+{
+  "model": "qwen2.5:14b",
+  "at": "2026-10-23T13:13:27.006495+09:00",
+  "scope": "observed_smoke_not_quality_proof",
+  "checks": {
+    "six_turns_no_errors": true,
+    "casual_no_old_song": true,
+    "internal_not_external_unverified": true,
+    "memory_source_qualified": true,
+    "ambiguous_cpu": true,
+    "clock_and_remaining_cpu": true
+  },
+  "turns": [
+    {
+      "input": "調子どう？",
+      "reply": "調子いいよ、どう？今日も一日頑張ろうかな。",
+      "intent": "casual_chat",
+      "meta": {
+        "unverified": false,
+        "regenerated": false,
+        "issues": []
+      },
+      "provenance": {
+        "intent": "casual_chat",
+        "sources": [
+          {
+            "kind": "state",
+            "items": {
+              "time.iso": "2026-10-23T13:13:25+09:00",
+              "time.year": 2026,
+              "time.month": 10,
+              "time.day": 23,
+              "time.hour": 13,
+              "time.minute": 13,
+              "time.weekday": "Friday"
+            }
+          },
+          {
+            "kind": "runtime",
+            "items": {
+              "time.iso": "2026-10-23T13:13:25+09:00",
+              "time.year": 2026,
+              "time.month": 10,
+              "time.day": 23,
+              "time.hour": 13,
+              "time.minute": 13,
+              "time.weekday": "Friday"
+            }
+          },
+          {
+            "kind": "assistant_generated",
+            "fact_evidence": false
+          }
+        ],
+        "generated": true,
+        "scope": "supplied_context_not_claim_verification"
+      }
+    },
+    {
+      "input": "その情報どこから？",
+      "reply": "直前回答に渡した情報は、CPU管理の状態・実行環境の観測。文章はAI生成で、それ自体は事実の根拠にならない。渡した情報と文章の一致までは保証していない。",
+      "intent": "self_state_memory",
+      "meta": {
+        "unverified": false,
+        "regenerated": false,
+        "cpu": true
+      },
+      "provenance": {
+        "intent": "casual_chat",
+        "sources": [
+          {
+            "kind": "state",
+            "items": {
+              "time.iso": "2026-10-23T13:13:25+09:00",
+              "time.year": 2026,
+              "time.month": 10,
+              "time.day": 23,
+              "time.hour": 13,
+              "time.minute": 13,
+              "time.weekday": "Friday"
+            }
+          },
+          {
+            "kind": "runtime",
+            "items": {
+              "time.iso": "2026-10-23T13:13:25+09:00",
+              "time.year": 2026,
+              "time.month": 10,
+              "time.day": 23,
+              "time.hour": 13,
+              "time.minute": 13,
+              "time.weekday": "Friday"
+            }
+          },
+          {
+            "kind": "assistant_generated",
+            "fact_evidence": false
+          }
+        ],
+        "generated": true,
+        "scope": "supplied_context_not_claim_verification"
+      }
+    },
+    {
+      "input": "Breaktailの記憶に入ってる？",
+      "reply": "保存されたユーザー申告は「LUMEN ARCという曲を聴いた」。発言としての記憶で、外部事実の確認済み根拠ではない。",
+      "intent": "self_state_memory",
+      "meta": {
+        "unverified": false,
+        "regenerated": false,
+        "cpu": true
+      },
+      "provenance": {
+        "intent": "self_state_memory",
+        "sources": [
+          {
+            "kind": "memory",
+            "items": [
+              "LUMEN ARCという曲を聴いた"
+            ],
+            "verified": false
+          }
+        ],
+        "generated": false,
+        "scope": "supplied_context_not_claim_verification"
+      }
+    },
+    {
+      "input": "は？",
+      "reply": "直前の返答について、どの部分が引っかかった？",
+      "intent": "ambiguous_followup",
+      "meta": {
+        "unverified": false,
+        "regenerated": false,
+        "cpu": true
+      },
+      "provenance": {
+        "intent": "ambiguous_followup",
+        "sources": [
+          {
+            "kind": "assistant_generated",
+            "fact_evidence": false
+          }
+        ],
+        "generated": false,
+        "referent": "保存されたユーザー申告は「LUMEN ARCという曲を聴いた」。発言としての記憶で、外部事実の確認済み根拠ではない。"
+      }
+    },
+    {
+      "input": "今何時？",
+      "reply": "13:13:26（Asia/Tokyo）。",
+      "intent": "time_calculation",
+      "meta": {
+        "unverified": false,
+        "regenerated": false,
+        "cpu": true
+      },
+      "provenance": {
+        "intent": "time_calculation",
+        "sources": [
+          {
+            "kind": "memory",
+            "items": [
+              "は？",
+              "Breaktailの記憶に入ってる？",
+              "その情報どこから？",
+              "調子どう？",
+              "LUMEN ARCという曲を聴いた"
+            ],
+            "verified": false
+          },
+          {
+            "kind": "state",
+            "items": {
+              "time.iso": "2026-10-23T13:13:26+09:00",
+              "time.year": 2026,
+              "time.month": 10,
+              "time.day": 23,
+              "time.hour": 13,
+              "time.minute": 13,
+              "time.weekday": "Friday"
+            }
+          },
+          {
+            "kind": "runtime",
+            "items": {
+              "time.iso": "2026-10-23T13:13:26+09:00",
+              "time.year": 2026,
+              "time.month": 10,
+              "time.day": 23,
+              "time.hour": 13,
+              "time.minute": 13,
+              "time.weekday": "Friday"
+            }
+          }
+        ],
+        "generated": false,
+        "scope": "supplied_context_not_claim_verification"
+      }
+    },
+    {
+      "input": "8時まであと何分？",
+      "reply": "今日のその時刻はもう過ぎている。明日の時刻なら「明日の8時まであと何分？」のように指定して。",
+      "intent": "time_calculation",
+      "meta": {
+        "unverified": false,
+        "regenerated": false,
+        "cpu": true
+      },
+      "provenance": {
+        "intent": "time_calculation",
+        "sources": [
+          {
+            "kind": "memory",
+            "items": [
+              "今何時？",
+              "は？",
+              "Breaktailの記憶に入ってる？",
+              "その情報どこから？",
+              "調子どう？",
+              "LUMEN ARCという曲を聴いた"
+            ],
+            "verified": false
+          },
+          {
+            "kind": "state",
+            "items": {
+              "time.iso": "2026-10-23T13:13:26+09:00",
+              "time.year": 2026,
+              "time.month": 10,
+              "time.day": 23,
+              "time.hour": 13,
+              "time.minute": 13,
+              "time.weekday": "Friday"
+            }
+          },
+          {
+            "kind": "runtime",
+            "items": {
+              "time.iso": "2026-10-23T13:13:26+09:00",
+              "time.year": 2026,
+              "time.month": 10,
+              "time.day": 23,
+              "time.hour": 13,
+              "time.minute": 13,
+              "time.weekday": "Friday"
+            }
+          }
+        ],
+        "generated": false,
+        "scope": "supplied_context_not_claim_verification"
+      }
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+[
+    {
+        "check":  "encoding",
+        "status":  "PASS",
+        "exitCode":  0
+    },
+    {
+        "check":  "unit",
+        "status":  "PASS",
+        "exitCode":  0
+    },
+    {
+        "check":  "behavior",
+        "status":  "PASS",
+        "exitCode":  0
+    },
+    {
+        "check":  "demo",
+        "status":  "PASS",
+        "exitCode":  0
+    },
+    {
+        "check":  "model",
+        "status":  "PASS",
+        "exitCode":  0
+    }
+]

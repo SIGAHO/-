@@ -5,15 +5,14 @@ from pathlib import Path
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
+from companion_core.encoding import configure_stdio
 from companion_core.daemon import CompanionDaemon
 from companion_core.runtime import OSRuntimeObserver
 from companion_core.model_adapter import FakeModelAdapter, OllamaAdapter
 
 
 def main(argv=None):
-    for stream in (sys.stdout, sys.stderr):
-        if hasattr(stream, "reconfigure"):
-            stream.reconfigure(encoding="utf-8")
+    configure_stdio()
     parser = argparse.ArgumentParser(description="Breaktail v2 resident companion")
     parser.add_argument("--event-log", default=os.environ.get("BREAKTAIL_EVENT_LOG", "data/events.jsonl"))
     parser.add_argument("--interval", type=float, default=os.environ.get("BREAKTAIL_OBSERVE_INTERVAL", "30"))

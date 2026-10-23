@@ -55,7 +55,7 @@ class CompanionDaemon:
             self.previous = dict(sample)
             return changed
 
-    def turn(self, text, correction_key=None):
+    def turn(self, text, correction_key=None, event_id=None):
         if not isinstance(text, str) or not text.strip() or len(text) > 16000:
             raise ValueError("入力は1〜16000文字にしてください")
         if correction_key is not None and not isinstance(correction_key, str):
@@ -63,12 +63,12 @@ class CompanionDaemon:
         # Serialize conversations, but allow OS observations/status while LLM is busy.
         with self.turn_lock:
             with self.lock:
-                ctx = self.session.core.handle(text, correction_key=correction_key)
+                ctx = self.session.core.handle(text, correction_key=correction_key, event_id=event_id)
                 ctx["runtime"]["pc_observation"] = self.session.core.last_runtime
                 messages = self.session.prompts.build(ctx, self.session.core.events.events)
             reply = self.session.generate_reply(ctx, messages)
             with self.lock:
-                self.session.core.record_assistant_output(reply)
+                self.session.core.record_assistant_output(reply, self.session.pending_provenance)
             return reply
 
     def start(self):
@@ -95,7 +95,7 @@ class CompanionDaemon:
                         with owner.lock:
                             result = owner.session.status()
                     elif self.path == "/turn":
-                        result = owner.turn(body["text"], body.get("correction_key"))
+                        result = owner.turn(body["text"], body.get("correction_key"), body.get("event_id"))
                     else:
                         self.send_error(404)
                         return
@@ -111,7 +111,10 @@ class CompanionDaemon:
                 self.send_header("Content-Type", "application/json; charset=utf-8")
                 self.send_header("Content-Length", str(len(data)))
                 self.end_headers()
-                self.wfile.write(data)
+                try:
+                    self.wfile.write(data)
+                except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError):
+                    pass
 
         self.poll()
         self.server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
@@ -167,8 +170,8 @@ class DaemonClient:
             # Never silently retry a possibly committed turn via a second writer.
             raise OSError("daemon接続が切れました。/statusで状態を確認してから再接続してください") from exc
 
-    def turn(self, text, *, correction_key=None):
-        return self.request("/turn", {"text": text, "correction_key": correction_key})
+    def turn(self, text, *, correction_key=None, event_id=None):
+        return self.request("/turn", {"text": text, "correction_key": correction_key, "event_id": event_id})
 
     def status(self):
         return self.request("/status", {})

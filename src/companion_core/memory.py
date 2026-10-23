@@ -1,5 +1,6 @@
 from __future__ import annotations
 import math
+import hashlib
 import time
 from .models import MemoryItem, SourceType, Status
 from .textmath import cosine_text
@@ -33,12 +34,14 @@ class MemoryEngine:
                 x.mentions += 1
                 x.importance = min(1.0, max(x.importance, importance))
                 return True
+        stamp = time.time() if now is None else now
         self.items.append(MemoryItem(
+            id=hashlib.sha256(f"{source}:{stamp}:{text.strip()}".encode()).hexdigest(),
             text=text.strip(),
             source=source,
             importance=max(0.0, min(1.0, importance)),
-            created_at=time.time() if now is None else now,
-            last_used_at=time.time() if now is None else now,
+            created_at=stamp,
+            last_used_at=stamp,
         ))
         return True
 
@@ -95,7 +98,6 @@ class MemoryEngine:
             if used + cost > budget_chars:
                 continue
             selected.append(item)
-            item.last_used_at = now
             used += cost
             if len(selected) >= limit:
                 break

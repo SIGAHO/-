@@ -93,7 +93,7 @@ you> 好きな色を覚えてる？
 
 同じログで再起動すると自動Replayし、話題・未完了事項・ユーザー記憶・訂正State・感情を復元します。
 時計は現在の実行環境から再取得します。記憶の作成時刻、話題と未完了事項の観測時刻は元イベントに基づきます。
-内部の派生IDは再生成されます。直接の `state.propose()` 呼び出しはログにないため復元対象外です。
+Memory・OpenLoop・訂正Stateの派生IDと作成時刻はイベントから再現します。直接の `state.propose()` 呼び出しはログにないため復元対象外です。
 
 会話経路は `user → CompanionCore.handle() → PromptBuilder → ModelAdapter → reply → record_assistant_output()`。
 短い構造化CPU文脈と最大6000文字の最近の履歴を渡します。
@@ -155,6 +155,7 @@ activeな `verified_memory` / `runtime` / `system` を対象に、対象名、�
 ユーザー申告・ユーザー訂正は会話の申告として利用しますが、外部の客観的事実の確認済み根拠にはしません。
 Memoryの類似文統合もsourceをまたがず、信頼済み記録が申告へ吸収されるのを防ぎます。
 
+`IntentRouter` が `external_knowledge` と判定した入力だけ、`KnowledgeGate` へ送ります。
 `KnowledgeGate` は引用された名前、英数字名、形態素上の固有名詞、未知のカタカナ、明示的な作品説明構文等を検出します。
 質問・説明依頼で根拠がなければ `external_required=True`。
 直前のユーザー側の対象を使い、「その作者は誰？」「歌手は？」の省略にも保守的に対応します。
@@ -170,7 +171,7 @@ Stateもsource/statusと同じ内容照合を通し、十分な根拠があれ�
 これは意味理解や完全な固有表現抽出ではありません。表記ゆれ・同義語・長い省略・同名異物には限界があり、
 保守的に止めすぎる場合と検出を逃す場合があります。信頼済み文書内の矛盾検出や最新性判定も未実装です。
 支持された回答でも、根拠から逸脱しないことの文章上の保証まではありません。
-時計・残り時間の最終文章化も従来どおりモデル経由なので、口調改善とは別に誤答が残ります。
+対応する時刻・残り時間・四則演算はCPUで最終回答を確定し、モデルと文体の再生成を通しません。
 
 ## 検証
 
@@ -192,3 +193,47 @@ Fakeの文面は配線テスト用の仮仕様であり、自然会話品質の�
 元のfreeze・manifest・過去候補のREVISEは保持します。
 Topicの分割・切替見逃し、有限ルールによる感情推定・完了解釈、曖昧な訂正対象の解決は残る制限です。
 [既存実験](experiments/README.md) と [憲法](CONSTITUTION.md) も参照してください。
+
+
+## Hardening Phase（c827924以降）
+
+### CPUで保証する境界
+
+- `IntentRouter`: casual_chat / self_state_memory / external_knowledge / time_calculation / task_correction / ambiguous_followup の順序付き判定。KnowledgeGateはexternal_knowledge専用で、根拠なしならモデルを呼ばず未確認。既知の内部・雑談経路に一致しない疑問文も保守的に外部確認へ回す（「地球は丸い？」等、固有名詞がない場合も含む）。
+- 「調子どう？」等の雑談では古いTopic・記憶・未完了事項と古い会話履歴を強く注入しない。内容のある話題では明示参照・一致・関連度で採用。「は？」「？？」は直前assistantへ結び、CPUが確認を返す。
+- 「Breaktailの記憶に入ってる？」「記憶にある？」等の一般的な記憶照会はCPUが保存済みのユーザー申告を出所付きで提示する。内容を指定した記憶照会はモデルに申告とStateを渡すが、客観的な検証済み事実への昇格はしない。
+- 「その情報どこから？」「どこからその情報を？」にはCPUのProvenanceResponderが返答。memory / state / runtime / external / assistant_generatedを回答ログへ保存し、再起動で復元。これは**生成に渡した情報の記録**であり、モデル文章の各主張がその情報から導けるとの証明ではない。旧ログに記録がなければ不明と返す。
+- 時刻・日付・曜日・指定時刻までの残り・簡単な四則演算はCPUの確定文。例: `7:41→8:00` は19分、`0.1+0.2` は0.3。計算はevalを使わずASTとDecimalで制限。精度は28桁、長さ160文字、ノード60個、結果絶対値1e30以内。未対応式・不正時刻は確定不能と返す。
+- `8時まであと何分？` は今日の8時。過ぎた場合は過去と明示し、明日へ黙って繰り越さない。`明日の8時まであと何分？` で明日指定。残りの秒もCPUで保持する。
+- assistant出力はログ専用。State.propose / State.correct / Memory.addもassistant_generatedを拒否。runtimeのtime.*はユーザー訂正で上書き不可（ユーザー申告専用time.user_yearを除く）。信頼されたPython呼び出し元がsourceを指定するAPIであり、任意のPythonコードの改竄や偽装に対する認証境界ではない。
+- 同一イベントIDの同一appendは追記しない。異なる内容で同じIDは拒否。`turn(..., event_id="request-id")` の同じIDの再利用は、再起動後も更新前に拒否。daemonの同時clientも直列化。**同じ文章だけでは再送と別発話を区別できない**ため、別IDの同文発話は別ターン。IPCの自動再送はしない。
+- 非runtimeの派生状態（訂正履歴・Memory・Topic・OpenLoop・Emotion）は同じイベント列で再現。現在の時計は再取得し、traceや検索ランキングの現在時刻依存はReplay同一性の対象外。直接APIで追加した未ログのState/verified資料は永続化しない。
+- UTF-8 JSONLの行末改行をコミット境界にする。途中行・不正UTF-8・schema・NaN・重複IDを行番号付きで拒否し、原本を保持。追記前にSHA-256で同じ長さの改変も検知。fsync失敗後はwriterを停止し再起動Replayを要求する。
+- chat / daemon / demoは標準入出力をUTF-8へreconfigure。孤立surrogate入力は置換し、モデルの不正Unicode・空文・不正型・タイムアウト・文体違反は返答ログへ保存しない。PowerShellのパイプは送信側もUTF-8設定が必要で、既にCP932で欠落した文字は復元できない。
+
+### 非保証範囲
+
+自然言語の意図分類・関連度判定はルールなので未知表現には限界がある。自由生成の意味・自然さ・非定型の質問癖・事実の含意・申告自体の真偽は完全保証しない。対応外の複雑な時刻表現や計算は推測せず確認する。外部検索は未接続。任意の直接Python操作やOS権限を持つ他プロセスからの改竄は防げない。完全なストレージ障害時のデータ復元、複数イベントをまたぐトランザクション、無制限のログサイズ・無期限稼働も保証しない。追記時のハッシュはログ全体を読むため大規模ログではコストが増える。
+旧教師データ・Teacher Store・自己生成学習・LoRAは使用しない。回帰文は人が指定した構造契約、外部コーパスは観測済み評価専用で、モデルに正解や採点基準を作らせない。
+
+### PowerShell診断と起動
+
+Windows PowerShell 5.1 / PowerShell 7（リポジトリのフォルダ内）:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\diagnose.ps1
+# 実14Bの6入力スモークも含める場合（Ollama起動・モデル導入済み）
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\diagnose.ps1 -ModelSmoke
+# daemonを非表示で起動し、準備完了を待ってchat接続。既存daemonがあれば接続する
+.\.venv\Scripts\python.exe .\scripts\start.py
+```
+
+診断は終了コードでPASS/FAILを判定し、stderrのunittest進捗をNativeCommandErrorと誤認しない。入力/出力/パイプのエンコーディングを表示し、各結果とsummary.jsonを`work/diagnose/`へ保存。最終終了コード0がPASS、1がFAIL。PowerShell 5.1でも日本語ソースを読めるUTF-8 BOM付きスクリプト。
+一発起動のdaemonはchat終了後も常駐。新規起動時に表示したPIDに`Stop-Process -Id <PID>`で終了できる（停止中の未完了モデル応答は失われ得る）。daemonログはイベントログ隣の`.daemon.log`。個別起動は従来どおり`python daemon.py`と`python chat.py`。
+
+```powershell
+# 既存観測済み7000発話/638対話。work/corpora/に当時のhash一致アーカイブがある場合のみ
+.\.venv\Scripts\python.exe .\scripts\corpus_regression.py
+```
+
+この再実行は過去のfreeze・採点基準・結果を上書きしない。新しい結果は`reports/hardening-corpus.json`。観測用contextのTopicは追跡状態と一致させ、生成へ渡すprompt_contextだけで注入を抑制する。過去のcontext_focus不変条件と新しい抑制方針を両方検証し、失敗は件数として記録する。既存157件・Behavior107件の期待値は変更しない。

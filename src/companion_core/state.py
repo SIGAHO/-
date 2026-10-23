@@ -35,7 +35,7 @@ class StateEngine:
                 and current.source == source and current.scope == scope)
 
     def propose(self, key: str, value, source: SourceType, scope: Scope = Scope.SESSION) -> bool:
-        if source not in ALLOWED_STATE_SOURCES:
+        if source not in ALLOWED_STATE_SOURCES or (key.startswith("time.") and key != "time.user_year" and source != SourceType.RUNTIME):
             return False
         if str(value) in self.blocked[key]:
             return False
@@ -55,7 +55,9 @@ class StateEngine:
         self.active[key] = candidate
         return True
 
-    def correct(self, key: str, new_value, old_value=None, scope: Scope = Scope.SESSION) -> Fact:
+    def correct(self, key: str, new_value, old_value=None, scope: Scope = Scope.SESSION, *, source=SourceType.USER_CORRECTION, now=None, event_id=None) -> Fact:
+        if source != SourceType.USER_CORRECTION or (key.startswith("time.") and key != "time.user_year"):
+            raise ValueError("correction source or runtime key rejected")
         current = self.active.get(key)
         if old_value is None and current is not None:
             old_value = current.value
@@ -63,7 +65,10 @@ class StateEngine:
             self.blocked[key].add(str(old_value))
         if self._unchanged(current, new_value, SourceType.USER_CORRECTION, scope):
             return current
+        stamp = time.time() if now is None else now
         fact = Fact(
+            created_at=stamp, updated_at=stamp,
+            **({"id": event_id} if event_id else {}),
             key=key,
             value=new_value,
             source=SourceType.USER_CORRECTION,
@@ -72,7 +77,7 @@ class StateEngine:
         if current:
             current.status = Status.INVALIDATED
             current.superseded_by = fact.id
-            current.updated_at = time.time()
+            current.updated_at = stamp
         self.history[key].append(fact)
         self.active[key] = fact
         return fact

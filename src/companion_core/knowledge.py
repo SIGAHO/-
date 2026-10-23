@@ -85,14 +85,14 @@ class KnowledgeDecision:
 
 
 class KnowledgeGate:
-    def evaluate(self, query, memory, state, previous_subjects=()):
+    def evaluate(self, query, memory, state, previous_subjects=(), *, force_external=False):
         subjects = tuple(entities(query))
         requesting = bool(FACT_REQUEST.search(query))
         if not subjects and EXPLICIT_REQUEST.search(query) and (REFERENTIAL.search(query) or any(re.search(pattern, query) for pattern, _ in FACETS.values())):
             subjects = tuple(previous_subjects)
         # Bare names with a question marker and factual requests about names
         # both need evidence. Everyday reactions and personal plans do not.
-        external = requesting and bool(subjects)
+        external = force_external or (requesting and bool(subjects))
         evidence = list(memory.reliable_context(query, subjects=subjects)) if external else []
         if external:
             for fact in state.active.values():

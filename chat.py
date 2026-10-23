@@ -6,15 +6,13 @@ from pathlib import Path
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
+from companion_core.encoding import configure_stdio
 from companion_core.daemon import DaemonClient, connect_session
 from companion_core.model_adapter import FakeModelAdapter, OllamaAdapter, ModelError
 
 
 def main(argv=None):
-    # Preserve Japanese/emoji in both Windows consoles and redirected pipes.
-    for stream in (sys.stdin, sys.stdout, sys.stderr):
-        if hasattr(stream, "reconfigure"):
-            stream.reconfigure(encoding="utf-8")
+    configure_stdio()
     parser = argparse.ArgumentParser(description="Breaktail v2 — Companion Core + Ollama")
     parser.add_argument("--model", help="既定: BREAKTAIL_MODEL または qwen2.5:14b")
     parser.add_argument("--host", help="既定: OLLAMA_HOST または http://127.0.0.1:11434")
@@ -53,6 +51,8 @@ def main(argv=None):
         except (EOFError, KeyboardInterrupt):
             print()
             break
+        except ValueError as exc:
+            print(f"入力を処理できません: {exc}", file=sys.stderr)
         except OSError as exc:
             print(f"ログ保存に失敗: {exc}", file=sys.stderr)
             session.close()

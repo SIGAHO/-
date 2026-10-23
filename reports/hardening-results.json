@@ -1,0 +1,90 @@
+{
+  "base_commit": "c827924a336364b6e81320c052d3797d96d142c6",
+  "unit": {
+    "existing": 157,
+    "added": 80,
+    "passed": 237,
+    "total": 237,
+    "seconds": 43.397
+  },
+  "behavior": {
+    "passed": 107,
+    "total": 107
+  },
+  "fuzz": {
+    "seed": 20261023,
+    "turns": 500,
+    "events": 1000,
+    "crashes": 0,
+    "replay_exact_nonruntime": true
+  },
+  "external_observed_corpus": {
+    "utterances": 7000,
+    "dialogues": 638,
+    "replay_passed": 638,
+    "invariant_violations": 0,
+    "quality_accuracy_claim": false
+  },
+  "real_model": {
+    "model": "qwen2.5:14b",
+    "checks": {
+      "six_turns_no_errors": true,
+      "casual_no_old_song": true,
+      "internal_not_external_unverified": true,
+      "memory_source_qualified": true,
+      "ambiguous_cpu": true,
+      "clock_and_remaining_cpu": true
+    },
+    "inputs": 6,
+    "scope": "only casual generation; memory, provenance, ambiguous, time guarded by CPU"
+  },
+  "sha256": {
+    "src/companion_core/__init__.py": "3f13daea6411d553c4704acda9ba7db671e28aeefeebfbf29d51fb2d849c77ed",
+    "src/companion_core/chat.py": "5af742d3dadeb6c0de19d68d1044947cf751d4bc98538b3ec4474055791db55a",
+    "src/companion_core/context.py": "bd5eb128946a173455538fcf0ff4eb57f2127fbd10dcf13f8f9ff88b0cdfc192",
+    "src/companion_core/core.py": "d218ed0ef519832fa7d8a0ea823fd866712c478b9282e76f3f5278261a8f28f9",
+    "src/companion_core/correction.py": "a603ca7c17489dc0be367cc21f06a3e5410062abcdda68b443c8b2f5d6738b96",
+    "src/companion_core/cpu_answer.py": "c7d4b1ec5bdb8487b0c9e3da1723acf939415b77e42530a2b25dd101afc03be5",
+    "src/companion_core/daemon.py": "1f48ac47a0db9ed884d2ed4164d01f52623c1e0b392eca1196739b84be8b6a2d",
+    "src/companion_core/emotion.py": "9e377b4dff37001c7a917be76428458aaa65378f09fc01108d76a739cad0c8b7",
+    "src/companion_core/encoding.py": "b6a17f1ce6a797d9498016a709d73c410e4f6723ccdb1ee9c1b755c286650dff",
+    "src/companion_core/event_store.py": "ce0d80576fbbc8b1b5d8ea31d03534ec7ebc6f88748edd70982477c3cf26dc9c",
+    "src/companion_core/intent.py": "0b9c48f2afd8696ed764f2a8676dace0042e1dc26afc91bed22bd5370a8f099b",
+    "src/companion_core/knowledge.py": "08ada17c0a3b2a485fc6d2e31488f80b9224d022154b8c92ac4bddeff416ae58",
+    "src/companion_core/memory.py": "6fedaaa96ec99cf7f67646fd03bafa3d20dcf2e25feca93ea52d067f7b893e81",
+    "src/companion_core/model_adapter.py": "17cf8b9abe86d3515da8effa0076405da31d9868025d0f4ab234b5579e502025",
+    "src/companion_core/models.py": "4438fbee49b045cc6b3c5c763bd8011d6f746abe4062a4102d876e303917c87a",
+    "src/companion_core/open_loops.py": "f4002c424251a46455025fdd4112de20beab81181ad95ba948913287e3e5bcb8",
+    "src/companion_core/ownership.py": "e80a46e37641d444e00b386049bcbce9e621ec66c09b6b69a67891e5e35f1c9f",
+    "src/companion_core/prompt.py": "123ddfd3eee239f1662edb76a404a2fb225ee5f05e1ef4afb57d413f1fa98c31",
+    "src/companion_core/provenance.py": "2052e80469cdb0f5ead2894cd1ae58e323e04223ed993e5b5846ec868b6c1b22",
+    "src/companion_core/runtime.py": "d1cfa49bfeb35156e36fcd6bba0cf87e64681d5b136926b7c2d6abb9ac5a76fa",
+    "src/companion_core/state.py": "a255798d99b39d271e99ef039ccaec73c078f737eb77cbb26819580b993c98c0",
+    "src/companion_core/style.py": "c009ec6c4b07414ea4e4950f175594746385b8790a3daca1a6c834fc64b52592",
+    "src/companion_core/textmath.py": "a4b49e51a95f909a9d19dce430bf8200a0aaf059b85ddd25caf9aa2ce321696f",
+    "src/companion_core/time_engine.py": "0e913e6ef8b965c90c714085d24f8e46be8b1fa4ca0be571c6b41099e860ae9e",
+    "src/companion_core/topic.py": "ab40c267182636bb9a695107aafe5222d43e301ea3a71fb24bbd253b7205f619",
+    "src/companion_core/topic_evidence.py": "9ef50a568f8ca21cda91025705c0b77ff4f4d88640e820df7d1a411f66409b81",
+    "tests/test_chat.py": "8531f6ed3d4e21e383aaefecc4a56a3a60d86460a7bb4da7f503851a7bc5a1b8",
+    "tests/test_core.py": "65eebf08a46c774e1914cfe8d490539d4c4d702623e4b03f5d067a7b1c6046d1",
+    "tests/test_correction_confirmation.py": "4f6accf72d30c1c9e1e0dbba5e9dd38245c1a997a3726ee8754bd5d118fa0532",
+    "tests/test_daemon.py": "f3e3559bebf7485d893ebd41b416517dfc674d66b7b972a7592f3c71824303c5",
+    "tests/test_experiments.py": "32753689a56ab802762bba4c5404fccc113c9cdaa229837d46f2e7f82c6ce2d0",
+    "tests/test_hardening.py": "aa2c4110807669f747e31eedbad329e437314d5b62f77a18986ba3f8e8c2c04b",
+    "tests/test_open_loops_behavior.py": "0f1bf50e20a2a4e6124a5ed47e4bf91fa4d263a5561b849279277a01df6462ee",
+    "tests/test_state_updates.py": "498678ccfc1ba3161f557618bfed6c4220d8c6814e6f708046463da25c1bb49a",
+    "tests/test_style_knowledge.py": "b09ac7c3de2e39175f1450071067276e164a28bf862ee63ce4d52e5fa6ee2472",
+    "tests/test_topic_behavior.py": "234a7f7d988df3d2fc7c31190fcd9c7788e72bb165b4b1e2c1bd0b82297780d0",
+    "tests/test_topic_corpus.py": "1e06a5623fea584196e814a3c2ea69124d9401e8422ac0658c9df341f067d765",
+    "tests/test_topic_evidence.py": "ad9106f1b62027c7d5d187aa5c7c0971dbb0fb8b22e71b6c1a619727ca98a54a",
+    "tests/test_topic_holdout.py": "a1e7f855ca7bce04a54bdd4b523bd2f967f0fb4dee016c4614e4c79ccc768c66",
+    "scripts/corpus_regression.py": "56418fdee92656fd452c27f94cda6eceb60a9b4ecf67b5e4abecb3a9028ab431",
+    "scripts/model_smoke.py": "2dec81ac7b2828d3b3605c0d9a155e35747d1d60833af38724c510ddd1d5c4c4",
+    "scripts/start.py": "d77d1fabfc6c2f0f61af627aec00c610a34e1948ae5f8e52465f04b067886489",
+    "scripts/diagnose.ps1": "ecc656664d22c538241d92acbb18dfbdf9f134c0d1a47d5757876168e62e52ce",
+    "README.md": "c2dcbb420cf4f053e19198d4577eca446d30ebe2d5b33139ca41ec8ebfcf6c8c",
+    "chat.py": "b25902dfda9fc36cba6d80cc1749e4af6923cd49c2dbe2a910959572143b05bd",
+    "daemon.py": "b2f9cc2e0695893f54705dbe1682cff7bab481cd4d274303fc42fdfb73d64964",
+    "demo.py": "328bbdd1303d42c9fd092a2a5126475d7ea6dd26378c42e9b318dd79c6dbc27a"
+  }
+}
