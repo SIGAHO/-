@@ -98,14 +98,17 @@ class StyleValidator:
         if not isinstance(candidate, str) or not candidate.strip():
             from .model_adapter import ModelError
             raise ModelError("口調の再生成が空の応答を返しました")
-        candidate = self.clean_tail(candidate.strip())
-        if not candidate:
-            # A rewrite consisting only of boilerplate is unusable; a safe
-            # suffix deletion from the original can still preserve its content.
-            candidate = self.clean_tail(reply)
-        remaining = self.violations(candidate, style)
-        if not candidate or remaining:
-            # Bounded failure: no second retry and no invalid/empty reply saved.
+        from .encoding import clean_input
+        if clean_input(candidate) != candidate:
             from .model_adapter import ModelError
-            raise ModelError("口調の再生成後もルール違反が残りました。入力は保存済みです")
-        return candidate, {"regenerated": True, "issues": issues}
+            raise ModelError('口調の再生成に不正なUnicodeが含まれています')
+        # Style is a preference, not a generation/safety failure. Remove only
+        # complete boilerplate tails, never cut substantive text or code.
+        original = self.clean_tail(reply) or reply
+        candidate = self.clean_tail(candidate.strip())
+        if not candidate or self.violations(candidate, style):
+            choices = [x for x in (original, candidate) if x]
+            candidate = min(choices, key=lambda x: (len(self.violations(x, style)), len(x)))
+        remaining = self.violations(candidate, style)
+        return candidate, {"regenerated": True, "issues": issues,
+                           "remaining_issues": remaining, "fail_open": bool(remaining)}

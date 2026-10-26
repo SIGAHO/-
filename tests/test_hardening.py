@@ -51,11 +51,12 @@ class HardeningTests(unittest.TestCase):
     def session(self, replies=('わかった。',)):
         return ChatSession(FakeModelAdapter(replies), self.path)
 
-    def test_casual_ignores_old_song_in_entire_model_request(self):
+    def test_casual_ignores_old_song_in_auxiliary_context_keeps_recent_raw(self):
         chat = self.session()
         chat.turn('LUMEN ARCという曲を聴いた')
         chat.turn('調子どう？')
-        self.assertNotIn('LUMEN ARC', json.dumps(chat.adapter.requests[-1], ensure_ascii=False))
+        self.assertNotIn('LUMEN ARC', chat.adapter.requests[-1][0]['content'])
+        self.assertIn('LUMEN ARCという曲を聴いた', [m['content'] for m in chat.adapter.requests[-1][1:-1]])
         self.assertFalse(chat.last_response_meta['unverified'])
 
     def test_ambiguous_prior_assistant_only(self):
@@ -70,7 +71,8 @@ class HardeningTests(unittest.TestCase):
             self.assertIsNone(ctx['prompt_context']['topic'])
             self.assertEqual(ctx['prompt_context']['memory'], [])
             request = PromptBuilder().build(ctx, chat.core.events.events)
-            self.assertNotIn('LUMEN ARC', json.dumps(request, ensure_ascii=False))
+            self.assertNotIn('LUMEN ARC', request[0]['content'])
+            self.assertIn('話を変える。机を片付けたい', [m['content'] for m in request[1:-1]])
 
     def test_internal_routes_never_call_knowledge_gate(self):
         chat = self.session()

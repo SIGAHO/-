@@ -39,4 +39,8 @@ class IntentRouter:
             return 'external_knowledge'
         if re.search(r'[?？]|教えて|説明して|解説して', t):
             return 'external_knowledge'
+        # Routing hint only: do not infer a topic, role or affirmative fact.
+        # Keep factual questions above on the KnowledgeGate path.
+        if re.fullmatch(r'(?:ああ|うん|はい|そう|そうだよ|いや|いいえ|それ|参加する(?:の)?|.{1,16}として)[。!\s]*', t):
+            return 'continuation'
         return 'casual_chat'

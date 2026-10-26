@@ -30,7 +30,7 @@ class FIOMemory:
         context['salient_experiences'] = []
         explicit = bool(EXPLICIT_RECALL.search(context['user_input']))
         # Exact greetings and ambiguous followups never reopen historical topics.
-        if context['intent'] != 'ambiguous_followup' and not core.router.casual.fullmatch(context['user_input'].replace('？', '?')):
+        if context['intent'] not in {'ambiguous_followup', 'continuation'} and not core.router.casual.fullmatch(context['user_input'].replace('？', '?')):
             if explicit:
                 context['session_recall'] = self.index.search(context['user_input'], explicit=True)
             elif context['intent'] == 'task_correction':

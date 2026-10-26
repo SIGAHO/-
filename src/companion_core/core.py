@@ -54,7 +54,7 @@ class CompanionCore:
 
     def _observe_user(self, text, ts):
         intent = self.router.route(text, previous_subjects=self.knowledge_subjects)
-        bypass = (intent in {'ambiguous_followup', 'self_state_memory', 'time_calculation'}
+        bypass = (intent in {'ambiguous_followup', 'continuation', 'self_state_memory', 'time_calculation'}
                   or self.router.casual.fullmatch(normalized(text)))
         if bypass:
             self.topic.last_decision = 'route_bypass'
@@ -155,8 +155,8 @@ class CompanionCore:
         observed = {key: ctx[key] for key in ('topic', 'memory', 'open_loops')}
         ctx['intent'] = intent
         ctx['completed_loop_ids'] = [x.id for x in self.open_loops.loops if x.done and x.id not in done_before]
-        ctx['previous_assistant'] = self.last_assistant if intent == 'ambiguous_followup' else None
-        if intent == 'ambiguous_followup' or self.router.casual.fullmatch(normalized(text)):
+        ctx['previous_assistant'] = self.last_assistant
+        if intent in {'ambiguous_followup', 'continuation'} or self.router.casual.fullmatch(normalized(text)):
             ctx['topic'] = None
             ctx['memory'] = []
             ctx['open_loops'] = []

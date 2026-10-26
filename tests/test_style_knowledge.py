@@ -86,10 +86,10 @@ class StyleContractTests(unittest.TestCase):
     def test_non_tail_boilerplate_is_not_silently_rewritten(self):
         fake = FakeModelAdapter(['無理のない範囲で進めて。次は設定する。'] * 3)
         session = ChatSession(fake)
-        with self.assertRaises(ModelError):
-            session.turn('始めるよ')
+        self.assertEqual(session.turn('始めるよ'), '無理のない範囲で進めて。次は設定する。')
         self.assertEqual(len(fake.requests), 2)
-        self.assertEqual(len(session.core.events.events), 1)
+        self.assertEqual(len(session.core.events.events), 2)
+        self.assertTrue(session.last_response_meta['fail_open'])
 
     def test_mixed_substantive_tail_is_never_deleted(self):
         validator = StyleValidator()

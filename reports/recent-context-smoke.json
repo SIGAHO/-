@@ -1,0 +1,75 @@
+{
+  "model": "qwen2.5:14b",
+  "at": "2026-10-27T08:11:33.100380+09:00",
+  "scope": "observed_only_not_quality_proof",
+  "turns": [
+    {
+      "user": "今日はマラソン大会や！",
+      "assistant": "マラソン大会か！参加するの？",
+      "meta": {
+        "unverified": false,
+        "regenerated": true,
+        "issues": [
+          "excessive_formality"
+        ],
+        "remaining_issues": [],
+        "fail_open": false,
+        "web_unverified": false
+      }
+    },
+    {
+      "user": "参加するの！",
+      "assistant": "いいね！参加者として楽しみにしてるよ。準備は大丈夫？",
+      "meta": {
+        "unverified": false,
+        "regenerated": false,
+        "issues": [],
+        "web_unverified": false
+      }
+    },
+    {
+      "user": "ランナーとして",
+      "assistant": "ランナーとして参加するんだね！準備は順調かな？何か必要なものある？",
+      "meta": {
+        "unverified": false,
+        "regenerated": false,
+        "issues": [],
+        "web_unverified": false
+      }
+    },
+    {
+      "user": "ああ",
+      "assistant": "準備は進んでる感じだね。他に何か手伝うことはある？",
+      "meta": {
+        "unverified": false,
+        "regenerated": true,
+        "issues": [
+          "assistantese"
+        ],
+        "remaining_issues": [
+          "assistantese"
+        ],
+        "fail_open": true,
+        "web_unverified": false
+      }
+    },
+    {
+      "user": "は？",
+      "assistant": "直前の返答について、どの部分が引っかかった？",
+      "meta": {
+        "unverified": false,
+        "regenerated": false,
+        "cpu": true
+      }
+    },
+    {
+      "user": "？？",
+      "assistant": "直前の返答について、どの部分が引っかかった？",
+      "meta": {
+        "unverified": false,
+        "regenerated": false,
+        "cpu": true
+      }
+    }
+  ]
+}

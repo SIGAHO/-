@@ -55,6 +55,8 @@ class ChatSession:
         reply = self.adapter.generate(messages)
         if not isinstance(reply, str) or not reply.strip():
             raise ModelError("モデルが空の応答を返しました")
+        if clean_input(reply) != reply:
+            raise ModelError('モデル応答に不正なUnicodeが含まれています')
         reply, meta = self.validator.process(reply.strip(), messages, self.adapter,
                                              self.prompts.style.context(context["user_input"]))
         self.last_response_meta = {"unverified": False, **meta,
