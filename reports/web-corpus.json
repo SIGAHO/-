@@ -1,0 +1,321 @@
+{
+  "observed_data_only": true,
+  "training_examples": 0,
+  "model_labels": 0,
+  "suites": [
+    {
+      "suite": "topic_corpus",
+      "utterances": 1000,
+      "dialogues": 128,
+      "replay_passed": 128,
+      "historical_invariant_failures": {},
+      "prompt_policy_passed": 1000,
+      "metrics": {
+        "jmultiwoz": {
+          "eligible_transitions": 811,
+          "abstained": 0,
+          "scored_transitions": 811,
+          "coverage": 1.0,
+          "confusion": {
+            "tp": 102,
+            "fp": 291,
+            "tn": 378,
+            "fn": 40
+          },
+          "accuracy": 0.591861898890259,
+          "switch_precision": 0.2595419847328244,
+          "switch_recall": 0.7183098591549296,
+          "switch_f1": 0.3813084112149533,
+          "continuation_retention": 0.5650224215246636,
+          "always_continue_accuracy": 0.8249075215782984,
+          "always_split_accuracy": 0.17509247842170161,
+          "return_events": 0,
+          "return_correct": 0,
+          "return_accuracy": null,
+          "proxy_errors_by_domain": {
+            "attraction->attraction:fp": 48,
+            "attraction->hotel:fn": 4,
+            "attraction->restaurant:fn": 1,
+            "attraction->shopping:fn": 5,
+            "attraction->weather:fn": 1,
+            "hotel->attraction:fn": 1,
+            "hotel->hotel:fp": 55,
+            "hotel->restaurant:fn": 3,
+            "hotel->shopping:fn": 2,
+            "hotel->taxi:fn": 1,
+            "hotel->weather:fn": 1,
+            "restaurant->attraction:fn": 2,
+            "restaurant->hotel:fn": 1,
+            "restaurant->restaurant:fp": 80,
+            "restaurant->shopping:fn": 3,
+            "restaurant->taxi:fn": 2,
+            "restaurant->weather:fn": 1,
+            "shopping->hotel:fn": 2,
+            "shopping->restaurant:fn": 6,
+            "shopping->shopping:fp": 57,
+            "shopping->taxi:fn": 2,
+            "shopping->weather:fn": 1,
+            "taxi->taxi:fp": 44,
+            "weather->taxi:fn": 1,
+            "weather->weather:fp": 7
+          }
+        }
+      }
+    },
+    {
+      "suite": "topic_holdout",
+      "utterances": 2000,
+      "dialogues": 173,
+      "replay_passed": 173,
+      "historical_invariant_failures": {},
+      "prompt_policy_passed": 2000,
+      "metrics": {
+        "jmultiwoz": {
+          "eligible_transitions": 797,
+          "abstained": 0,
+          "scored_transitions": 797,
+          "coverage": 1.0,
+          "confusion": {
+            "tp": 116,
+            "fp": 248,
+            "tn": 407,
+            "fn": 26
+          },
+          "accuracy": 0.6562107904642409,
+          "switch_precision": 0.31868131868131866,
+          "switch_recall": 0.8169014084507042,
+          "switch_f1": 0.45849802371541504,
+          "continuation_retention": 0.6213740458015267,
+          "always_continue_accuracy": 0.821831869510665,
+          "always_split_accuracy": 0.178168130489335,
+          "return_events": 0,
+          "return_correct": 0,
+          "return_accuracy": null,
+          "proxy_errors_by_domain": {
+            "attraction->attraction:fp": 53,
+            "attraction->hotel:fn": 1,
+            "attraction->shopping:fn": 5,
+            "hotel->attraction:fn": 1,
+            "hotel->hotel:fp": 35,
+            "hotel->restaurant:fn": 2,
+            "hotel->shopping:fn": 2,
+            "hotel->weather:fn": 5,
+            "restaurant->attraction:fn": 2,
+            "restaurant->restaurant:fp": 57,
+            "restaurant->taxi:fn": 1,
+            "shopping->hotel:fn": 4,
+            "shopping->restaurant:fn": 1,
+            "shopping->shopping:fp": 56,
+            "taxi->taxi:fp": 37,
+            "taxi->weather:fn": 1,
+            "weather->taxi:fn": 1,
+            "weather->weather:fp": 10
+          }
+        },
+        "bsd": {
+          "eligible_transitions": 967,
+          "abstained": 11,
+          "scored_transitions": 956,
+          "coverage": 0.9886246122026887,
+          "confusion": {
+            "tp": 0,
+            "fp": 299,
+            "tn": 657,
+            "fn": 0
+          },
+          "accuracy": 0.6872384937238494,
+          "switch_precision": 0.0,
+          "switch_recall": null,
+          "switch_f1": 0.0,
+          "continuation_retention": 0.6872384937238494,
+          "always_continue_accuracy": 1.0,
+          "always_split_accuracy": 0.0,
+          "return_events": 0,
+          "return_correct": 0,
+          "return_accuracy": null,
+          "proxy_errors_by_domain": {
+            "face-to-face conversation->face-to-face conversation:fp": 115,
+            "general chatting->general chatting:fp": 64,
+            "meeting->meeting:fp": 67,
+            "phone call->phone call:fp": 29,
+            "presentation->presentation:fp": 10,
+            "training->training:fp": 14
+          }
+        }
+      }
+    },
+    {
+      "suite": "topic_holdout_v2",
+      "utterances": 2000,
+      "dialogues": 169,
+      "replay_passed": 169,
+      "historical_invariant_failures": {},
+      "prompt_policy_passed": 2000,
+      "metrics": {
+        "jmultiwoz": {
+          "eligible_transitions": 803,
+          "abstained": 0,
+          "scored_transitions": 803,
+          "coverage": 1.0,
+          "confusion": {
+            "tp": 118,
+            "fp": 259,
+            "tn": 389,
+            "fn": 37
+          },
+          "accuracy": 0.6313823163138231,
+          "switch_precision": 0.3129973474801061,
+          "switch_recall": 0.7612903225806451,
+          "switch_f1": 0.44360902255639095,
+          "continuation_retention": 0.6003086419753086,
+          "always_continue_accuracy": 0.8069738480697385,
+          "always_split_accuracy": 0.1930261519302615,
+          "return_events": 0,
+          "return_correct": 0,
+          "return_accuracy": null,
+          "proxy_errors_by_domain": {
+            "attraction->attraction:fp": 44,
+            "attraction->hotel:fn": 2,
+            "attraction->restaurant:fn": 1,
+            "attraction->shopping:fn": 3,
+            "attraction->taxi:fn": 3,
+            "attraction->weather:fn": 1,
+            "hotel->attraction:fn": 1,
+            "hotel->hotel:fp": 61,
+            "hotel->shopping:fn": 1,
+            "hotel->taxi:fn": 1,
+            "hotel->weather:fn": 3,
+            "restaurant->attraction:fn": 2,
+            "restaurant->hotel:fn": 3,
+            "restaurant->restaurant:fp": 62,
+            "restaurant->shopping:fn": 3,
+            "shopping->attraction:fn": 1,
+            "shopping->hotel:fn": 2,
+            "shopping->restaurant:fn": 6,
+            "shopping->shopping:fp": 41,
+            "shopping->taxi:fn": 1,
+            "taxi->taxi:fp": 45,
+            "taxi->weather:fn": 1,
+            "weather->taxi:fn": 2,
+            "weather->weather:fp": 6
+          }
+        },
+        "bsd": {
+          "eligible_transitions": 968,
+          "abstained": 7,
+          "scored_transitions": 961,
+          "coverage": 0.9927685950413223,
+          "confusion": {
+            "tp": 0,
+            "fp": 308,
+            "tn": 653,
+            "fn": 0
+          },
+          "accuracy": 0.6795005202913632,
+          "switch_precision": 0.0,
+          "switch_recall": null,
+          "switch_f1": 0.0,
+          "continuation_retention": 0.6795005202913632,
+          "always_continue_accuracy": 1.0,
+          "always_split_accuracy": 0.0,
+          "return_events": 0,
+          "return_correct": 0,
+          "return_accuracy": null,
+          "proxy_errors_by_domain": {
+            "face-to-face conversation->face-to-face conversation:fp": 89,
+            "general chatting->general chatting:fp": 67,
+            "meeting->meeting:fp": 87,
+            "phone call->phone call:fp": 45,
+            "training->training:fp": 20
+          }
+        }
+      }
+    },
+    {
+      "suite": "topic_holdout_v3",
+      "utterances": 2000,
+      "dialogues": 168,
+      "replay_passed": 168,
+      "historical_invariant_failures": {},
+      "prompt_policy_passed": 2000,
+      "metrics": {
+        "jmultiwoz": {
+          "eligible_transitions": 803,
+          "abstained": 0,
+          "scored_transitions": 803,
+          "coverage": 1.0,
+          "confusion": {
+            "tp": 89,
+            "fp": 251,
+            "tn": 426,
+            "fn": 37
+          },
+          "accuracy": 0.6413449564134496,
+          "switch_precision": 0.26176470588235295,
+          "switch_recall": 0.7063492063492064,
+          "switch_f1": 0.38197424892703863,
+          "continuation_retention": 0.6292466765140325,
+          "always_continue_accuracy": 0.8430884184308842,
+          "always_split_accuracy": 0.1569115815691158,
+          "return_events": 0,
+          "return_correct": 0,
+          "return_accuracy": null,
+          "proxy_errors_by_domain": {
+            "attraction->attraction:fp": 47,
+            "attraction->hotel:fn": 1,
+            "attraction->restaurant:fn": 4,
+            "attraction->shopping:fn": 2,
+            "hotel->attraction:fn": 2,
+            "hotel->hotel:fp": 56,
+            "hotel->restaurant:fn": 2,
+            "hotel->shopping:fn": 3,
+            "restaurant->attraction:fn": 2,
+            "restaurant->hotel:fn": 4,
+            "restaurant->restaurant:fp": 62,
+            "restaurant->shopping:fn": 4,
+            "restaurant->taxi:fn": 1,
+            "shopping->attraction:fn": 3,
+            "shopping->hotel:fn": 2,
+            "shopping->restaurant:fn": 2,
+            "shopping->shopping:fp": 52,
+            "shopping->taxi:fn": 2,
+            "shopping->weather:fn": 1,
+            "taxi->taxi:fp": 31,
+            "taxi->weather:fn": 1,
+            "weather->taxi:fn": 1,
+            "weather->weather:fp": 3
+          }
+        },
+        "bsd": {
+          "eligible_transitions": 967,
+          "abstained": 15,
+          "scored_transitions": 952,
+          "coverage": 0.984488107549121,
+          "confusion": {
+            "tp": 0,
+            "fp": 293,
+            "tn": 659,
+            "fn": 0
+          },
+          "accuracy": 0.6922268907563025,
+          "switch_precision": 0.0,
+          "switch_recall": null,
+          "switch_f1": 0.0,
+          "continuation_retention": 0.6922268907563025,
+          "always_continue_accuracy": 1.0,
+          "always_split_accuracy": 0.0,
+          "return_events": 0,
+          "return_correct": 0,
+          "return_accuracy": null,
+          "proxy_errors_by_domain": {
+            "face-to-face conversation->face-to-face conversation:fp": 107,
+            "general chatting->general chatting:fp": 68,
+            "meeting->meeting:fp": 39,
+            "phone call->phone call:fp": 40,
+            "training->training:fp": 39
+          }
+        }
+      }
+    }
+  ]
+}

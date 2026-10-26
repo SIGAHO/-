@@ -65,7 +65,9 @@ class CompanionDaemon:
             with self.lock:
                 ctx = self.session.core.handle(text, correction_key=correction_key, event_id=event_id)
                 ctx["runtime"]["pc_observation"] = self.session.core.last_runtime
-                messages = self.session.prompts.build(ctx, self.session.core.events.events)
+                events = list(self.session.core.events.events)
+            # Network I/O must not block runtime observations or status.
+            messages = self.session.prepare_reply(ctx, events)
             reply = self.session.generate_reply(ctx, messages)
             with self.lock:
                 self.session.core.record_assistant_output(reply, self.session.pending_provenance)

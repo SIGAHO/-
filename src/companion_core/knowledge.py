@@ -36,8 +36,11 @@ def entities(text):
     nominal = re.findall(r"(?:^|[、。\s])([^、。！？?]+?)(?:について|はどんな|の(?:作者|歌手|発売|価格|値段|内容))", text)
     named += [span for span in nominal if len(span) >= 4 and all(
         t.part_of_speech.split(',')[0] in {'名詞', '接頭詞', '記号'} for t in _tokenizer().tokenize(span))]
+    # Quoted names already have exact boundaries above. Do not merge a category
+    # prefix (曲「TITLE」) or multiple quoted entities into a fabricated name.
+    named = [span for span in named if not re.search(r'[「」『』"]', span)]
     # Keep the largest spans (OVERDOSE must not become a separate target).
-    candidates = sorted(set(explicit + latin + katakana + proper + named), key=lambda x: (-len(x), x))
+    candidates = sorted({s.strip('「」『』"') for s in explicit + latin + katakana + proper + named}, key=lambda x: (-len(x), x))
     return [x for i, x in enumerate(candidates) if not any(normalize(x) in normalize(y) for y in candidates[:i])]
 
 

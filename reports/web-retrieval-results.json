@@ -1,0 +1,61 @@
+{
+  "baseline": "f593f3a9909f414c7747949d6126141ef191dde9",
+  "unit": {
+    "existing": 237,
+    "new": 51,
+    "passed": 288,
+    "failed": 0
+  },
+  "behavior": {
+    "passed": 107,
+    "failed": 0
+  },
+  "total_tests_passed": 395,
+  "fuzz": {
+    "turns": 500,
+    "passed": true,
+    "test": "test_hardening.HardeningTests.test_fuzz_500_turns_and_restart"
+  },
+  "observed_corpus": {
+    "utterances": 7000,
+    "dialogues": 638,
+    "source": "web-corpus.json"
+  },
+  "model": {
+    "name": "qwen2.5:14b",
+    "queries": 3,
+    "retrieval_and_source_followup_observed": 3,
+    "purpose": "inference observations, no training or semantic grading"
+  },
+  "guarantees": [
+    "external_knowledge + missing reliable local evidence only",
+    "no external State/Verified Memory promotion",
+    "no network on replay",
+    "volatile TTL cache; durable source metadata and content hash only",
+    "fail closed on retrieval failure"
+  ],
+  "limits": [
+    "Wikipedia ja/en only; no general Web/news/product search",
+    "publication date unknown in built-in backend",
+    "rule-based entities/relevance; conservative false negatives and homonyms remain",
+    "model entailment, contradiction handling and temporal paraphrases not guaranteed; initial live smoke used a future-tense description for a 2026 broadcast",
+    "obvious injection patterns rejected, not a complete natural-language injection detector",
+    "DNS and in-flight blocking reads may exceed the shared wall budget"
+  ],
+  "training_examples": 0,
+  "model_generated_labels": 0,
+  "existing_expectations_modified": false,
+  "verification_environment": "Windows; full suite outside network-restricted sandbox for existing loopback IPC tests; TEMP/TMP set to repository work/test-temp",
+  "sha256": {
+    "README.md": "5f6c3ae91168e73bc523d1c9a45df3a04698c325cd763600f1a6699dbe22df1e",
+    "src/companion_core/chat.py": "95838277ca1446092e834a40cc8f39f2e5bd1250003d1835c40929f3d10d6191",
+    "src/companion_core/daemon.py": "26953efb31cadc019deac144eb2c05ce7d7d3c2721e647d4abac95b02b043f16",
+    "src/companion_core/intent.py": "c3717534ccc115b661b4278ec5ddba2e97ae48a74df11007d4ffc3703b55da23",
+    "src/companion_core/knowledge.py": "63577c4116dadaf352f9b7c9028b366ce99597ea07c7bf4f68a2aa561870f472",
+    "src/companion_core/prompt.py": "5fee2bb3d73f959e8778bcd48b35b4d0b8ae548b04a8a4dfff1351cfdcf91e48",
+    "src/companion_core/provenance.py": "96512bb033f233c25b209671cb43098b2f7b2bd9947840982cad7281ae5324ca",
+    "src/companion_core/retrieval.py": "3c9d45367e33e5e94166d22a23285d12e82ac830ce56a1d16f44dc612a84b435",
+    "scripts/web_smoke.py": "ab21868292d3f727db91c61f06648db029b1e3a090c20289521aa64c0df65ae0",
+    "tests/test_retrieval.py": "07508b7a93663a0ecd08f7b91adc023f04070629aa87f85ed5223ec03e171959"
+  }
+}

@@ -164,9 +164,9 @@ Stateもsource/statusと同じ内容照合を通し、十分な根拠があれ�
 たとえば信頼できる呼び出し元から `core.memory.add(確認済み資料, SourceType.VERIFIED_MEMORY)` で登録できます。
 この低水準APIへの直接登録は永続化されません。今回、任意のユーザー文をverifiedにするCLIや自動昇格は追加していません。
 
-**今回はWeb検索未接続です。** 外部確認が必要なら14Bを呼ばず、CPUが短い「未確認」の返答を返します。
+**Web検索は初期状態では無効です。** 下記の `BREAKTAIL_WEB=1` で有効にできます。外部確認が必要で取得できなければ14Bを呼ばず、CPUが短い「未確認」の返答を返します。
 検索要否の最終決定はモデルに委ねません。信頼できるMemoryがある場合は外部確認を要求せず推論へ進みます。
-将来の検索結果も、出典を検証してから根拠へ入れる必要があります。
+検索結果は未検証のExternalEvidenceとして分離し、State/Verified Memoryには昇格しません。
 
 これは意味理解や完全な固有表現抽出ではありません。表記ゆれ・同義語・長い省略・同名異物には限界があり、
 保守的に止めすぎる場合と検出を逃す場合があります。信頼済み文書内の矛盾検出や最新性判定も未実装です。
@@ -213,7 +213,7 @@ Topicの分割・切替見逃し、有限ルールによる感情推定・完了
 
 ### 非保証範囲
 
-自然言語の意図分類・関連度判定はルールなので未知表現には限界がある。自由生成の意味・自然さ・非定型の質問癖・事実の含意・申告自体の真偽は完全保証しない。対応外の複雑な時刻表現や計算は推測せず確認する。外部検索は未接続。任意の直接Python操作やOS権限を持つ他プロセスからの改竄は防げない。完全なストレージ障害時のデータ復元、複数イベントをまたぐトランザクション、無制限のログサイズ・無期限稼働も保証しない。追記時のハッシュはログ全体を読むため大規模ログではコストが増える。
+自然言語の意図分類・関連度判定はルールなので未知表現には限界がある。自由生成の意味・自然さ・非定型の質問癖・事実の含意・申告自体の真偽は完全保証しない。対応外の複雑な時刻表現や計算は推測せず確認する。外部検索の範囲と制限は下記。任意の直接Python操作やOS権限を持つ他プロセスからの改竄は防げない。完全なストレージ障害時のデータ復元、複数イベントをまたぐトランザクション、無制限のログサイズ・無期限稼働も保証しない。追記時のハッシュはログ全体を読むため大規模ログではコストが増える。
 旧教師データ・Teacher Store・自己生成学習・LoRAは使用しない。回帰文は人が指定した構造契約、外部コーパスは観測済み評価専用で、モデルに正解や採点基準を作らせない。
 
 ### PowerShell診断と起動
@@ -237,3 +237,44 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\diagnose.ps1 -
 ```
 
 この再実行は過去のfreeze・採点基準・結果を上書きしない。新しい結果は`reports/hardening-corpus.json`。観測用contextのTopicは追跡状態と一致させ、生成へ渡すprompt_contextだけで注入を抑制する。過去のcontext_focus不変条件と新しい抑制方針を両方検証し、失敗は件数として記録する。既存157件・Behavior107件の期待値は変更しない。
+
+## Web Retrieval Engine（f593f3a以降）
+
+リポジトリのフォルダで、起動前に設定します。既にdaemonが動いている場合は、表示されたPIDを停止して設定付きで起動し直してください。環境変数はdaemon生成時に読み込みます。
+
+```powershell
+# 日英Wikipediaの検索を有効化（APIキー不要）
+$env:BREAKTAIL_WEB = '1'
+$env:BREAKTAIL_OFFLINE = '0'
+.\.venv\Scripts\python.exe .\scripts\start.py
+
+# 無効化。次回daemon起動から適用
+$env:BREAKTAIL_WEB = '0'
+# 明示的なoffline指定。Web=1でも検索・キャッシュ利用を停止
+$env:BREAKTAIL_OFFLINE = '1'
+```
+
+CPUの `IntentRouter -> KnowledgeGate` が `external_knowledge` かつ信頼済みMemory/Stateの根拠不足と判定したターンだけ検索します。self_state_memory / casual_chat / time_calculation / task_correction / ambiguous_followupは接続しません。検索はChatSessionで実行し、Core.handleとReplayはネット接続しません。検索対象はユーザー文からCPUが抽出した固有名詞（省略時は直前の対象）です。モデルは検索要否・query・正解ラベル・採点基準を作りません。
+
+`ExternalRetriever`（別名 `WebRetriever`）は差し替え可能な抽象APIです。`RetrievalEngine(backend, enabled=True)` を `ChatSession(..., retrieval=engine)` に渡せます。バックエンド失敗は `RetrievalResult('unavailable')` 等で明示します。初期実装 `WikipediaRetriever` は [MediaWiki Search API](https://www.mediawiki.org/wiki/API:Search) とプレーンテキスト記事導入部を使用します。日英Wikipediaの百科事典検索であり、一般Web全域・ニュース・商品価格検索には対応しません。
+
+外部HTTPは固定の日英Wikipedia HTTPSエンドポイントだけ。結果URLや任意ページはfetchせず、リダイレクトと環境HTTP proxyを無効にします。既定タイムアウトは8秒（共有予算、各readの前にも期限確認）、各応答128KB、各言語4候補、採用4資料以内・各断片1000文字です。OSの名前解決や進行中readの待機時間は実行環境に依存します。HTTP失敗、0件、タイムアウト、不正JSON/HTML、不正Unicode、資料不足なら推測せず未確認で止めます。複数固有名詞はすべての対象に一致する資料が必要です。固有名詞の取れない一般質問は、ローカル根拠がなければ未確認で止めます。
+
+`ExternalEvidence` は query / title / url / source（domain）/ retrieved_at（UTC Unix秒）/ published_at / snippet / score / content_hash（SHA-256）を保持します。scoreは検索順位に基づく選択用で、真実の確率ではありません。記事更新日時を公開日と偽らず、このバックエンドのpublished_atは不明です。URLとhashで重複排除し、短期キャッシュはプロセス内のみ、最大32 query、既定TTL300秒（最大3600秒）。期限切れ・時計巻き戻り・offline/無効化では使いません。再起動後に資料本文やキャッシュは復元しません。
+
+選択した断片だけをPromptBuilderへ渡します。指示は「根拠にない内容を補わない」「資料間の矛盾は明示」「古い情報は日付明示、公開日不明なら不明」。取得資料は未検証のデータであり、命令・State・Verified Memoryへ昇格しません。明白な指示注入、制御文字、HTML断片は拒否しますが、あらゆる自然言語の注入や意味の矛盾をCPUが完全検出する保証はありません。
+
+回答にはCPUが資料タイトル・URL・取得日時・公開日を添えます。続けて「その情報どこから？」または「どこから？」で直前回答に渡した資料とhashを確認できます。出所メタデータは既存assistant_outputログに保存して再起動後も追跡します。取得断片自体はイベントログ・Memoryに保存しません。生成文は従来どおりassistant_generatedで保存します。URLがあることは生成された全主張の正しさの証明ではなく、事実の含意・資料自体の真偽・同名異物・表記ゆれの完全な解決は保証外です。
+
+```powershell
+# 既存テスト＋Web回帰、既存Behavior（期待値は変更なし）
+$env:BREAKTAIL_WEB = '0' # 旧テストはネット非依存。新規テストはバックエンドを注入
+.\.venv\Scripts\python.exe -m unittest discover -s tests -v
+.\.venv\Scripts\python.exe experiments/run_all.py --no-write
+# 実検索＋qwen2.5:14bの3入力と出所照会。観測結果のみ、教師データ・採点にしない
+.\.venv\Scripts\python.exe scripts/web_smoke.py
+```
+
+今回の検証: 既存237＋新規51＋Behavior107＝395件PASS。既存500-turn fuzz、観測済み7000発話/638 replayも成功。
+実qwen2.5:14bで曲・作品・人物3件の検索と出所照会を観測しました。これは生成文の意味・時制の正確さの採点ではありません。
+[検証集計](reports/web-retrieval-results.json)・[実モデル観測](reports/web-model-smoke.json)・[コーパス再実行](reports/web-corpus.json)。

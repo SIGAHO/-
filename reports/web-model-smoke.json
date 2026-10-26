@@ -1,0 +1,241 @@
+{
+  "model": "qwen2.5:14b",
+  "purpose": "inference_observations_only",
+  "training_examples": 0,
+  "model_labels": 0,
+  "observations": [
+    {
+      "query": "「夜に駆ける」について教えて",
+      "reply": "「夜に駆ける」はYOASOBIのデビューシングルで、2019年12月15日にリリースされました。この曲は短編小説「タナトスの誘惑」を基に作られています。曲は大ヒットし、翌年の紅白歌会に出場しました。\n出典（取得資料・未検証）:\n夜に駆ける — https://ja.wikipedia.org/wiki/%E5%A4%9C%E3%81%AB%E9%A7%86%E3%81%91%E3%82%8B（取得 2026-10-26T10:46:08+00:00、公開日 不明）\nYoru ni Kakeru — https://en.wikipedia.org/wiki/Yoru_ni_Kakeru（取得 2026-10-26T10:46:09+00:00、公開日 不明）\nYOASOBI — https://ja.wikipedia.org/wiki/YOASOBI（取得 2026-10-26T10:46:08+00:00、公開日 不明）\n夜に駆ける YOASOBI小説集 — https://ja.wikipedia.org/wiki/%E5%A4%9C%E3%81%AB%E9%A7%86%E3%81%91%E3%82%8B_YOASOBI%E5%B0%8F%E8%AA%AC%E9%9B%86（取得 2026-10-26T10:46:08+00:00、公開日 不明）",
+      "meta": {
+        "unverified": false,
+        "regenerated": false,
+        "issues": [],
+        "web_unverified": true
+      },
+      "sources": {
+        "intent": "external_knowledge",
+        "sources": [
+          {
+            "kind": "state",
+            "items": {
+              "time.iso": "2026-10-26T19:46:08+09:00",
+              "time.year": 2026,
+              "time.month": 10,
+              "time.day": 26,
+              "time.hour": 19,
+              "time.minute": 46,
+              "time.weekday": "Monday"
+            }
+          },
+          {
+            "kind": "runtime",
+            "items": {
+              "time.iso": "2026-10-26T19:46:08+09:00",
+              "time.year": 2026,
+              "time.month": 10,
+              "time.day": 26,
+              "time.hour": 19,
+              "time.minute": 46,
+              "time.weekday": "Monday"
+            }
+          },
+          {
+            "kind": "web",
+            "items": [
+              {
+                "query": "夜に駆ける",
+                "title": "夜に駆ける",
+                "url": "https://ja.wikipedia.org/wiki/%E5%A4%9C%E3%81%AB%E9%A7%86%E3%81%91%E3%82%8B",
+                "source": "ja.wikipedia.org",
+                "retrieved_at": 1793011568.7891078,
+                "published_at": null,
+                "score": 0.5,
+                "content_hash": "7573bd5635a6cab63e098a55a39629b7721203f189f4b54076cbe900fb90506d"
+              },
+              {
+                "query": "夜に駆ける",
+                "title": "Yoru ni Kakeru",
+                "url": "https://en.wikipedia.org/wiki/Yoru_ni_Kakeru",
+                "source": "en.wikipedia.org",
+                "retrieved_at": 1793011569.4277878,
+                "published_at": null,
+                "score": 0.5,
+                "content_hash": "6c9ad84f91fad0408a03a87d8b333b3841bedda1ee39195585456d379d5cc136"
+              },
+              {
+                "query": "夜に駆ける",
+                "title": "YOASOBI",
+                "url": "https://ja.wikipedia.org/wiki/YOASOBI",
+                "source": "ja.wikipedia.org",
+                "retrieved_at": 1793011568.7891078,
+                "published_at": null,
+                "score": 0.3333333333333333,
+                "content_hash": "dd4cf80b721739c1f85af3d6c06ebdc389a87fa656f4560dea4f05e6fc1e4abe"
+              },
+              {
+                "query": "夜に駆ける",
+                "title": "夜に駆ける YOASOBI小説集",
+                "url": "https://ja.wikipedia.org/wiki/%E5%A4%9C%E3%81%AB%E9%A7%86%E3%81%91%E3%82%8B_YOASOBI%E5%B0%8F%E8%AA%AC%E9%9B%86",
+                "source": "ja.wikipedia.org",
+                "retrieved_at": 1793011568.7891078,
+                "published_at": null,
+                "score": 0.25,
+                "content_hash": "f43858891ac930f385442aec29321966645e5c5e67cc1b756dbcbbe2442c9b3d"
+              }
+            ],
+            "verified": false
+          },
+          {
+            "kind": "assistant_generated",
+            "fact_evidence": false
+          }
+        ],
+        "generated": true,
+        "scope": "supplied_context_not_claim_verification"
+      },
+      "where_from": "直前回答に渡したWeb資料（未検証）は以下。\n夜に駆ける — https://ja.wikipedia.org/wiki/%E5%A4%9C%E3%81%AB%E9%A7%86%E3%81%91%E3%82%8B（取得 2026-10-26T10:46:08+00:00、公開日 不明、SHA256 7573bd5635a6cab63e098a55a39629b7721203f189f4b54076cbe900fb90506d）\nYoru ni Kakeru — https://en.wikipedia.org/wiki/Yoru_ni_Kakeru（取得 2026-10-26T10:46:09+00:00、公開日 不明、SHA256 6c9ad84f91fad0408a03a87d8b333b3841bedda1ee39195585456d379d5cc136）\nYOASOBI — https://ja.wikipedia.org/wiki/YOASOBI（取得 2026-10-26T10:46:08+00:00、公開日 不明、SHA256 dd4cf80b721739c1f85af3d6c06ebdc389a87fa656f4560dea4f05e6fc1e4abe）\n夜に駆ける YOASOBI小説集 — https://ja.wikipedia.org/wiki/%E5%A4%9C%E3%81%AB%E9%A7%86%E3%81%91%E3%82%8B_YOASOBI%E5%B0%8F%E8%AA%AC%E9%9B%86（取得 2026-10-26T10:46:08+00:00、公開日 不明、SHA256 f43858891ac930f385442aec29321966645e5c5e67cc1b756dbcbbe2442c9b3d）文章はAI生成で、それ自体は事実の根拠にならない。渡した情報と文章の一致までは保証していない。",
+      "cache_entries": 1
+    },
+    {
+      "query": "「葬送のフリーレン」について教えて",
+      "reply": "「葬送のフリーレン」は山田鐘人の漫画。アベツカサが絵を描いてる。週刊少年サンデーで2020年から連載中。ファンタジーの世界でエルフの魔法使いフリーレンが冒険する話。\n出典（取得資料・未検証）:\n葬送のフリーレン — https://ja.wikipedia.org/wiki/%E8%91%AC%E9%80%81%E3%81%AE%E3%83%95%E3%83%AA%E3%83%BC%E3%83%AC%E3%83%B3（取得 2026-10-26T10:46:14+00:00、公開日 不明）\nFrieren — https://en.wikipedia.org/wiki/Frieren（取得 2026-10-26T10:46:15+00:00、公開日 不明）",
+      "meta": {
+        "unverified": false,
+        "regenerated": true,
+        "issues": [
+          "excessive_formality"
+        ],
+        "web_unverified": true
+      },
+      "sources": {
+        "intent": "external_knowledge",
+        "sources": [
+          {
+            "kind": "state",
+            "items": {
+              "time.iso": "2026-10-26T19:46:14+09:00",
+              "time.year": 2026,
+              "time.month": 10,
+              "time.day": 26,
+              "time.hour": 19,
+              "time.minute": 46,
+              "time.weekday": "Monday"
+            }
+          },
+          {
+            "kind": "runtime",
+            "items": {
+              "time.iso": "2026-10-26T19:46:14+09:00",
+              "time.year": 2026,
+              "time.month": 10,
+              "time.day": 26,
+              "time.hour": 19,
+              "time.minute": 46,
+              "time.weekday": "Monday"
+            }
+          },
+          {
+            "kind": "web",
+            "items": [
+              {
+                "query": "葬送のフリーレン",
+                "title": "葬送のフリーレン",
+                "url": "https://ja.wikipedia.org/wiki/%E8%91%AC%E9%80%81%E3%81%AE%E3%83%95%E3%83%AA%E3%83%BC%E3%83%AC%E3%83%B3",
+                "source": "ja.wikipedia.org",
+                "retrieved_at": 1793011574.915175,
+                "published_at": null,
+                "score": 0.5,
+                "content_hash": "cac18f55ed0c89439806cc034e44319c3bb99937d9786958b384d3d5dc29d35f"
+              },
+              {
+                "query": "葬送のフリーレン",
+                "title": "Frieren",
+                "url": "https://en.wikipedia.org/wiki/Frieren",
+                "source": "en.wikipedia.org",
+                "retrieved_at": 1793011575.5289772,
+                "published_at": null,
+                "score": 0.5,
+                "content_hash": "afc7146b8f9e603db68c22edcad359ca467990838551ef802aa82b6794636d0b"
+              }
+            ],
+            "verified": false
+          },
+          {
+            "kind": "assistant_generated",
+            "fact_evidence": false
+          }
+        ],
+        "generated": true,
+        "scope": "supplied_context_not_claim_verification"
+      },
+      "where_from": "直前回答に渡したWeb資料（未検証）は以下。\n葬送のフリーレン — https://ja.wikipedia.org/wiki/%E8%91%AC%E9%80%81%E3%81%AE%E3%83%95%E3%83%AA%E3%83%BC%E3%83%AC%E3%83%B3（取得 2026-10-26T10:46:14+00:00、公開日 不明、SHA256 cac18f55ed0c89439806cc034e44319c3bb99937d9786958b384d3d5dc29d35f）\nFrieren — https://en.wikipedia.org/wiki/Frieren（取得 2026-10-26T10:46:15+00:00、公開日 不明、SHA256 afc7146b8f9e603db68c22edcad359ca467990838551ef802aa82b6794636d0b）文章はAI生成で、それ自体は事実の根拠にならない。渡した情報と文章の一致までは保証していない。",
+      "cache_entries": 1
+    },
+    {
+      "query": "「藤井風」について教えて",
+      "reply": "藤井風は97年生まれのシンガーソングライター兼ピアニスト。岡山出身で、日本のトップアーティストの一人として有名。\n出典（取得資料・未検証）:\n藤井風 — https://ja.wikipedia.org/wiki/%E8%97%A4%E4%BA%95%E9%A2%A8（取得 2026-10-26T10:46:22+00:00、公開日 不明）",
+      "meta": {
+        "unverified": false,
+        "regenerated": true,
+        "issues": [
+          "excessive_formality"
+        ],
+        "web_unverified": true
+      },
+      "sources": {
+        "intent": "external_knowledge",
+        "sources": [
+          {
+            "kind": "state",
+            "items": {
+              "time.iso": "2026-10-26T19:46:22+09:00",
+              "time.year": 2026,
+              "time.month": 10,
+              "time.day": 26,
+              "time.hour": 19,
+              "time.minute": 46,
+              "time.weekday": "Monday"
+            }
+          },
+          {
+            "kind": "runtime",
+            "items": {
+              "time.iso": "2026-10-26T19:46:22+09:00",
+              "time.year": 2026,
+              "time.month": 10,
+              "time.day": 26,
+              "time.hour": 19,
+              "time.minute": 46,
+              "time.weekday": "Monday"
+            }
+          },
+          {
+            "kind": "web",
+            "items": [
+              {
+                "query": "藤井風",
+                "title": "藤井風",
+                "url": "https://ja.wikipedia.org/wiki/%E8%97%A4%E4%BA%95%E9%A2%A8",
+                "source": "ja.wikipedia.org",
+                "retrieved_at": 1793011582.7453365,
+                "published_at": null,
+                "score": 0.5,
+                "content_hash": "d7ba529853a90cbeaa2723c87bf2f2dab713cd1de05bf0f6fd292486f0a91233"
+              }
+            ],
+            "verified": false
+          },
+          {
+            "kind": "assistant_generated",
+            "fact_evidence": false
+          }
+        ],
+        "generated": true,
+        "scope": "supplied_context_not_claim_verification"
+      },
+      "where_from": "直前回答に渡したWeb資料（未検証）は以下。\n藤井風 — https://ja.wikipedia.org/wiki/%E8%97%A4%E4%BA%95%E9%A2%A8（取得 2026-10-26T10:46:22+00:00、公開日 不明、SHA256 d7ba529853a90cbeaa2723c87bf2f2dab713cd1de05bf0f6fd292486f0a91233）文章はAI生成で、それ自体は事実の根拠にならない。渡した情報と文章の一致までは保証していない。",
+      "cache_entries": 1
+    }
+  ]
+}

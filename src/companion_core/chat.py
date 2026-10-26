@@ -6,11 +6,12 @@ from .style import StyleValidator
 from .cpu_answer import CPUAnswer
 from .intent import IntentRouter
 from .encoding import clean_input
+from .retrieval import RetrievalEngine
 import threading
 
 
 class ChatSession:
-    def __init__(self, adapter, event_path=None, *, style_profile=None):
+    def __init__(self, adapter, event_path=None, *, style_profile=None, retrieval=None):
         self.core = CompanionCore(event_path)
         self.adapter = adapter
         self.prompts = PromptBuilder(style_profile)
@@ -18,6 +19,7 @@ class ChatSession:
         self.last_response_meta = {}
         self.turn_lock = threading.RLock()
         self.pending_provenance = None
+        self.retrieval = retrieval if retrieval is not None else RetrievalEngine.from_environment()
 
     def generate_reply(self, context, messages):
         self.pending_provenance = None
@@ -40,20 +42,29 @@ class ChatSession:
             self.pending_provenance = self.core.provenance.capture({**context, 'memory': records, 'state': {}, 'runtime': {}, 'prompt_context': {}}, generated=False)
             self.last_response_meta = {'unverified': False, 'regenerated': False, 'cpu': True}
             return reply
-        if context["knowledge"]["external_required"]:
+        if context["knowledge"]["external_required"] and not context.get('external_evidence'):
             self.last_response_meta = {"unverified": True, "regenerated": False}
             self.pending_provenance = self.core.provenance.capture({**context, "state": {}, "runtime": {}, "memory": [], "prompt_context": {}}, generated=False)
-            return KnowledgeGate.unverified_reply()
+            status = context.get('external_retrieval', {}).get('status', 'disabled')
+            if status in {'disabled', 'offline'}:
+                return KnowledgeGate.unverified_reply()
+            return 'そこはまだ未確認。外部検索で十分な根拠を取得できなかった（' + status + '）。推測では答えない。'
         reply = self.adapter.generate(messages)
         if not isinstance(reply, str) or not reply.strip():
             raise ModelError("モデルが空の応答を返しました")
         reply, meta = self.validator.process(reply.strip(), messages, self.adapter,
                                              self.prompts.style.context(context["user_input"]))
-        self.last_response_meta = {"unverified": False, **meta}
+        self.last_response_meta = {"unverified": False, **meta,
+                                   'web_unverified': bool(context.get('external_evidence'))}
         if clean_input(reply) != reply:
             raise ModelError('モデル応答に不正なUnicodeが含まれています')
         self.pending_provenance = self.core.provenance.capture(context, generated=True)
-        return reply
+        return reply + self.retrieval.citations(context)
+
+    def prepare_reply(self, context, events):
+        result = self.retrieval.retrieve(context)
+        self.retrieval.attach(context, result)
+        return self.prompts.build(context, events)
 
     def turn(self, text, *, correction_key=None, event_id=None):
         if not isinstance(text, str) or not text.strip():
@@ -62,7 +73,7 @@ class ChatSession:
             context = self.core.handle(text, correction_key=correction_key, event_id=event_id)
             if self.core.last_runtime is not None:
                 context['runtime']['pc_observation'] = self.core.last_runtime
-            messages = self.prompts.build(context, self.core.events.events)
+            messages = self.prepare_reply(context, self.core.events.events)
             reply = self.generate_reply(context, messages)
             self.core.record_assistant_output(reply, self.pending_provenance)
             return reply
