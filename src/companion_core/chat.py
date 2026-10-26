@@ -7,11 +7,12 @@ from .cpu_answer import CPUAnswer
 from .intent import IntentRouter
 from .encoding import clean_input
 from .retrieval import RetrievalEngine
+from .fio_memory import FIOMemory
 import threading
 
 
 class ChatSession:
-    def __init__(self, adapter, event_path=None, *, style_profile=None, retrieval=None):
+    def __init__(self, adapter, event_path=None, *, style_profile=None, retrieval=None, heat_config=None):
         self.core = CompanionCore(event_path)
         self.adapter = adapter
         self.prompts = PromptBuilder(style_profile)
@@ -20,6 +21,8 @@ class ChatSession:
         self.turn_lock = threading.RLock()
         self.pending_provenance = None
         self.retrieval = retrieval if retrieval is not None else RetrievalEngine.from_environment()
+        self.fio = FIOMemory(event_path, heat_config=heat_config)
+        self.fio.recover(self.core.events.events)
 
     def generate_reply(self, context, messages):
         self.pending_provenance = None
@@ -62,8 +65,10 @@ class ChatSession:
         return reply + self.retrieval.citations(context)
 
     def prepare_reply(self, context, events):
+        self.fio.begin(self.core, context)
         result = self.retrieval.retrieve(context)
         self.retrieval.attach(context, result)
+        self.fio.retrieved()
         return self.prompts.build(context, events)
 
     def turn(self, text, *, correction_key=None, event_id=None):
@@ -74,12 +79,16 @@ class ChatSession:
             if self.core.last_runtime is not None:
                 context['runtime']['pc_observation'] = self.core.last_runtime
             messages = self.prepare_reply(context, self.core.events.events)
-            reply = self.generate_reply(context, messages)
-            self.core.record_assistant_output(reply, self.pending_provenance)
+            try:
+                reply = self.generate_reply(context, messages)
+            except ModelError as exc:
+                self.fio.failed(exc)
+                raise
+            self.fio.confirmed(self.core, reply, self.pending_provenance)
             return reply
 
     def status(self):
         return self.core.status()
 
     def close(self):
-        pass
+        self.fio.close()

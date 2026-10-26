@@ -1,5 +1,6 @@
 """Re-evaluate observed human partitions; never change historical reports or use text for learning."""
 from collections import Counter
+import argparse
 from contextlib import ExitStack
 import hashlib
 import json
@@ -17,6 +18,9 @@ from companion_core.core import CompanionCore
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--output', type=Path, default=ROOT/'reports/hardening-corpus.json')
+    args = parser.parse_args()
     dialogues, splits = corpus.read_archive(ROOT/'work/corpora/JMultiWOZ_1.0.zip')
     jm = {(name, turn['turn_id']): turn['utterance'] for name, d in dialogues.items() for turn in d['turns'] if turn['speaker']=='USER'}
     reports = []
@@ -66,7 +70,8 @@ def main():
                   'historical_invariant_failures': dict(failures), 'prompt_policy_passed': policy_passed, 'metrics': metrics}
         reports.append(report)
         print(json.dumps({k:v for k,v in report.items() if k!='metrics'}), flush=True)
-    destination = ROOT/'reports/hardening-corpus.json'
+    destination = args.output
+    destination.parent.mkdir(parents=True, exist_ok=True)
     destination.write_text(json.dumps({'observed_data_only': True, 'training_examples': 0, 'model_labels': 0, 'suites': reports}, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
 
 if __name__=='__main__':

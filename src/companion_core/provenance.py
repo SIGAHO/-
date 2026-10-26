@@ -12,6 +12,9 @@ class ProvenanceResponder:
     def capture(self, context, *, generated):
         context = {**context, **context.get('prompt_context', {})}
         sources = []
+        for kind in ('session_recall', 'salient_experiences'):
+            if context.get(kind):
+                sources.append({'kind': kind, 'items': context[kind], 'verified': False, 'fact_evidence': False})
         if context.get('memory'):
             sources.append({'kind': 'memory', 'items': context['memory'], 'verified': False})
         if context.get('state'):
@@ -33,7 +36,8 @@ class ProvenanceResponder:
         if self.last is None:
             return '直前回答の出所記録はない。AIの発言だけでは事実を確認できない。'
         labels = {'memory': '記憶（ユーザー申告を含む）', 'state': 'CPU管理の状態',
-                  'runtime': '実行環境の観測', 'external': '信頼済み資料'}
+                  'runtime': '実行環境の観測', 'external': '信頼済み資料',
+                  'session_recall': '過去の会話引用（未検証）', 'salient_experiences': '過去の経験記録（未検証）'}
         names = [labels[s['kind']] for s in self.last.get('sources', []) if s['kind'] in labels]
         message = '直前回答に渡した情報は、' + '・'.join(names) + '。' if names else '直前回答には確認済みの事実根拠はない。'
         web = [item for source in self.last.get('sources', []) if source['kind'] == 'web' for item in source['items']]

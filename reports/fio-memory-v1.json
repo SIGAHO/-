@@ -1,0 +1,177 @@
+{
+  "at": "2026-10-26T12:19:21.180706+00:00",
+  "base_commit": "b62b3d457478382e56f1915cd66aca987a38c9ac",
+  "branch": "codex/breaktail-v2",
+  "main_updated": false,
+  "environment": {
+    "python": "3.12.10",
+    "sqlite": "3.49.1",
+    "platform": "Windows"
+  },
+  "reference": {
+    "name": "FIO_Memory_Architecture_EN.pdf",
+    "sha256": "b1129952f3623f984682217bcb00302e612ae2c1509c35af46024dea03ef0057",
+    "used_pages": [
+      13,
+      15,
+      17,
+      19,
+      20,
+      30,
+      33
+    ],
+    "scope": "inspired_design_not_source_copy"
+  },
+  "tests": {
+    "existing_unittest": 288,
+    "new_unittest": 71,
+    "all_unittest": 359,
+    "all_unittest_passed": true,
+    "seconds": 78.802,
+    "behavior": {
+      "state": {
+        "passed": 25,
+        "total": 25
+      },
+      "correction": {
+        "passed": 12,
+        "total": 12
+      },
+      "topic": {
+        "passed": 21,
+        "total": 21
+      },
+      "open_loops": {
+        "passed": 22,
+        "total": 22
+      },
+      "memory": {
+        "passed": 14,
+        "total": 14
+      },
+      "emotion": {
+        "passed": 13,
+        "total": 13
+      }
+    },
+    "existing_plus_behavior": 395
+  },
+  "corpus": {
+    "status": "previously_observed_regression_only",
+    "utterances": 7000,
+    "replay_passed": 638,
+    "replay_total": 638,
+    "historical_invariant_failures": 0,
+    "prompt_policy_passed": 7000
+  },
+  "durability": {
+    "confirmed_turns": 500,
+    "event_count": 1000,
+    "restart_every": 50,
+    "checks": {
+      "restart_recall_original_session": true,
+      "greeting_no_recall": true,
+      "greeting_no_old_song_in_context": true,
+      "greeting_no_old_song_in_output": true,
+      "explicit_correct_excerpt": true,
+      "ambiguous_previous_priority": true,
+      "durability_confirmed_count": true,
+      "durability_replay_count": true,
+      "durability_experience_count": true,
+      "heat_decay_reinforce": true
+    }
+  },
+  "model": {
+    "name": "qwen2.5:14b",
+    "at": "2026-10-26T12:17:20.842838+00:00",
+    "checks": {
+      "restart_recall_original_session": true,
+      "greeting_no_recall": true,
+      "greeting_no_old_song_in_context": true,
+      "greeting_no_old_song_in_output": true,
+      "explicit_correct_excerpt": true,
+      "ambiguous_previous_priority": true,
+      "heat_decay_reinforce": true
+    },
+    "scope": "observed_mechanical_path_only_not_quality_proof"
+  },
+  "heat": {
+    "formula": "stored_heat * 2**(-max(0, now-heated_at)/half_life_seconds)",
+    "reinforce": "min(maximum, live_heat + reinforcement)",
+    "defaults": {
+      "half_life_seconds": 604800,
+      "reinforcement": 0.25,
+      "maximum": 4
+    },
+    "probe_half_life_seconds": 100,
+    "probe": {
+      "initial": 1.0,
+      "after_half_life": 0.5,
+      "after_reinforce": 0.75
+    },
+    "truth_confidence_changed": false
+  },
+  "training_examples": 0,
+  "model_generated_labels": 0,
+  "teacher_assets_used": false,
+  "limitations": [
+    "Lexical character ngrams; no semantic/synonym guarantee.",
+    "Old Event Logs without explicit commit envelopes are not guessed into sessions.",
+    "Index rebuild and outbox scanning cost grows with history; large production histories not benchmarked.",
+    "Session corruption requires explicit operator repair; no silent tail truncation.",
+    "Model wording can still exaggerate what was discussed; excerpt correctness is the acceptance criterion.",
+    "Power-loss behavior was simulated through writeback failure, not physical power removal."
+  ],
+  "source_sha256": {
+    "src/companion_core/__init__.py": "3f13daea6411d553c4704acda9ba7db671e28aeefeebfbf29d51fb2d849c77ed",
+    "src/companion_core/chat.py": "8d31c36308b0042083df074bc9c4578b97842e7ca21ffc202ad7a53ec6a29867",
+    "src/companion_core/context.py": "bd5eb128946a173455538fcf0ff4eb57f2127fbd10dcf13f8f9ff88b0cdfc192",
+    "src/companion_core/core.py": "e9c67314e4472d3eb03e538578f3c6eacbf13fbdef958f54b023684a12ea0dec",
+    "src/companion_core/correction.py": "a603ca7c17489dc0be367cc21f06a3e5410062abcdda68b443c8b2f5d6738b96",
+    "src/companion_core/cpu_answer.py": "c7d4b1ec5bdb8487b0c9e3da1723acf939415b77e42530a2b25dd101afc03be5",
+    "src/companion_core/daemon.py": "1684ed375c25e88141f2f308733b62e6bafe6e9bc76ff6a1841382059ce154c4",
+    "src/companion_core/emotion.py": "9e377b4dff37001c7a917be76428458aaa65378f09fc01108d76a739cad0c8b7",
+    "src/companion_core/encoding.py": "018bd71e14092fea3cf703a5c6a88800baa4deaa355d5ac17f86297d2150acd1",
+    "src/companion_core/event_store.py": "ce0d80576fbbc8b1b5d8ea31d03534ec7ebc6f88748edd70982477c3cf26dc9c",
+    "src/companion_core/experience.py": "e882f74c4984e31e18849d1b16d8a4850aabc1744a7c8640eaea2ca8e76caf0c",
+    "src/companion_core/fio_memory.py": "ffb7d864b83e1cf173b6be31018fdd6cc597ea4e9ff87b5d03500717dee18b57",
+    "src/companion_core/intent.py": "d88c291990ce793c7b7beffcf9c281099c6ebb1025c1c4f753a676a035ab4688",
+    "src/companion_core/knowledge.py": "63577c4116dadaf352f9b7c9028b366ce99597ea07c7bf4f68a2aa561870f472",
+    "src/companion_core/memory.py": "6fedaaa96ec99cf7f67646fd03bafa3d20dcf2e25feca93ea52d067f7b893e81",
+    "src/companion_core/model_adapter.py": "ac0da7653612f29d499d91026fdf127ecde332b1eac28f776a8cdd4f4db49052",
+    "src/companion_core/models.py": "4438fbee49b045cc6b3c5c763bd8011d6f746abe4062a4102d876e303917c87a",
+    "src/companion_core/open_loops.py": "f4002c424251a46455025fdd4112de20beab81181ad95ba948913287e3e5bcb8",
+    "src/companion_core/ownership.py": "fa86d510205fdb810b123b35d908da7be3fc7decb9c449b0a126db4987e48c4e",
+    "src/companion_core/prompt.py": "eebba9b8d4759565c81b2b12758c4ad151938f3514c01d3a7fc87330ac6eecc8",
+    "src/companion_core/provenance.py": "57b25b7b1b3f53eb4fe1bea11bf013446e1711a903044556c8e8306cf972ed13",
+    "src/companion_core/retrieval.py": "3b891bdc9a207d8ae8dec3fab1ecb0ef0c47d78fb58a1605613dd72a908e05c3",
+    "src/companion_core/runtime.py": "7b20454a006be5107dce75e1d4c0db1e8748da45650eb9a8e4fdb31ed2a2d107",
+    "src/companion_core/session_memory.py": "c82f000088ecc12591ea89393ac1a7a15d4bab160ac62a2e1282dd44d75f7144",
+    "src/companion_core/state.py": "a255798d99b39d271e99ef039ccaec73c078f737eb77cbb26819580b993c98c0",
+    "src/companion_core/style.py": "c009ec6c4b07414ea4e4950f175594746385b8790a3daca1a6c834fc64b52592",
+    "src/companion_core/textmath.py": "a4b49e51a95f909a9d19dce430bf8200a0aaf059b85ddd25caf9aa2ce321696f",
+    "src/companion_core/time_engine.py": "0e913e6ef8b965c90c714085d24f8e46be8b1fa4ca0be571c6b41099e860ae9e",
+    "src/companion_core/topic.py": "ab40c267182636bb9a695107aafe5222d43e301ea3a71fb24bbd253b7205f619",
+    "src/companion_core/topic_evidence.py": "9ef50a568f8ca21cda91025705c0b77ff4f4d88640e820df7d1a411f66409b81",
+    "tests/test_chat.py": "51e5bd19bbfa9e1da30fdf1859c3e7a532e9f4480197d0c644868aa4121cd2f4",
+    "tests/test_core.py": "65eebf08a46c774e1914cfe8d490539d4c4d702623e4b03f5d067a7b1c6046d1",
+    "tests/test_correction_confirmation.py": "4f6accf72d30c1c9e1e0dbba5e9dd38245c1a997a3726ee8754bd5d118fa0532",
+    "tests/test_daemon.py": "f156da97769e189f798f1e51907f2fa0de7f75f127f3776f6ad0b46ca3436823",
+    "tests/test_experiments.py": "32753689a56ab802762bba4c5404fccc113c9cdaa229837d46f2e7f82c6ce2d0",
+    "tests/test_fio_memory.py": "5ed2ae6e9aeb3b4629098210bd860dca0cfc92d2e845a91aa9d5a834b303a52e",
+    "tests/test_hardening.py": "aa2c4110807669f747e31eedbad329e437314d5b62f77a18986ba3f8e8c2c04b",
+    "tests/test_open_loops_behavior.py": "0f1bf50e20a2a4e6124a5ed47e4bf91fa4d263a5561b849279277a01df6462ee",
+    "tests/test_retrieval.py": "ed69de81189d9b213a63d818129d23f270969bfabf6317c643013594c6cabdad",
+    "tests/test_state_updates.py": "498678ccfc1ba3161f557618bfed6c4220d8c6814e6f708046463da25c1bb49a",
+    "tests/test_style_knowledge.py": "2c84e6dfcc0ccc2d074b277a36d4b09987e83066b6454b05ae7ea6261a9572d4",
+    "tests/test_topic_behavior.py": "234a7f7d988df3d2fc7c31190fcd9c7788e72bb165b4b1e2c1bd0b82297780d0",
+    "tests/test_topic_corpus.py": "1e06a5623fea584196e814a3c2ea69124d9401e8422ac0658c9df341f067d765",
+    "tests/test_topic_evidence.py": "ad9106f1b62027c7d5d187aa5c7c0971dbb0fb8b22e71b6c1a619727ca98a54a",
+    "tests/test_topic_holdout.py": "a1e7f855ca7bce04a54bdd4b523bd2f967f0fb4dee016c4614e4c79ccc768c66",
+    "scripts/corpus_regression.py": "120f90d9e9cb5ff88105989259208628f9722216c91862e1f5c24fc138a40ea2",
+    "scripts/fio_memory.py": "1eff18b8df6f1626fb8ca1cedc83c22855d8e991fc2eb61f3d9cf28e8f6ea3d2",
+    "scripts/model_smoke.py": "2dec81ac7b2828d3b3605c0d9a155e35747d1d60833af38724c510ddd1d5c4c4",
+    "scripts/start.py": "d1e667fdb2db92c6cabd5353e11de067169fa2fc04ed97746e5c61d1f60b3e39",
+    "scripts/web_smoke.py": "cd19ed121a2316aeb48c4bc4bfaaf173971789795786a545bfb4397c2d2b6153"
+  }
+}

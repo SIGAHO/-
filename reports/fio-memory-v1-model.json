@@ -1,0 +1,519 @@
+{
+  "at": "2026-10-26T12:17:20.842838+00:00",
+  "model": "qwen2.5:14b",
+  "scope": "mechanical_memory_path_not_conversation_quality",
+  "training_examples": 0,
+  "model_labels": 0,
+  "durability_turns": 0,
+  "checks": {
+    "restart_recall_original_session": true,
+    "greeting_no_recall": true,
+    "greeting_no_old_song_in_context": true,
+    "greeting_no_old_song_in_output": true,
+    "explicit_correct_excerpt": true,
+    "ambiguous_previous_priority": true,
+    "heat_decay_reinforce": true
+  },
+  "heat": {
+    "initial": 1.0,
+    "after_half_life": 0.5,
+    "after_reinforce": 0.75
+  },
+  "turns": [
+    {
+      "input": "前に何話した？",
+      "reply": "前の話は「INTERNET OVERDOSE」という曲についてだったね。その曲のことを詳しく話したよ。",
+      "duration_seconds": 1.984,
+      "context": {
+        "state": {
+          "time.iso": "2026-10-26T21:17:15+09:00",
+          "time.year": 2026,
+          "time.month": 10,
+          "time.day": 26,
+          "time.hour": 21,
+          "time.minute": 17,
+          "time.weekday": "Monday"
+        },
+        "runtime": {
+          "time.iso": "2026-10-26T21:17:15+09:00",
+          "time.year": 2026,
+          "time.month": 10,
+          "time.day": 26,
+          "time.hour": 21,
+          "time.minute": 17,
+          "time.weekday": "Monday"
+        },
+        "topic": {
+          "label": "INTERNET OVERDOSEという曲を聴いた。",
+          "score": 1.0
+        },
+        "open_loops": [],
+        "memory": [
+          "INTERNET OVERDOSEという曲を聴いた。"
+        ],
+        "emotion": {
+          "valence": 0.0,
+          "arousal": 0.213,
+          "attachment": 0.21,
+          "irritation": 0.0,
+          "curiosity": 0.346,
+          "confidence": 0.51
+        },
+        "intent": "self_state_memory",
+        "previous_assistant": null,
+        "knowledge": {
+          "external_required": false,
+          "reliable_context": false,
+          "subjects": [],
+          "evidence": [],
+          "reason": "route_bypass"
+        },
+        "external_evidence": [],
+        "session_recall": [
+          {
+            "session_id": "c4c9e0ab-4ff6-496b-b24e-6e7c58b80c3a",
+            "hit_turn_id": "bafc2ab8-7868-414e-ad51-f5281ff0c5d9",
+            "score": 1793017032.267357,
+            "exchanges": [
+              {
+                "turn_id": "bafc2ab8-7868-414e-ad51-f5281ff0c5d9",
+                "timestamp": 1793017032.267357,
+                "user": "INTERNET OVERDOSEという曲を聴いた。",
+                "assistant": "曲調は元気に踊れる感じだよ。気に入ったのはキャッチーなメロディと力強いリズムさ。",
+                "user_source": "user_statement",
+                "assistant_source": "assistant_generated",
+                "verified": false,
+                "sha256": "e7c1650f008127f2a9a5ada7f1cdce154744090f0dd81e7d94fb6c57e984e757"
+              }
+            ]
+          }
+        ],
+        "salient_experiences": [],
+        "style": {
+          "profile": {
+            "formality": 0.1,
+            "verbosity": 0.25,
+            "energy": 0.65,
+            "teasing": 0.3,
+            "directness": 0.85,
+            "assistantese": 0.02
+          },
+          "detailed_requested": false,
+          "max_chars": 320
+        }
+      },
+      "provenance": {
+        "intent": "self_state_memory",
+        "sources": [
+          {
+            "kind": "session_recall",
+            "items": [
+              {
+                "session_id": "c4c9e0ab-4ff6-496b-b24e-6e7c58b80c3a",
+                "hit_turn_id": "bafc2ab8-7868-414e-ad51-f5281ff0c5d9",
+                "score": 1793017032.267357,
+                "exchanges": [
+                  {
+                    "turn_id": "bafc2ab8-7868-414e-ad51-f5281ff0c5d9",
+                    "timestamp": 1793017032.267357,
+                    "user": "INTERNET OVERDOSEという曲を聴いた。",
+                    "assistant": "曲調は元気に踊れる感じだよ。気に入ったのはキャッチーなメロディと力強いリズムさ。",
+                    "user_source": "user_statement",
+                    "assistant_source": "assistant_generated",
+                    "verified": false,
+                    "sha256": "e7c1650f008127f2a9a5ada7f1cdce154744090f0dd81e7d94fb6c57e984e757"
+                  }
+                ]
+              }
+            ],
+            "verified": false,
+            "fact_evidence": false
+          },
+          {
+            "kind": "memory",
+            "items": [
+              "INTERNET OVERDOSEという曲を聴いた。"
+            ],
+            "verified": false
+          },
+          {
+            "kind": "state",
+            "items": {
+              "time.iso": "2026-10-26T21:17:15+09:00",
+              "time.year": 2026,
+              "time.month": 10,
+              "time.day": 26,
+              "time.hour": 21,
+              "time.minute": 17,
+              "time.weekday": "Monday"
+            }
+          },
+          {
+            "kind": "runtime",
+            "items": {
+              "time.iso": "2026-10-26T21:17:15+09:00",
+              "time.year": 2026,
+              "time.month": 10,
+              "time.day": 26,
+              "time.hour": 21,
+              "time.minute": 17,
+              "time.weekday": "Monday"
+            }
+          },
+          {
+            "kind": "assistant_generated",
+            "fact_evidence": false
+          }
+        ],
+        "generated": true,
+        "scope": "supplied_context_not_claim_verification"
+      },
+      "meta": {
+        "unverified": false,
+        "regenerated": false,
+        "issues": [],
+        "web_unverified": false
+      },
+      "previous_assistant": "曲調は元気に踊れる感じだよ。気に入ったのはキャッチーなメロディと力強いリズムさ。"
+    },
+    {
+      "input": "調子どう？",
+      "reply": "元気だよ。お前は？",
+      "duration_seconds": 0.86,
+      "context": {
+        "state": {
+          "time.iso": "2026-10-26T21:17:17+09:00",
+          "time.year": 2026,
+          "time.month": 10,
+          "time.day": 26,
+          "time.hour": 21,
+          "time.minute": 17,
+          "time.weekday": "Monday"
+        },
+        "runtime": {
+          "time.iso": "2026-10-26T21:17:17+09:00",
+          "time.year": 2026,
+          "time.month": 10,
+          "time.day": 26,
+          "time.hour": 21,
+          "time.minute": 17,
+          "time.weekday": "Monday"
+        },
+        "topic": null,
+        "open_loops": [],
+        "memory": [],
+        "emotion": {
+          "valence": 0.0,
+          "arousal": 0.226,
+          "attachment": 0.213,
+          "irritation": 0.0,
+          "curiosity": 0.389,
+          "confidence": 0.513
+        },
+        "intent": "casual_chat",
+        "previous_assistant": null,
+        "knowledge": {
+          "external_required": false,
+          "reliable_context": false,
+          "subjects": [],
+          "evidence": [],
+          "reason": "route_bypass"
+        },
+        "external_evidence": [],
+        "session_recall": [],
+        "salient_experiences": [],
+        "style": {
+          "profile": {
+            "formality": 0.1,
+            "verbosity": 0.25,
+            "energy": 0.65,
+            "teasing": 0.3,
+            "directness": 0.85,
+            "assistantese": 0.02
+          },
+          "detailed_requested": false,
+          "max_chars": 320
+        }
+      },
+      "provenance": {
+        "intent": "casual_chat",
+        "sources": [
+          {
+            "kind": "state",
+            "items": {
+              "time.iso": "2026-10-26T21:17:17+09:00",
+              "time.year": 2026,
+              "time.month": 10,
+              "time.day": 26,
+              "time.hour": 21,
+              "time.minute": 17,
+              "time.weekday": "Monday"
+            }
+          },
+          {
+            "kind": "runtime",
+            "items": {
+              "time.iso": "2026-10-26T21:17:17+09:00",
+              "time.year": 2026,
+              "time.month": 10,
+              "time.day": 26,
+              "time.hour": 21,
+              "time.minute": 17,
+              "time.weekday": "Monday"
+            }
+          },
+          {
+            "kind": "assistant_generated",
+            "fact_evidence": false
+          }
+        ],
+        "generated": true,
+        "scope": "supplied_context_not_claim_verification"
+      },
+      "meta": {
+        "unverified": false,
+        "regenerated": false,
+        "issues": [],
+        "web_unverified": false
+      },
+      "previous_assistant": "前の話は「INTERNET OVERDOSE」という曲についてだったね。その曲のことを詳しく話したよ。"
+    },
+    {
+      "input": "前に曲の話したよな？",
+      "reply": "そう、前は「INTERNET OVERDOSE」という曲の話をしたね。何か曲の具体的な部分について詳しく聞きたい？",
+      "duration_seconds": 2.687,
+      "context": {
+        "state": {
+          "time.iso": "2026-10-26T21:17:18+09:00",
+          "time.year": 2026,
+          "time.month": 10,
+          "time.day": 26,
+          "time.hour": 21,
+          "time.minute": 17,
+          "time.weekday": "Monday"
+        },
+        "runtime": {
+          "time.iso": "2026-10-26T21:17:18+09:00",
+          "time.year": 2026,
+          "time.month": 10,
+          "time.day": 26,
+          "time.hour": 21,
+          "time.minute": 17,
+          "time.weekday": "Monday"
+        },
+        "topic": {
+          "label": "INTERNET OVERDOSEという曲を聴いた。",
+          "score": 1.0
+        },
+        "open_loops": [],
+        "memory": [
+          "前に何話した？",
+          "調子どう？",
+          "INTERNET OVERDOSEという曲を聴いた。"
+        ],
+        "emotion": {
+          "valence": 0.0,
+          "arousal": 0.236,
+          "attachment": 0.215,
+          "irritation": 0.0,
+          "curiosity": 0.42,
+          "confidence": 0.515
+        },
+        "intent": "self_state_memory",
+        "previous_assistant": null,
+        "knowledge": {
+          "external_required": false,
+          "reliable_context": false,
+          "subjects": [],
+          "evidence": [],
+          "reason": "route_bypass"
+        },
+        "external_evidence": [],
+        "session_recall": [
+          {
+            "session_id": "c4c9e0ab-4ff6-496b-b24e-6e7c58b80c3a",
+            "hit_turn_id": "bafc2ab8-7868-414e-ad51-f5281ff0c5d9",
+            "score": 3.049997,
+            "exchanges": [
+              {
+                "turn_id": "bafc2ab8-7868-414e-ad51-f5281ff0c5d9",
+                "timestamp": 1793017032.267357,
+                "user": "INTERNET OVERDOSEという曲を聴いた。",
+                "assistant": "曲調は元気に踊れる感じだよ。気に入ったのはキャッチーなメロディと力強いリズムさ。",
+                "user_source": "user_statement",
+                "assistant_source": "assistant_generated",
+                "verified": false,
+                "sha256": "e7c1650f008127f2a9a5ada7f1cdce154744090f0dd81e7d94fb6c57e984e757"
+              }
+            ]
+          },
+          {
+            "session_id": "449df99f-ab96-400e-b429-1d4881431e39",
+            "hit_turn_id": "819ab3b3-6ea9-4940-9dfa-02d76cb00b61",
+            "score": 1.049998,
+            "exchanges": [
+              {
+                "turn_id": "819ab3b3-6ea9-4940-9dfa-02d76cb00b61",
+                "timestamp": 1793017035.2643242,
+                "user": "前に何話した？",
+                "assistant": "前の話は「INTERNET OVERDOSE」という曲についてだったね。その曲のことを詳しく話したよ。",
+                "user_source": "user_statement",
+                "assistant_source": "assistant_generated",
+                "verified": false,
+                "sha256": "f317569a69030479fc2125cbcd739e685421fa710d1247004f7d1ad22bb48232"
+              },
+              {
+                "turn_id": "5bd52892-65c6-4e61-a6a8-c975069a126e",
+                "timestamp": 1793017037.2459276,
+                "user": "調子どう？",
+                "assistant": "元気だよ。お前は？",
+                "user_source": "user_statement",
+                "assistant_source": "assistant_generated",
+                "verified": false,
+                "sha256": "1284ee128be800392475b4975c44c0d0410d78763520761e22f53dd1a172db4b"
+              }
+            ]
+          }
+        ],
+        "salient_experiences": [],
+        "style": {
+          "profile": {
+            "formality": 0.1,
+            "verbosity": 0.25,
+            "energy": 0.65,
+            "teasing": 0.3,
+            "directness": 0.85,
+            "assistantese": 0.02
+          },
+          "detailed_requested": false,
+          "max_chars": 320
+        }
+      },
+      "provenance": {
+        "intent": "self_state_memory",
+        "sources": [
+          {
+            "kind": "session_recall",
+            "items": [
+              {
+                "session_id": "c4c9e0ab-4ff6-496b-b24e-6e7c58b80c3a",
+                "hit_turn_id": "bafc2ab8-7868-414e-ad51-f5281ff0c5d9",
+                "score": 3.049997,
+                "exchanges": [
+                  {
+                    "turn_id": "bafc2ab8-7868-414e-ad51-f5281ff0c5d9",
+                    "timestamp": 1793017032.267357,
+                    "user": "INTERNET OVERDOSEという曲を聴いた。",
+                    "assistant": "曲調は元気に踊れる感じだよ。気に入ったのはキャッチーなメロディと力強いリズムさ。",
+                    "user_source": "user_statement",
+                    "assistant_source": "assistant_generated",
+                    "verified": false,
+                    "sha256": "e7c1650f008127f2a9a5ada7f1cdce154744090f0dd81e7d94fb6c57e984e757"
+                  }
+                ]
+              },
+              {
+                "session_id": "449df99f-ab96-400e-b429-1d4881431e39",
+                "hit_turn_id": "819ab3b3-6ea9-4940-9dfa-02d76cb00b61",
+                "score": 1.049998,
+                "exchanges": [
+                  {
+                    "turn_id": "819ab3b3-6ea9-4940-9dfa-02d76cb00b61",
+                    "timestamp": 1793017035.2643242,
+                    "user": "前に何話した？",
+                    "assistant": "前の話は「INTERNET OVERDOSE」という曲についてだったね。その曲のことを詳しく話したよ。",
+                    "user_source": "user_statement",
+                    "assistant_source": "assistant_generated",
+                    "verified": false,
+                    "sha256": "f317569a69030479fc2125cbcd739e685421fa710d1247004f7d1ad22bb48232"
+                  },
+                  {
+                    "turn_id": "5bd52892-65c6-4e61-a6a8-c975069a126e",
+                    "timestamp": 1793017037.2459276,
+                    "user": "調子どう？",
+                    "assistant": "元気だよ。お前は？",
+                    "user_source": "user_statement",
+                    "assistant_source": "assistant_generated",
+                    "verified": false,
+                    "sha256": "1284ee128be800392475b4975c44c0d0410d78763520761e22f53dd1a172db4b"
+                  }
+                ]
+              }
+            ],
+            "verified": false,
+            "fact_evidence": false
+          },
+          {
+            "kind": "memory",
+            "items": [
+              "前に何話した？",
+              "調子どう？",
+              "INTERNET OVERDOSEという曲を聴いた。"
+            ],
+            "verified": false
+          },
+          {
+            "kind": "state",
+            "items": {
+              "time.iso": "2026-10-26T21:17:18+09:00",
+              "time.year": 2026,
+              "time.month": 10,
+              "time.day": 26,
+              "time.hour": 21,
+              "time.minute": 17,
+              "time.weekday": "Monday"
+            }
+          },
+          {
+            "kind": "runtime",
+            "items": {
+              "time.iso": "2026-10-26T21:17:18+09:00",
+              "time.year": 2026,
+              "time.month": 10,
+              "time.day": 26,
+              "time.hour": 21,
+              "time.minute": 17,
+              "time.weekday": "Monday"
+            }
+          },
+          {
+            "kind": "assistant_generated",
+            "fact_evidence": false
+          }
+        ],
+        "generated": true,
+        "scope": "supplied_context_not_claim_verification"
+      },
+      "meta": {
+        "unverified": false,
+        "regenerated": false,
+        "issues": [],
+        "web_unverified": false
+      },
+      "previous_assistant": "元気だよ。お前は？"
+    },
+    {
+      "input": "は？",
+      "reply": "直前の返答について、どの部分が引っかかった？",
+      "duration_seconds": 0.047,
+      "context": null,
+      "provenance": {
+        "intent": "ambiguous_followup",
+        "sources": [
+          {
+            "kind": "assistant_generated",
+            "fact_evidence": false
+          }
+        ],
+        "generated": false,
+        "referent": "そう、前は「INTERNET OVERDOSE」という曲の話をしたね。何か曲の具体的な部分について詳しく聞きたい？"
+      },
+      "meta": {
+        "unverified": false,
+        "regenerated": false,
+        "cpu": true
+      },
+      "previous_assistant": "そう、前は「INTERNET OVERDOSE」という曲の話をしたね。何か曲の具体的な部分について詳しく聞きたい？"
+    }
+  ]
+}

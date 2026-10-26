@@ -68,9 +68,13 @@ class CompanionDaemon:
                 events = list(self.session.core.events.events)
             # Network I/O must not block runtime observations or status.
             messages = self.session.prepare_reply(ctx, events)
-            reply = self.session.generate_reply(ctx, messages)
+            try:
+                reply = self.session.generate_reply(ctx, messages)
+            except ModelError as exc:
+                self.session.fio.failed(exc)
+                raise
             with self.lock:
-                self.session.core.record_assistant_output(reply, self.session.pending_provenance)
+                self.session.fio.confirmed(self.session.core, reply, self.session.pending_provenance)
             return reply
 
     def start(self):
@@ -144,6 +148,7 @@ class CompanionDaemon:
         if self.published:
             self.endpoint.unlink(missing_ok=True)
             self.published = False
+        self.session.close()
         self.lease.close()
 
 
@@ -192,6 +197,7 @@ class LocalSession(ChatSession):
             raise
 
     def close(self):
+        super().close()
         self.lease.close()
 
 

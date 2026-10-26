@@ -278,3 +278,83 @@ $env:BREAKTAIL_WEB = '0' # 旧テストはネット非依存。新規テスト�
 今回の検証: 既存237＋新規51＋Behavior107＝395件PASS。既存500-turn fuzz、観測済み7000発話/638 replayも成功。
 実qwen2.5:14bで曲・作品・人物3件の検索と出所照会を観測しました。これは生成文の意味・時制の正確さの採点ではありません。
 [検証集計](reports/web-retrieval-results.json)・[実モデル観測](reports/web-model-smoke.json)・[コーパス再実行](reports/web-corpus.json)。
+
+
+## FIO-inspired memory v1
+
+FIO Memory Architecture (2026-10-16) のSession JSONL・二段検索・Experience heatを参考に、
+Breaktailの既存IntentRouter / Hardening / KnowledgeGate / Provenance / Event Replay / Web Retrievalの外側へ補助経路を追加しました。
+Vault、Obsidian、DMN、Bookshelf、Link Weaver、蒸留・学習処理は含みません。
+
+### 保存と復元
+
+通常の `chat.py` / `daemon.py` で自動的に有効です。event-logが `data/events.jsonl` の場合:
+
+- `data/events.jsonl.fio.sessions.jsonl`: 確定したuser/assistant一組の原文、session_id、入力event由来のturn_id、Unix秒timestamp、confirmed status、出所要約。
+- `data/events.jsonl.fio.index.sqlite3`: 再構築可能なSQLite FTS5検索用DB。
+- `data/events.jsonl.fio.experiences.sqlite3`: Experience原文とheat・参照数。Sessionと独立して保存・バックアップ可能。
+
+JSONLはUTF-8追記・flush・fsync・turn_id重複抑制・競合検知付き。再起動は同じファイルへ新しいsession_idで追記します。
+モデル失敗時は入力を既存Event Logへ保持し、model_failureをExperienceへ保存します。返答のないターンはSessionへ入りません。
+ユーザー訂正、既存OpenLoopの完了遷移、実際の検索結果statusも観測イベントとして残ります。モデル文から成功や完了を判定しません。
+
+Event LogのReplayは従来通りCPU投影だけを復元します。新しいassistantイベントの `fio_commit` は確定処理のoutboxで、
+Event Log保存後・Session/Experience保存前の停止を起動時に冪等補完します。古い履歴を推測で会話ペアへ変換しません。
+Session/Experienceだけの独立読み取りも可能。Indexは起動時にSession原本から作り直し、その後は増分追加します。
+JSONL途中行・最終行破損、不正UTF-8、終端改行欠損は行番号付きエラーで停止します。壊れた行の黙認・自動削除はしません。
+修復前に原本を保管し、管理者が内容を確認してください。Experience DBは原本なのでIndexのように削除しないでください。
+
+### 検索と信頼境界
+
+NFKC・小文字化・英数字/日本語のcharacter bigram/trigramをFTS5/BM25で検索します。
+user入力のBM25重みは2、assistantは1。文字一致率と完全一致もuserを優先し、recencyは小さい同点調整です。
+sessionごとの最良ヒットでsessionを選び、その中のturnと隣接turn-windowを選択します。
+sessionを巡回して多様性を確保し、同じturnの引用を重複させません。
+通常は最大2 session × 2 hit、引用本文2400文字。明示想起は最大4 session × 2 hit、6000文字。
+「前に曲の話したよな？」のような一文字検索語はexplicit recallだけ原本の文字一致で補います。
+「前に何話した？」のように検索語がない明示想起は最近のsessionから選びます。
+
+通常の挨拶ではSession/Experienceを注入しません。普通のcasual_chatも自動の過去会話検索は無効。
+task_correctionでは関連する少数の会話・経験、explicit recallでは広めの引用を許可します。
+外部質問では同じ対象に関連する過去の検索/モデル失敗だけExperienceから補助します。
+「は？」などambiguous_followupは直前assistantを優先し、Session/Experienceは空です。
+
+PromptBuilderの `session_recall` / `salient_experiences` はState / 現在のMemory / Topicより弱い補助データです。
+引用にはsession/turn ID、timestamp、原記録SHA256、発言元、未検証ラベルを付け、Provenanceにも記録します。
+assistantの原文保存は発言記録であり真実の承認ではありません。Web資料本文を別途Session/Experienceへコピーせず、
+話した返答だけをassistant_generated引用として残します。State / Verified Memoryへの昇格経路はありません。
+
+### Experience heat
+
+`turn / correction / task_completion / retrieval_success / retrieval_failure / model_failure` を保存します。
+原文bodyとsourceは不変、参照で変えるのはheat・時刻・参照数だけです。
+
+```text
+live_heat(t) = stored_heat × 2^(-max(0, t - heated_at) / half_life_seconds)
+reinforce(t) = min(maximum, live_heat(t) + reinforcement)
+```
+
+既定: 半減期7日、参照加算0.25、最大4、turn初期値0.5、その他1。
+候補は最新512件の非turnイベントから元user文/構造化targetに関連する最大2件。熱だけで無関係な経験は選びません。
+確定した返答に渡した経験だけ再強化し、読み取りやモデル失敗では参照数を増やしません。
+heatは目立ちやすさで、事実の信頼度ではありません。全イベントの元bodyを保持し、冷却で削除・要約しません。
+ライブラリでは `ChatSession(..., heat_config=HeatConfig(half_life_seconds=86400, reinforcement=.2, maximum=3))`
+で設定できます（`from companion_core.experience import HeatConfig`）。
+
+### 診断・再現
+
+daemon/chatを止め、依存導入済みPythonで実行します。診断も所有権ロックを取得し、稼働中のwriterとの競合を拒否します。
+
+```sh
+python scripts/fio_memory.py --event-log data/events.jsonl
+python scripts/fio_memory.py --event-log data/events.jsonl --query "前に曲の話したよな？"
+python scripts/fio_memory.py --event-log data/events.jsonl --rebuild-index
+python scripts/fio_memory.py --smoke --turns 500 --output work/fio-durability.json
+python scripts/fio_memory.py --model --output work/fio-model.json
+python -m unittest discover -s tests -v
+python experiments/run_all.py --no-write
+```
+
+実装・検証結果は [FIO Memory v1 report](reports/fio-memory-v1.md)。
+同義語・長い省略の意味検索、全履歴規模での性能保証、会話品質の保証は対象外です。
+SQLiteのFTS5有効ビルドが必要です。Index破損時は上記 `--rebuild-index` で検証済みJSONLから再作成できます。

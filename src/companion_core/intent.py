@@ -2,6 +2,7 @@
 import re
 import unicodedata
 from .knowledge import EXPLICIT_REQUEST, entities
+from .session_memory import EXPLICIT_RECALL
 
 
 def normalized(text):
@@ -20,7 +21,7 @@ class IntentRouter:
         t = normalized(text)
         if correction_key or re.search(r'じゃなく|ではなく|訂正|違う、', t):
             return 'task_correction'
-        if self.provenance.search(t) or self.memory.search(t):
+        if self.provenance.search(t) or self.memory.search(t) or EXPLICIT_RECALL.search(t):
             return 'self_state_memory'
         if self.casual.fullmatch(t):
             return 'casual_chat'

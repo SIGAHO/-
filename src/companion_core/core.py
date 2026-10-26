@@ -123,6 +123,7 @@ class CompanionCore:
                 "reason": "multiple_candidates" if correction_key else "missing_target",
             })
 
+        done_before = {x.id for x in self.open_loops.loops if x.done}
         topic, emo = self._observe_user(text, user_event.ts)
         self._trace("topic", {"current": topic.label if topic else None})
         self._trace("emotion", emo.to_dict())
@@ -153,6 +154,7 @@ class CompanionCore:
         )
         observed = {key: ctx[key] for key in ('topic', 'memory', 'open_loops')}
         ctx['intent'] = intent
+        ctx['completed_loop_ids'] = [x.id for x in self.open_loops.loops if x.done and x.id not in done_before]
         ctx['previous_assistant'] = self.last_assistant if intent == 'ambiguous_followup' else None
         if intent == 'ambiguous_followup' or self.router.casual.fullmatch(normalized(text)):
             ctx['topic'] = None
@@ -170,10 +172,11 @@ class CompanionCore:
         })
         return ctx
 
-    def record_assistant_output(self, text: str, provenance=None) -> None:
+    def record_assistant_output(self, text: str, provenance=None, *, fio_commit=None) -> None:
         self.events.append(Event(
             kind="assistant_output",
-            payload={"text": clean_input(text), "provenance": provenance},
+            payload={"text": clean_input(text), "provenance": provenance,
+                     **({'fio_commit': fio_commit} if fio_commit is not None else {})},
             source=SourceType.ASSISTANT_GENERATED,
         ))
         self.last_assistant = clean_input(text)
