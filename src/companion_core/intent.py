@@ -17,7 +17,12 @@ class IntentRouter:
     time_request = re.compile(r'今何時|何曜日|今日.*(?:日付|何日)|現在.*(?:時刻|日時)|あと何分|残り時間|まで.*何分|\d{1,2}[:時]\d{1,2}.*(?:→|から)')
     arithmetic = re.compile(r'(?:計算して[:：\s]*)?[0-9().+*/%\s-]+(?:は|=)?[?？。\s]*')
 
-    def route(self, text, *, correction_key=None, previous_subjects=()):
+    quantity_reply = re.compile(
+        r'(?:\d+(?:\.\d+)?\s*(?:キロ(?:メートル)?|km|メートル|m|時間|分|秒)\s*)+'
+        r'(?:くらい|ぐらい|ほど)?(?:かな)?[。!?\s]*', re.IGNORECASE)
+    quantity_question = re.compile(r'タイム|時間|何分|何秒|距離|何キロ|何メートル')
+
+    def route(self, text, *, correction_key=None, previous_subjects=(), previous_assistant=None):
         t = normalized(text)
         if correction_key or re.search(r'じゃなく|ではなく|訂正|違う、', t):
             return 'task_correction'
@@ -33,6 +38,12 @@ class IntentRouter:
             return 'self_state_memory'
         if re.fullmatch(r'(?:その|それの|さっきの)?続き(?:は|を)?[?。\s]*', t):
             return 'casual_chat'
+        # A question mark can hedge the user's answer to our last question.
+        # Only bare measurements qualify; explicit factual requests still gate.
+        prior = normalized(previous_assistant or '')
+        if (self.quantity_reply.fullmatch(t) and re.search(r'[?？]', prior)
+                and self.quantity_question.search(prior)):
+            return 'continuation'
         # New named factual requests and elliptical factual attributes use the gate.
         if (EXPLICIT_REQUEST.search(t) or re.search(r"とは|って何", t)) and (entities(t) or re.search(r'誰|いつ|価格|値段|作者|歌手|発売|意味|とは|どこ', t)
                                       or previous_subjects and re.search(r'その|それ|あの|続き', t)):

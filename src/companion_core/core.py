@@ -53,7 +53,8 @@ class CompanionCore:
         del self.trace[:-1200]
 
     def _observe_user(self, text, ts):
-        intent = self.router.route(text, previous_subjects=self.knowledge_subjects)
+        intent = self.router.route(text, previous_subjects=self.knowledge_subjects,
+                                   previous_assistant=self.last_assistant)
         bypass = (intent in {'ambiguous_followup', 'continuation', 'self_state_memory', 'time_calculation'}
                   or self.router.casual.fullmatch(normalized(text)))
         if bypass:
@@ -76,7 +77,8 @@ class CompanionCore:
             raise ValueError('invalid correction key')
         if event_id is not None and any(e.id == event_id for e in self.events.events):
             raise ValueError('duplicate input event; state was not updated')
-        intent = self.router.route(text, correction_key=correction_key, previous_subjects=self.knowledge_subjects)
+        intent = self.router.route(text, correction_key=correction_key, previous_subjects=self.knowledge_subjects,
+                                   previous_assistant=self.last_assistant)
         payload = {"text": text}
         if correction_key is not None:
             payload['correction_key'] = correction_key
@@ -227,7 +229,8 @@ class CompanionCore:
                 self._remember_correction(p["key"], p["new"], e.ts)
             elif e.kind == "user_input" and e.source == SourceType.USER_STATEMENT:
                 text = e.payload.get("text", "")
-                intent = self.router.route(text, correction_key=e.payload.get('correction_key'), previous_subjects=self.knowledge_subjects)
+                intent = self.router.route(text, correction_key=e.payload.get('correction_key'), previous_subjects=self.knowledge_subjects,
+                                           previous_assistant=self.last_assistant)
                 decision = (self.knowledge.evaluate(text, self.memory, self.state, self.knowledge_subjects, force_external=True)
                             if intent == 'external_knowledge' else KnowledgeDecision(False, False, (), (), 'route_bypass'))
                 self._observe_user(text, e.ts)

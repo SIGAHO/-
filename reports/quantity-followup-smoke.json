@@ -1,0 +1,16 @@
+{
+  "scope": "one_real_generation_with_user_supplied_prior_turns_not_quality_proof",
+  "model": "qwen2.5:14b",
+  "input": "7キロ５０分くらい？",
+  "reply": "7キロ50分か、いいタイムだね。距離と時間のバランス考えても、良い走りだと思ったよ。次も楽しみだな。",
+  "meta": {
+    "unverified": false,
+    "regenerated": true,
+    "issues": [
+      "excessive_formality"
+    ],
+    "remaining_issues": [],
+    "fail_open": false,
+    "web_unverified": false
+  }
+}
