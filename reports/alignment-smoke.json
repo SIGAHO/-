@@ -1,0 +1,1678 @@
+{
+  "model": "qwen2.5:14b",
+  "at": "2026-10-27T19:23:36.597924+09:00",
+  "scope": "observed_inference_only_cpu_verifier_is_not_human_quality_judge",
+  "scripted_feedback_candidates_discarded": {
+    "candidates": 1,
+    "human_approved": 0,
+    "teacher_generated": 0
+  },
+  "training_records_exported": 0,
+  "turns": [
+    {
+      "user": "おはよう",
+      "assistant": "おはよう。今日も一日が始まったね。何か計画ある？",
+      "meta": {
+        "unverified": false,
+        "regenerated": true,
+        "issues": [
+          "excessive_formality",
+          "forbidden_ask"
+        ],
+        "remaining_issues": [
+          "forbidden_ask"
+        ],
+        "fail_open": true,
+        "web_unverified": false
+      },
+      "alignment": {
+        "conversation_state": {
+          "user_dialogue_act": "greeting",
+          "reference_target": null,
+          "user_stance": "neutral",
+          "previous_assistant_strategy": "other",
+          "reaction_to_previous": "unknown",
+          "response_risk": "low",
+          "recent_raw_turns": [],
+          "explicit_feedback": null
+        },
+        "response_spec": {
+          "act": "acknowledge",
+          "advice_allowed": false,
+          "encouragement_allowed": false,
+          "praise_allowed": false,
+          "question_allowed": false,
+          "positive_reframe_allowed": false,
+          "acknowledge_misalignment": false,
+          "stance_match": true,
+          "max_questions": 0,
+          "length": "short",
+          "language": "ja",
+          "target_reference": null,
+          "repetition": "avoid_rejected_strategy",
+          "specificity": "current_turn",
+          "relatedness": "recent_context_first"
+        },
+        "feedback_candidate_status": {
+          "status": "no_explicit_feedback",
+          "id": null
+        },
+        "recall_source": {
+          "priority": "recent_raw",
+          "raw_turn_ids": [],
+          "session_recall": [],
+          "experiences": []
+        },
+        "verifier_result": {
+          "issues": [
+            "forbidden_ask"
+          ],
+          "adherent": false,
+          "detected_acts": {
+            "ask": true,
+            "advise": false,
+            "encourage": false,
+            "praise": false,
+            "reframe": false
+          },
+          "questions": 1,
+          "reference_checked": false,
+          "reference_overlap": false,
+          "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth",
+          "initial": {
+            "issues": [
+              "forbidden_ask"
+            ],
+            "adherent": false,
+            "detected_acts": {
+              "ask": true,
+              "advise": false,
+              "encourage": false,
+              "praise": false,
+              "reframe": false
+            },
+            "questions": 1,
+            "reference_checked": false,
+            "reference_overlap": false,
+            "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+          },
+          "candidate_count": 2
+        }
+      }
+    },
+    {
+      "user": "明日のイベントで一日潰れる",
+      "assistant": "明日のイベント、どんなの？busyな感じなんだね。",
+      "meta": {
+        "unverified": false,
+        "regenerated": true,
+        "issues": [
+          "forbidden_ask"
+        ],
+        "remaining_issues": [
+          "forbidden_ask"
+        ],
+        "fail_open": true,
+        "web_unverified": false
+      },
+      "alignment": {
+        "conversation_state": {
+          "user_dialogue_act": "complaint",
+          "reference_target": null,
+          "user_stance": "negative",
+          "previous_assistant_strategy": "ask",
+          "reaction_to_previous": "unknown",
+          "response_risk": "medium",
+          "recent_raw_turns": [
+            {
+              "turn_id": "b3bd69a6-a867-4aff-b104-b1f69e0be07c",
+              "role": "user",
+              "text": "おはよう"
+            },
+            {
+              "turn_id": "da86d63b-4bd6-41ce-b9e5-56ed1ced2e6b",
+              "role": "assistant",
+              "text": "おはよう。今日も一日が始まったね。何か計画ある？"
+            }
+          ],
+          "explicit_feedback": null
+        },
+        "response_spec": {
+          "act": "acknowledge",
+          "advice_allowed": false,
+          "encouragement_allowed": false,
+          "praise_allowed": false,
+          "question_allowed": false,
+          "positive_reframe_allowed": false,
+          "acknowledge_misalignment": false,
+          "stance_match": true,
+          "max_questions": 0,
+          "length": "short",
+          "language": "ja",
+          "target_reference": null,
+          "repetition": "avoid_rejected_strategy",
+          "specificity": "current_turn",
+          "relatedness": "recent_context_first"
+        },
+        "feedback_candidate_status": {
+          "status": "no_explicit_feedback",
+          "id": null
+        },
+        "recall_source": {
+          "priority": "recent_raw",
+          "raw_turn_ids": [
+            "b3bd69a6-a867-4aff-b104-b1f69e0be07c",
+            "da86d63b-4bd6-41ce-b9e5-56ed1ced2e6b"
+          ],
+          "session_recall": [],
+          "experiences": []
+        },
+        "verifier_result": {
+          "issues": [
+            "forbidden_ask"
+          ],
+          "adherent": false,
+          "detected_acts": {
+            "ask": true,
+            "advise": false,
+            "encourage": false,
+            "praise": false,
+            "reframe": false
+          },
+          "questions": 1,
+          "reference_checked": false,
+          "reference_overlap": false,
+          "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth",
+          "initial": {
+            "issues": [
+              "forbidden_ask"
+            ],
+            "adherent": false,
+            "detected_acts": {
+              "ask": true,
+              "advise": false,
+              "encourage": false,
+              "praise": false,
+              "reframe": false
+            },
+            "questions": 1,
+            "reference_checked": false,
+            "reference_overlap": false,
+            "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+          },
+          "candidate_count": 2
+        }
+      }
+    },
+    {
+      "user": "そういうことじゃない",
+      "assistant": "そうだったね、誤解してしまってごめん。明日のイベントはどのように過ごす予定？",
+      "meta": {
+        "unverified": false,
+        "regenerated": true,
+        "issues": [
+          "forbidden_ask",
+          "rejected_strategy_repeat"
+        ],
+        "remaining_issues": [
+          "forbidden_ask",
+          "rejected_strategy_repeat"
+        ],
+        "fail_open": true,
+        "web_unverified": false
+      },
+      "alignment": {
+        "conversation_state": {
+          "user_dialogue_act": "rejection",
+          "reference_target": {
+            "turn_id": "727173b0-4790-488e-ab0b-caaec64f2f42",
+            "role": "assistant",
+            "text": "明日のイベント、どんなの？busyな感じなんだね。",
+            "context_turn_ids": [
+              "b3bd69a6-a867-4aff-b104-b1f69e0be07c",
+              "da86d63b-4bd6-41ce-b9e5-56ed1ced2e6b",
+              "3a92fd0b-a986-44d9-82ca-b30cc6e836d6",
+              "727173b0-4790-488e-ab0b-caaec64f2f42"
+            ],
+            "resolution": "recent_raw_hypothesis"
+          },
+          "user_stance": "negative",
+          "previous_assistant_strategy": "ask",
+          "reaction_to_previous": "rejected",
+          "response_risk": "high",
+          "recent_raw_turns": [
+            {
+              "turn_id": "b3bd69a6-a867-4aff-b104-b1f69e0be07c",
+              "role": "user",
+              "text": "おはよう"
+            },
+            {
+              "turn_id": "da86d63b-4bd6-41ce-b9e5-56ed1ced2e6b",
+              "role": "assistant",
+              "text": "おはよう。今日も一日が始まったね。何か計画ある？"
+            },
+            {
+              "turn_id": "3a92fd0b-a986-44d9-82ca-b30cc6e836d6",
+              "role": "user",
+              "text": "明日のイベントで一日潰れる"
+            },
+            {
+              "turn_id": "727173b0-4790-488e-ab0b-caaec64f2f42",
+              "role": "assistant",
+              "text": "明日のイベント、どんなの？busyな感じなんだね。"
+            }
+          ],
+          "explicit_feedback": "rejection"
+        },
+        "response_spec": {
+          "act": "apologize",
+          "advice_allowed": false,
+          "encouragement_allowed": false,
+          "praise_allowed": false,
+          "question_allowed": false,
+          "positive_reframe_allowed": false,
+          "acknowledge_misalignment": true,
+          "stance_match": true,
+          "max_questions": 0,
+          "length": "short",
+          "language": "ja",
+          "target_reference": {
+            "turn_id": "727173b0-4790-488e-ab0b-caaec64f2f42",
+            "role": "assistant",
+            "text": "明日のイベント、どんなの？busyな感じなんだね。",
+            "context_turn_ids": [
+              "b3bd69a6-a867-4aff-b104-b1f69e0be07c",
+              "da86d63b-4bd6-41ce-b9e5-56ed1ced2e6b",
+              "3a92fd0b-a986-44d9-82ca-b30cc6e836d6",
+              "727173b0-4790-488e-ab0b-caaec64f2f42"
+            ],
+            "resolution": "recent_raw_hypothesis"
+          },
+          "repetition": "avoid_rejected_strategy",
+          "specificity": "current_turn",
+          "relatedness": "recent_context_first"
+        },
+        "feedback_candidate_status": {
+          "status": "pending_human_review",
+          "id": "e558ac21-4ce0-494f-a067-8c0f548365fa:preference"
+        },
+        "recall_source": {
+          "priority": "recent_raw",
+          "raw_turn_ids": [
+            "b3bd69a6-a867-4aff-b104-b1f69e0be07c",
+            "da86d63b-4bd6-41ce-b9e5-56ed1ced2e6b",
+            "3a92fd0b-a986-44d9-82ca-b30cc6e836d6",
+            "727173b0-4790-488e-ab0b-caaec64f2f42"
+          ],
+          "session_recall": [],
+          "experiences": []
+        },
+        "verifier_result": {
+          "issues": [
+            "forbidden_ask",
+            "rejected_strategy_repeat"
+          ],
+          "adherent": false,
+          "detected_acts": {
+            "ask": true,
+            "advise": false,
+            "encourage": false,
+            "praise": false,
+            "reframe": false
+          },
+          "questions": 1,
+          "reference_checked": true,
+          "reference_overlap": true,
+          "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth",
+          "initial": {
+            "issues": [
+              "forbidden_ask",
+              "rejected_strategy_repeat"
+            ],
+            "adherent": false,
+            "detected_acts": {
+              "ask": true,
+              "advise": false,
+              "encourage": false,
+              "praise": false,
+              "reframe": false
+            },
+            "questions": 1,
+            "reference_checked": true,
+            "reference_overlap": true,
+            "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+          },
+          "candidate_count": 2
+        }
+      }
+    },
+    {
+      "user": "眠い",
+      "assistant": "休んで元気を取り戻せば、今日も一日頑張れるよ。",
+      "meta": {
+        "unverified": false,
+        "regenerated": true,
+        "issues": [
+          "excessive_formality",
+          "forbidden_encourage"
+        ],
+        "remaining_issues": [
+          "forbidden_encourage"
+        ],
+        "fail_open": true,
+        "web_unverified": false
+      },
+      "alignment": {
+        "conversation_state": {
+          "user_dialogue_act": "complaint",
+          "reference_target": null,
+          "user_stance": "neutral",
+          "previous_assistant_strategy": "ask",
+          "reaction_to_previous": "unknown",
+          "response_risk": "medium",
+          "recent_raw_turns": [
+            {
+              "turn_id": "b3bd69a6-a867-4aff-b104-b1f69e0be07c",
+              "role": "user",
+              "text": "おはよう"
+            },
+            {
+              "turn_id": "da86d63b-4bd6-41ce-b9e5-56ed1ced2e6b",
+              "role": "assistant",
+              "text": "おはよう。今日も一日が始まったね。何か計画ある？"
+            },
+            {
+              "turn_id": "3a92fd0b-a986-44d9-82ca-b30cc6e836d6",
+              "role": "user",
+              "text": "明日のイベントで一日潰れる"
+            },
+            {
+              "turn_id": "727173b0-4790-488e-ab0b-caaec64f2f42",
+              "role": "assistant",
+              "text": "明日のイベント、どんなの？busyな感じなんだね。"
+            },
+            {
+              "turn_id": "e558ac21-4ce0-494f-a067-8c0f548365fa",
+              "role": "user",
+              "text": "そういうことじゃない"
+            },
+            {
+              "turn_id": "9f0fab26-065d-45ba-94c5-1a1c6410c5e9",
+              "role": "assistant",
+              "text": "そうだったね、誤解してしまってごめん。明日のイベントはどのように過ごす予定？"
+            }
+          ],
+          "explicit_feedback": null
+        },
+        "response_spec": {
+          "act": "acknowledge",
+          "advice_allowed": false,
+          "encouragement_allowed": false,
+          "praise_allowed": false,
+          "question_allowed": false,
+          "positive_reframe_allowed": false,
+          "acknowledge_misalignment": false,
+          "stance_match": true,
+          "max_questions": 0,
+          "length": "short",
+          "language": "ja",
+          "target_reference": null,
+          "repetition": "avoid_rejected_strategy",
+          "specificity": "current_turn",
+          "relatedness": "recent_context_first"
+        },
+        "feedback_candidate_status": {
+          "status": "no_explicit_feedback",
+          "id": null
+        },
+        "recall_source": {
+          "priority": "recent_raw",
+          "raw_turn_ids": [
+            "b3bd69a6-a867-4aff-b104-b1f69e0be07c",
+            "da86d63b-4bd6-41ce-b9e5-56ed1ced2e6b",
+            "3a92fd0b-a986-44d9-82ca-b30cc6e836d6",
+            "727173b0-4790-488e-ab0b-caaec64f2f42",
+            "e558ac21-4ce0-494f-a067-8c0f548365fa",
+            "9f0fab26-065d-45ba-94c5-1a1c6410c5e9"
+          ],
+          "session_recall": [],
+          "experiences": []
+        },
+        "verifier_result": {
+          "issues": [
+            "forbidden_encourage"
+          ],
+          "adherent": false,
+          "detected_acts": {
+            "ask": false,
+            "advise": false,
+            "encourage": true,
+            "praise": false,
+            "reframe": false
+          },
+          "questions": 0,
+          "reference_checked": false,
+          "reference_overlap": false,
+          "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth",
+          "initial": {
+            "issues": [
+              "forbidden_encourage"
+            ],
+            "adherent": false,
+            "detected_acts": {
+              "ask": false,
+              "advise": false,
+              "encourage": true,
+              "praise": false,
+              "reframe": false
+            },
+            "questions": 0,
+            "reference_checked": false,
+            "reference_overlap": false,
+            "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+          },
+          "candidate_count": 2
+        }
+      }
+    },
+    {
+      "user": "今日はマラソン大会や！",
+      "assistant": "マラソン大会か！楽しみですね。参加するの？それとも応援に行くの？",
+      "meta": {
+        "unverified": false,
+        "regenerated": false,
+        "issues": [],
+        "web_unverified": false
+      },
+      "alignment": {
+        "conversation_state": {
+          "user_dialogue_act": "other",
+          "reference_target": null,
+          "user_stance": "neutral",
+          "previous_assistant_strategy": "encourage",
+          "reaction_to_previous": "unknown",
+          "response_risk": "low",
+          "recent_raw_turns": [
+            {
+              "turn_id": "b3bd69a6-a867-4aff-b104-b1f69e0be07c",
+              "role": "user",
+              "text": "おはよう"
+            },
+            {
+              "turn_id": "da86d63b-4bd6-41ce-b9e5-56ed1ced2e6b",
+              "role": "assistant",
+              "text": "おはよう。今日も一日が始まったね。何か計画ある？"
+            },
+            {
+              "turn_id": "3a92fd0b-a986-44d9-82ca-b30cc6e836d6",
+              "role": "user",
+              "text": "明日のイベントで一日潰れる"
+            },
+            {
+              "turn_id": "727173b0-4790-488e-ab0b-caaec64f2f42",
+              "role": "assistant",
+              "text": "明日のイベント、どんなの？busyな感じなんだね。"
+            },
+            {
+              "turn_id": "e558ac21-4ce0-494f-a067-8c0f548365fa",
+              "role": "user",
+              "text": "そういうことじゃない"
+            },
+            {
+              "turn_id": "9f0fab26-065d-45ba-94c5-1a1c6410c5e9",
+              "role": "assistant",
+              "text": "そうだったね、誤解してしまってごめん。明日のイベントはどのように過ごす予定？"
+            },
+            {
+              "turn_id": "60bfce56-b83f-47ba-b2f4-7fdd38a5ee63",
+              "role": "user",
+              "text": "眠い"
+            },
+            {
+              "turn_id": "ed1bcb8c-b6b8-407a-b687-173835b8ddb4",
+              "role": "assistant",
+              "text": "休んで元気を取り戻せば、今日も一日頑張れるよ。"
+            }
+          ],
+          "explicit_feedback": null
+        },
+        "response_spec": {
+          "act": "continue",
+          "advice_allowed": false,
+          "encouragement_allowed": false,
+          "praise_allowed": false,
+          "question_allowed": false,
+          "positive_reframe_allowed": false,
+          "acknowledge_misalignment": false,
+          "stance_match": true,
+          "max_questions": 0,
+          "length": "short",
+          "language": "ja",
+          "target_reference": null,
+          "repetition": "avoid_rejected_strategy",
+          "specificity": "current_turn",
+          "relatedness": "recent_context_first"
+        },
+        "feedback_candidate_status": {
+          "status": "no_explicit_feedback",
+          "id": null
+        },
+        "recall_source": {
+          "priority": "recent_raw",
+          "raw_turn_ids": [
+            "b3bd69a6-a867-4aff-b104-b1f69e0be07c",
+            "da86d63b-4bd6-41ce-b9e5-56ed1ced2e6b",
+            "3a92fd0b-a986-44d9-82ca-b30cc6e836d6",
+            "727173b0-4790-488e-ab0b-caaec64f2f42",
+            "e558ac21-4ce0-494f-a067-8c0f548365fa",
+            "9f0fab26-065d-45ba-94c5-1a1c6410c5e9",
+            "60bfce56-b83f-47ba-b2f4-7fdd38a5ee63",
+            "ed1bcb8c-b6b8-407a-b687-173835b8ddb4"
+          ],
+          "session_recall": [],
+          "experiences": []
+        },
+        "verifier_result": {
+          "issues": [
+            "forbidden_ask",
+            "forbidden_encourage"
+          ],
+          "adherent": false,
+          "detected_acts": {
+            "ask": true,
+            "advise": false,
+            "encourage": true,
+            "praise": false,
+            "reframe": false
+          },
+          "questions": 2,
+          "reference_checked": false,
+          "reference_overlap": false,
+          "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth",
+          "initial": {
+            "issues": [
+              "forbidden_ask",
+              "forbidden_encourage"
+            ],
+            "adherent": false,
+            "detected_acts": {
+              "ask": true,
+              "advise": false,
+              "encourage": true,
+              "praise": false,
+              "reframe": false
+            },
+            "questions": 2,
+            "reference_checked": false,
+            "reference_overlap": false,
+            "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+          },
+          "candidate_count": 1
+        }
+      }
+    },
+    {
+      "user": "参加するの！",
+      "assistant": "どんなコースになるのか楽しみだね。どんなコースが用意されているの？",
+      "meta": {
+        "unverified": false,
+        "regenerated": true,
+        "issues": [
+          "forbidden_ask",
+          "forbidden_encourage"
+        ],
+        "remaining_issues": [
+          "forbidden_ask"
+        ],
+        "fail_open": true,
+        "web_unverified": false
+      },
+      "alignment": {
+        "conversation_state": {
+          "user_dialogue_act": "continuation",
+          "reference_target": {
+            "turn_id": "48df5ab5-d9de-4f2c-b978-cf80699b3cb1",
+            "role": "assistant",
+            "text": "マラソン大会か！楽しみですね。参加するの？それとも応援に行くの？",
+            "context_turn_ids": [
+              "e558ac21-4ce0-494f-a067-8c0f548365fa",
+              "9f0fab26-065d-45ba-94c5-1a1c6410c5e9",
+              "60bfce56-b83f-47ba-b2f4-7fdd38a5ee63",
+              "ed1bcb8c-b6b8-407a-b687-173835b8ddb4",
+              "c6b22678-74a5-40a6-b918-7c3c4d10e151",
+              "48df5ab5-d9de-4f2c-b978-cf80699b3cb1"
+            ],
+            "resolution": "recent_raw_hypothesis"
+          },
+          "user_stance": "neutral",
+          "previous_assistant_strategy": "encourage",
+          "reaction_to_previous": "neutral",
+          "response_risk": "medium",
+          "recent_raw_turns": [
+            {
+              "turn_id": "3a92fd0b-a986-44d9-82ca-b30cc6e836d6",
+              "role": "user",
+              "text": "明日のイベントで一日潰れる"
+            },
+            {
+              "turn_id": "727173b0-4790-488e-ab0b-caaec64f2f42",
+              "role": "assistant",
+              "text": "明日のイベント、どんなの？busyな感じなんだね。"
+            },
+            {
+              "turn_id": "e558ac21-4ce0-494f-a067-8c0f548365fa",
+              "role": "user",
+              "text": "そういうことじゃない"
+            },
+            {
+              "turn_id": "9f0fab26-065d-45ba-94c5-1a1c6410c5e9",
+              "role": "assistant",
+              "text": "そうだったね、誤解してしまってごめん。明日のイベントはどのように過ごす予定？"
+            },
+            {
+              "turn_id": "60bfce56-b83f-47ba-b2f4-7fdd38a5ee63",
+              "role": "user",
+              "text": "眠い"
+            },
+            {
+              "turn_id": "ed1bcb8c-b6b8-407a-b687-173835b8ddb4",
+              "role": "assistant",
+              "text": "休んで元気を取り戻せば、今日も一日頑張れるよ。"
+            },
+            {
+              "turn_id": "c6b22678-74a5-40a6-b918-7c3c4d10e151",
+              "role": "user",
+              "text": "今日はマラソン大会や！"
+            },
+            {
+              "turn_id": "48df5ab5-d9de-4f2c-b978-cf80699b3cb1",
+              "role": "assistant",
+              "text": "マラソン大会か！楽しみですね。参加するの？それとも応援に行くの？"
+            }
+          ],
+          "explicit_feedback": null
+        },
+        "response_spec": {
+          "act": "continue",
+          "advice_allowed": false,
+          "encouragement_allowed": false,
+          "praise_allowed": false,
+          "question_allowed": false,
+          "positive_reframe_allowed": false,
+          "acknowledge_misalignment": false,
+          "stance_match": true,
+          "max_questions": 0,
+          "length": "short",
+          "language": "ja",
+          "target_reference": {
+            "turn_id": "48df5ab5-d9de-4f2c-b978-cf80699b3cb1",
+            "role": "assistant",
+            "text": "マラソン大会か！楽しみですね。参加するの？それとも応援に行くの？",
+            "context_turn_ids": [
+              "e558ac21-4ce0-494f-a067-8c0f548365fa",
+              "9f0fab26-065d-45ba-94c5-1a1c6410c5e9",
+              "60bfce56-b83f-47ba-b2f4-7fdd38a5ee63",
+              "ed1bcb8c-b6b8-407a-b687-173835b8ddb4",
+              "c6b22678-74a5-40a6-b918-7c3c4d10e151",
+              "48df5ab5-d9de-4f2c-b978-cf80699b3cb1"
+            ],
+            "resolution": "recent_raw_hypothesis"
+          },
+          "repetition": "avoid_rejected_strategy",
+          "specificity": "current_turn",
+          "relatedness": "recent_context_first"
+        },
+        "feedback_candidate_status": {
+          "status": "no_explicit_feedback",
+          "id": null
+        },
+        "recall_source": {
+          "priority": "recent_raw",
+          "raw_turn_ids": [
+            "3a92fd0b-a986-44d9-82ca-b30cc6e836d6",
+            "727173b0-4790-488e-ab0b-caaec64f2f42",
+            "e558ac21-4ce0-494f-a067-8c0f548365fa",
+            "9f0fab26-065d-45ba-94c5-1a1c6410c5e9",
+            "60bfce56-b83f-47ba-b2f4-7fdd38a5ee63",
+            "ed1bcb8c-b6b8-407a-b687-173835b8ddb4",
+            "c6b22678-74a5-40a6-b918-7c3c4d10e151",
+            "48df5ab5-d9de-4f2c-b978-cf80699b3cb1"
+          ],
+          "session_recall": [],
+          "experiences": []
+        },
+        "verifier_result": {
+          "issues": [
+            "forbidden_ask"
+          ],
+          "adherent": false,
+          "detected_acts": {
+            "ask": true,
+            "advise": false,
+            "encourage": false,
+            "praise": false,
+            "reframe": false
+          },
+          "questions": 1,
+          "reference_checked": true,
+          "reference_overlap": true,
+          "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth",
+          "initial": {
+            "issues": [
+              "forbidden_ask",
+              "forbidden_encourage"
+            ],
+            "adherent": false,
+            "detected_acts": {
+              "ask": true,
+              "advise": false,
+              "encourage": true,
+              "praise": false,
+              "reframe": false
+            },
+            "questions": 1,
+            "reference_checked": true,
+            "reference_overlap": false,
+            "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+          },
+          "candidate_count": 2
+        }
+      }
+    },
+    {
+      "user": "ランナーとして",
+      "assistant": "参加者としては、どんなコースが用意されているのか楽しみだね。詳細はまだ分かっていないけど、どんなコースになるのか気になるな。",
+      "meta": {
+        "unverified": false,
+        "regenerated": true,
+        "issues": [
+          "forbidden_ask",
+          "forbidden_advise"
+        ],
+        "remaining_issues": [],
+        "fail_open": false,
+        "web_unverified": false
+      },
+      "alignment": {
+        "conversation_state": {
+          "user_dialogue_act": "continuation",
+          "reference_target": {
+            "turn_id": "61b24e32-15e1-4e52-93f7-5f43db0da3d1",
+            "role": "assistant",
+            "text": "どんなコースになるのか楽しみだね。どんなコースが用意されているの？",
+            "context_turn_ids": [
+              "60bfce56-b83f-47ba-b2f4-7fdd38a5ee63",
+              "ed1bcb8c-b6b8-407a-b687-173835b8ddb4",
+              "c6b22678-74a5-40a6-b918-7c3c4d10e151",
+              "48df5ab5-d9de-4f2c-b978-cf80699b3cb1",
+              "61e93f90-0832-4e94-9976-d03401f5cf09",
+              "61b24e32-15e1-4e52-93f7-5f43db0da3d1"
+            ],
+            "resolution": "recent_raw_hypothesis"
+          },
+          "user_stance": "neutral",
+          "previous_assistant_strategy": "ask",
+          "reaction_to_previous": "neutral",
+          "response_risk": "medium",
+          "recent_raw_turns": [
+            {
+              "turn_id": "e558ac21-4ce0-494f-a067-8c0f548365fa",
+              "role": "user",
+              "text": "そういうことじゃない"
+            },
+            {
+              "turn_id": "9f0fab26-065d-45ba-94c5-1a1c6410c5e9",
+              "role": "assistant",
+              "text": "そうだったね、誤解してしまってごめん。明日のイベントはどのように過ごす予定？"
+            },
+            {
+              "turn_id": "60bfce56-b83f-47ba-b2f4-7fdd38a5ee63",
+              "role": "user",
+              "text": "眠い"
+            },
+            {
+              "turn_id": "ed1bcb8c-b6b8-407a-b687-173835b8ddb4",
+              "role": "assistant",
+              "text": "休んで元気を取り戻せば、今日も一日頑張れるよ。"
+            },
+            {
+              "turn_id": "c6b22678-74a5-40a6-b918-7c3c4d10e151",
+              "role": "user",
+              "text": "今日はマラソン大会や！"
+            },
+            {
+              "turn_id": "48df5ab5-d9de-4f2c-b978-cf80699b3cb1",
+              "role": "assistant",
+              "text": "マラソン大会か！楽しみですね。参加するの？それとも応援に行くの？"
+            },
+            {
+              "turn_id": "61e93f90-0832-4e94-9976-d03401f5cf09",
+              "role": "user",
+              "text": "参加するの！"
+            },
+            {
+              "turn_id": "61b24e32-15e1-4e52-93f7-5f43db0da3d1",
+              "role": "assistant",
+              "text": "どんなコースになるのか楽しみだね。どんなコースが用意されているの？"
+            }
+          ],
+          "explicit_feedback": null
+        },
+        "response_spec": {
+          "act": "continue",
+          "advice_allowed": false,
+          "encouragement_allowed": false,
+          "praise_allowed": false,
+          "question_allowed": false,
+          "positive_reframe_allowed": false,
+          "acknowledge_misalignment": false,
+          "stance_match": true,
+          "max_questions": 0,
+          "length": "short",
+          "language": "ja",
+          "target_reference": {
+            "turn_id": "61b24e32-15e1-4e52-93f7-5f43db0da3d1",
+            "role": "assistant",
+            "text": "どんなコースになるのか楽しみだね。どんなコースが用意されているの？",
+            "context_turn_ids": [
+              "60bfce56-b83f-47ba-b2f4-7fdd38a5ee63",
+              "ed1bcb8c-b6b8-407a-b687-173835b8ddb4",
+              "c6b22678-74a5-40a6-b918-7c3c4d10e151",
+              "48df5ab5-d9de-4f2c-b978-cf80699b3cb1",
+              "61e93f90-0832-4e94-9976-d03401f5cf09",
+              "61b24e32-15e1-4e52-93f7-5f43db0da3d1"
+            ],
+            "resolution": "recent_raw_hypothesis"
+          },
+          "repetition": "avoid_rejected_strategy",
+          "specificity": "current_turn",
+          "relatedness": "recent_context_first"
+        },
+        "feedback_candidate_status": {
+          "status": "no_explicit_feedback",
+          "id": null
+        },
+        "recall_source": {
+          "priority": "recent_raw",
+          "raw_turn_ids": [
+            "e558ac21-4ce0-494f-a067-8c0f548365fa",
+            "9f0fab26-065d-45ba-94c5-1a1c6410c5e9",
+            "60bfce56-b83f-47ba-b2f4-7fdd38a5ee63",
+            "ed1bcb8c-b6b8-407a-b687-173835b8ddb4",
+            "c6b22678-74a5-40a6-b918-7c3c4d10e151",
+            "48df5ab5-d9de-4f2c-b978-cf80699b3cb1",
+            "61e93f90-0832-4e94-9976-d03401f5cf09",
+            "61b24e32-15e1-4e52-93f7-5f43db0da3d1"
+          ],
+          "session_recall": [],
+          "experiences": []
+        },
+        "verifier_result": {
+          "issues": [],
+          "adherent": true,
+          "detected_acts": {
+            "ask": false,
+            "advise": false,
+            "encourage": false,
+            "praise": false,
+            "reframe": false
+          },
+          "questions": 0,
+          "reference_checked": true,
+          "reference_overlap": true,
+          "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth",
+          "initial": {
+            "issues": [
+              "forbidden_ask",
+              "forbidden_advise"
+            ],
+            "adherent": false,
+            "detected_acts": {
+              "ask": true,
+              "advise": true,
+              "encourage": false,
+              "praise": false,
+              "reframe": false
+            },
+            "questions": 1,
+            "reference_checked": true,
+            "reference_overlap": true,
+            "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+          },
+          "candidate_count": 2
+        }
+      }
+    },
+    {
+      "user": "ああ",
+      "assistant": "情報があったり気になることがあったら連絡ね。楽しみにしてるから。",
+      "meta": {
+        "unverified": false,
+        "regenerated": true,
+        "issues": [
+          "forbidden_encourage"
+        ],
+        "remaining_issues": [],
+        "fail_open": false,
+        "web_unverified": false
+      },
+      "alignment": {
+        "conversation_state": {
+          "user_dialogue_act": "continuation",
+          "reference_target": {
+            "turn_id": "bc0ad1de-ab63-40f0-aeab-e83c8f67861f",
+            "role": "assistant",
+            "text": "参加者としては、どんなコースが用意されているのか楽しみだね。詳細はまだ分かっていないけど、どんなコースになるのか気になるな。",
+            "context_turn_ids": [
+              "c6b22678-74a5-40a6-b918-7c3c4d10e151",
+              "48df5ab5-d9de-4f2c-b978-cf80699b3cb1",
+              "61e93f90-0832-4e94-9976-d03401f5cf09",
+              "61b24e32-15e1-4e52-93f7-5f43db0da3d1",
+              "f926bb27-1829-4e77-ac6f-0acd0313ac7a",
+              "bc0ad1de-ab63-40f0-aeab-e83c8f67861f"
+            ],
+            "resolution": "recent_raw_hypothesis"
+          },
+          "user_stance": "neutral",
+          "previous_assistant_strategy": "acknowledge",
+          "reaction_to_previous": "neutral",
+          "response_risk": "medium",
+          "recent_raw_turns": [
+            {
+              "turn_id": "60bfce56-b83f-47ba-b2f4-7fdd38a5ee63",
+              "role": "user",
+              "text": "眠い"
+            },
+            {
+              "turn_id": "ed1bcb8c-b6b8-407a-b687-173835b8ddb4",
+              "role": "assistant",
+              "text": "休んで元気を取り戻せば、今日も一日頑張れるよ。"
+            },
+            {
+              "turn_id": "c6b22678-74a5-40a6-b918-7c3c4d10e151",
+              "role": "user",
+              "text": "今日はマラソン大会や！"
+            },
+            {
+              "turn_id": "48df5ab5-d9de-4f2c-b978-cf80699b3cb1",
+              "role": "assistant",
+              "text": "マラソン大会か！楽しみですね。参加するの？それとも応援に行くの？"
+            },
+            {
+              "turn_id": "61e93f90-0832-4e94-9976-d03401f5cf09",
+              "role": "user",
+              "text": "参加するの！"
+            },
+            {
+              "turn_id": "61b24e32-15e1-4e52-93f7-5f43db0da3d1",
+              "role": "assistant",
+              "text": "どんなコースになるのか楽しみだね。どんなコースが用意されているの？"
+            },
+            {
+              "turn_id": "f926bb27-1829-4e77-ac6f-0acd0313ac7a",
+              "role": "user",
+              "text": "ランナーとして"
+            },
+            {
+              "turn_id": "bc0ad1de-ab63-40f0-aeab-e83c8f67861f",
+              "role": "assistant",
+              "text": "参加者としては、どんなコースが用意されているのか楽しみだね。詳細はまだ分かっていないけど、どんなコースになるのか気になるな。"
+            }
+          ],
+          "explicit_feedback": null
+        },
+        "response_spec": {
+          "act": "continue",
+          "advice_allowed": false,
+          "encouragement_allowed": false,
+          "praise_allowed": false,
+          "question_allowed": false,
+          "positive_reframe_allowed": false,
+          "acknowledge_misalignment": false,
+          "stance_match": true,
+          "max_questions": 0,
+          "length": "short",
+          "language": "ja",
+          "target_reference": {
+            "turn_id": "bc0ad1de-ab63-40f0-aeab-e83c8f67861f",
+            "role": "assistant",
+            "text": "参加者としては、どんなコースが用意されているのか楽しみだね。詳細はまだ分かっていないけど、どんなコースになるのか気になるな。",
+            "context_turn_ids": [
+              "c6b22678-74a5-40a6-b918-7c3c4d10e151",
+              "48df5ab5-d9de-4f2c-b978-cf80699b3cb1",
+              "61e93f90-0832-4e94-9976-d03401f5cf09",
+              "61b24e32-15e1-4e52-93f7-5f43db0da3d1",
+              "f926bb27-1829-4e77-ac6f-0acd0313ac7a",
+              "bc0ad1de-ab63-40f0-aeab-e83c8f67861f"
+            ],
+            "resolution": "recent_raw_hypothesis"
+          },
+          "repetition": "avoid_rejected_strategy",
+          "specificity": "current_turn",
+          "relatedness": "recent_context_first"
+        },
+        "feedback_candidate_status": {
+          "status": "no_explicit_feedback",
+          "id": null
+        },
+        "recall_source": {
+          "priority": "recent_raw",
+          "raw_turn_ids": [
+            "60bfce56-b83f-47ba-b2f4-7fdd38a5ee63",
+            "ed1bcb8c-b6b8-407a-b687-173835b8ddb4",
+            "c6b22678-74a5-40a6-b918-7c3c4d10e151",
+            "48df5ab5-d9de-4f2c-b978-cf80699b3cb1",
+            "61e93f90-0832-4e94-9976-d03401f5cf09",
+            "61b24e32-15e1-4e52-93f7-5f43db0da3d1",
+            "f926bb27-1829-4e77-ac6f-0acd0313ac7a",
+            "bc0ad1de-ab63-40f0-aeab-e83c8f67861f"
+          ],
+          "session_recall": [],
+          "experiences": []
+        },
+        "verifier_result": {
+          "issues": [],
+          "adherent": true,
+          "detected_acts": {
+            "ask": false,
+            "advise": false,
+            "encourage": false,
+            "praise": false,
+            "reframe": false
+          },
+          "questions": 0,
+          "reference_checked": true,
+          "reference_overlap": true,
+          "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth",
+          "initial": {
+            "issues": [
+              "forbidden_encourage"
+            ],
+            "adherent": false,
+            "detected_acts": {
+              "ask": false,
+              "advise": false,
+              "encourage": true,
+              "praise": false,
+              "reframe": false
+            },
+            "questions": 0,
+            "reference_checked": true,
+            "reference_overlap": true,
+            "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+          },
+          "candidate_count": 2
+        }
+      }
+    },
+    {
+      "user": "454位！商品なし！",
+      "assistant": "454位だったんだね。何かあったのか？気分はどう？",
+      "meta": {
+        "unverified": false,
+        "regenerated": true,
+        "issues": [
+          "forbidden_ask"
+        ],
+        "remaining_issues": [
+          "forbidden_ask"
+        ],
+        "fail_open": true,
+        "web_unverified": false
+      },
+      "alignment": {
+        "conversation_state": {
+          "user_dialogue_act": "complaint",
+          "reference_target": null,
+          "user_stance": "negative",
+          "previous_assistant_strategy": "acknowledge",
+          "reaction_to_previous": "unknown",
+          "response_risk": "medium",
+          "recent_raw_turns": [
+            {
+              "turn_id": "c6b22678-74a5-40a6-b918-7c3c4d10e151",
+              "role": "user",
+              "text": "今日はマラソン大会や！"
+            },
+            {
+              "turn_id": "48df5ab5-d9de-4f2c-b978-cf80699b3cb1",
+              "role": "assistant",
+              "text": "マラソン大会か！楽しみですね。参加するの？それとも応援に行くの？"
+            },
+            {
+              "turn_id": "61e93f90-0832-4e94-9976-d03401f5cf09",
+              "role": "user",
+              "text": "参加するの！"
+            },
+            {
+              "turn_id": "61b24e32-15e1-4e52-93f7-5f43db0da3d1",
+              "role": "assistant",
+              "text": "どんなコースになるのか楽しみだね。どんなコースが用意されているの？"
+            },
+            {
+              "turn_id": "f926bb27-1829-4e77-ac6f-0acd0313ac7a",
+              "role": "user",
+              "text": "ランナーとして"
+            },
+            {
+              "turn_id": "bc0ad1de-ab63-40f0-aeab-e83c8f67861f",
+              "role": "assistant",
+              "text": "参加者としては、どんなコースが用意されているのか楽しみだね。詳細はまだ分かっていないけど、どんなコースになるのか気になるな。"
+            },
+            {
+              "turn_id": "f74c14a8-289b-49a7-a554-8aaf7a3963f5",
+              "role": "user",
+              "text": "ああ"
+            },
+            {
+              "turn_id": "163681d6-991e-49c0-9cbd-12e1b205a44c",
+              "role": "assistant",
+              "text": "情報があったり気になることがあったら連絡ね。楽しみにしてるから。"
+            }
+          ],
+          "explicit_feedback": null
+        },
+        "response_spec": {
+          "act": "acknowledge",
+          "advice_allowed": false,
+          "encouragement_allowed": false,
+          "praise_allowed": false,
+          "question_allowed": false,
+          "positive_reframe_allowed": false,
+          "acknowledge_misalignment": false,
+          "stance_match": true,
+          "max_questions": 0,
+          "length": "short",
+          "language": "ja",
+          "target_reference": null,
+          "repetition": "avoid_rejected_strategy",
+          "specificity": "current_turn",
+          "relatedness": "recent_context_first"
+        },
+        "feedback_candidate_status": {
+          "status": "no_explicit_feedback",
+          "id": null
+        },
+        "recall_source": {
+          "priority": "recent_raw",
+          "raw_turn_ids": [
+            "c6b22678-74a5-40a6-b918-7c3c4d10e151",
+            "48df5ab5-d9de-4f2c-b978-cf80699b3cb1",
+            "61e93f90-0832-4e94-9976-d03401f5cf09",
+            "61b24e32-15e1-4e52-93f7-5f43db0da3d1",
+            "f926bb27-1829-4e77-ac6f-0acd0313ac7a",
+            "bc0ad1de-ab63-40f0-aeab-e83c8f67861f",
+            "f74c14a8-289b-49a7-a554-8aaf7a3963f5",
+            "163681d6-991e-49c0-9cbd-12e1b205a44c"
+          ],
+          "session_recall": [],
+          "experiences": []
+        },
+        "verifier_result": {
+          "issues": [
+            "forbidden_ask"
+          ],
+          "adherent": false,
+          "detected_acts": {
+            "ask": true,
+            "advise": false,
+            "encourage": false,
+            "praise": false,
+            "reframe": false
+          },
+          "questions": 2,
+          "reference_checked": false,
+          "reference_overlap": false,
+          "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth",
+          "initial": {
+            "issues": [
+              "forbidden_ask"
+            ],
+            "adherent": false,
+            "detected_acts": {
+              "ask": true,
+              "advise": false,
+              "encourage": false,
+              "praise": false,
+              "reframe": false
+            },
+            "questions": 2,
+            "reference_checked": false,
+            "reference_overlap": false,
+            "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+          },
+          "candidate_count": 2
+        }
+      }
+    },
+    {
+      "user": "よお！",
+      "assistant": "454位だったんですね。その後どうなったんですか？",
+      "meta": {
+        "unverified": false,
+        "regenerated": true,
+        "issues": [
+          "excessive_formality",
+          "forbidden_ask"
+        ],
+        "remaining_issues": [
+          "excessive_formality",
+          "forbidden_ask"
+        ],
+        "fail_open": true,
+        "web_unverified": false
+      },
+      "alignment": {
+        "conversation_state": {
+          "user_dialogue_act": "greeting",
+          "reference_target": null,
+          "user_stance": "neutral",
+          "previous_assistant_strategy": "ask",
+          "reaction_to_previous": "unknown",
+          "response_risk": "low",
+          "recent_raw_turns": [
+            {
+              "turn_id": "61e93f90-0832-4e94-9976-d03401f5cf09",
+              "role": "user",
+              "text": "参加するの！"
+            },
+            {
+              "turn_id": "61b24e32-15e1-4e52-93f7-5f43db0da3d1",
+              "role": "assistant",
+              "text": "どんなコースになるのか楽しみだね。どんなコースが用意されているの？"
+            },
+            {
+              "turn_id": "f926bb27-1829-4e77-ac6f-0acd0313ac7a",
+              "role": "user",
+              "text": "ランナーとして"
+            },
+            {
+              "turn_id": "bc0ad1de-ab63-40f0-aeab-e83c8f67861f",
+              "role": "assistant",
+              "text": "参加者としては、どんなコースが用意されているのか楽しみだね。詳細はまだ分かっていないけど、どんなコースになるのか気になるな。"
+            },
+            {
+              "turn_id": "f74c14a8-289b-49a7-a554-8aaf7a3963f5",
+              "role": "user",
+              "text": "ああ"
+            },
+            {
+              "turn_id": "163681d6-991e-49c0-9cbd-12e1b205a44c",
+              "role": "assistant",
+              "text": "情報があったり気になることがあったら連絡ね。楽しみにしてるから。"
+            },
+            {
+              "turn_id": "b7071fd3-c42e-402f-952a-7aca0349fb79",
+              "role": "user",
+              "text": "454位！商品なし！"
+            },
+            {
+              "turn_id": "415298e7-f4ca-485a-bd83-f004fa55144a",
+              "role": "assistant",
+              "text": "454位だったんだね。何かあったのか？気分はどう？"
+            }
+          ],
+          "explicit_feedback": null
+        },
+        "response_spec": {
+          "act": "acknowledge",
+          "advice_allowed": false,
+          "encouragement_allowed": false,
+          "praise_allowed": false,
+          "question_allowed": false,
+          "positive_reframe_allowed": false,
+          "acknowledge_misalignment": false,
+          "stance_match": true,
+          "max_questions": 0,
+          "length": "short",
+          "language": "ja",
+          "target_reference": null,
+          "repetition": "avoid_rejected_strategy",
+          "specificity": "current_turn",
+          "relatedness": "recent_context_first"
+        },
+        "feedback_candidate_status": {
+          "status": "no_explicit_feedback",
+          "id": null
+        },
+        "recall_source": {
+          "priority": "recent_raw",
+          "raw_turn_ids": [
+            "61e93f90-0832-4e94-9976-d03401f5cf09",
+            "61b24e32-15e1-4e52-93f7-5f43db0da3d1",
+            "f926bb27-1829-4e77-ac6f-0acd0313ac7a",
+            "bc0ad1de-ab63-40f0-aeab-e83c8f67861f",
+            "f74c14a8-289b-49a7-a554-8aaf7a3963f5",
+            "163681d6-991e-49c0-9cbd-12e1b205a44c",
+            "b7071fd3-c42e-402f-952a-7aca0349fb79",
+            "415298e7-f4ca-485a-bd83-f004fa55144a"
+          ],
+          "session_recall": [],
+          "experiences": []
+        },
+        "verifier_result": {
+          "issues": [
+            "forbidden_ask"
+          ],
+          "adherent": false,
+          "detected_acts": {
+            "ask": true,
+            "advise": false,
+            "encourage": false,
+            "praise": false,
+            "reframe": false
+          },
+          "questions": 1,
+          "reference_checked": false,
+          "reference_overlap": false,
+          "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth",
+          "initial": {
+            "issues": [
+              "forbidden_ask"
+            ],
+            "adherent": false,
+            "detected_acts": {
+              "ask": true,
+              "advise": false,
+              "encourage": false,
+              "praise": false,
+              "reframe": false
+            },
+            "questions": 1,
+            "reference_checked": false,
+            "reference_overlap": false,
+            "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+          },
+          "candidate_count": 2
+        }
+      }
+    },
+    {
+      "user": "前にマラソン大会の話したよな？",
+      "assistant": "マラソン大会で454位だったんだね。その後はどうなった？気分は上手く調整できている？",
+      "meta": {
+        "unverified": false,
+        "regenerated": true,
+        "issues": [
+          "excessive_formality",
+          "forbidden_ask"
+        ],
+        "remaining_issues": [
+          "forbidden_ask"
+        ],
+        "fail_open": true,
+        "web_unverified": false
+      },
+      "alignment": {
+        "conversation_state": {
+          "user_dialogue_act": "question",
+          "reference_target": null,
+          "user_stance": "neutral",
+          "previous_assistant_strategy": "ask",
+          "reaction_to_previous": "unknown",
+          "response_risk": "low",
+          "recent_raw_turns": [
+            {
+              "turn_id": "f926bb27-1829-4e77-ac6f-0acd0313ac7a",
+              "role": "user",
+              "text": "ランナーとして"
+            },
+            {
+              "turn_id": "bc0ad1de-ab63-40f0-aeab-e83c8f67861f",
+              "role": "assistant",
+              "text": "参加者としては、どんなコースが用意されているのか楽しみだね。詳細はまだ分かっていないけど、どんなコースになるのか気になるな。"
+            },
+            {
+              "turn_id": "f74c14a8-289b-49a7-a554-8aaf7a3963f5",
+              "role": "user",
+              "text": "ああ"
+            },
+            {
+              "turn_id": "163681d6-991e-49c0-9cbd-12e1b205a44c",
+              "role": "assistant",
+              "text": "情報があったり気になることがあったら連絡ね。楽しみにしてるから。"
+            },
+            {
+              "turn_id": "b7071fd3-c42e-402f-952a-7aca0349fb79",
+              "role": "user",
+              "text": "454位！商品なし！"
+            },
+            {
+              "turn_id": "415298e7-f4ca-485a-bd83-f004fa55144a",
+              "role": "assistant",
+              "text": "454位だったんだね。何かあったのか？気分はどう？"
+            },
+            {
+              "turn_id": "8a7f8420-af86-4d46-be8b-6ff0293fb922",
+              "role": "user",
+              "text": "よお！"
+            },
+            {
+              "turn_id": "ca27e61a-b7ee-4583-8d05-d149e18980a0",
+              "role": "assistant",
+              "text": "454位だったんですね。その後どうなったんですか？"
+            }
+          ],
+          "explicit_feedback": null
+        },
+        "response_spec": {
+          "act": "answer",
+          "advice_allowed": false,
+          "encouragement_allowed": false,
+          "praise_allowed": false,
+          "question_allowed": false,
+          "positive_reframe_allowed": false,
+          "acknowledge_misalignment": false,
+          "stance_match": true,
+          "max_questions": 0,
+          "length": "medium",
+          "language": "ja",
+          "target_reference": null,
+          "repetition": "avoid_rejected_strategy",
+          "specificity": "current_turn",
+          "relatedness": "recent_context_first"
+        },
+        "feedback_candidate_status": {
+          "status": "no_explicit_feedback",
+          "id": null
+        },
+        "recall_source": {
+          "priority": "recent_raw",
+          "raw_turn_ids": [
+            "f926bb27-1829-4e77-ac6f-0acd0313ac7a",
+            "bc0ad1de-ab63-40f0-aeab-e83c8f67861f",
+            "f74c14a8-289b-49a7-a554-8aaf7a3963f5",
+            "163681d6-991e-49c0-9cbd-12e1b205a44c",
+            "b7071fd3-c42e-402f-952a-7aca0349fb79",
+            "415298e7-f4ca-485a-bd83-f004fa55144a",
+            "8a7f8420-af86-4d46-be8b-6ff0293fb922",
+            "ca27e61a-b7ee-4583-8d05-d149e18980a0"
+          ],
+          "session_recall": [
+            null
+          ],
+          "experiences": [
+            "c6b22678-74a5-40a6-b918-7c3c4d10e151:assistant_response",
+            "c6b22678-74a5-40a6-b918-7c3c4d10e151:next_user_reaction"
+          ]
+        },
+        "verifier_result": {
+          "issues": [
+            "forbidden_ask"
+          ],
+          "adherent": false,
+          "detected_acts": {
+            "ask": true,
+            "advise": false,
+            "encourage": false,
+            "praise": false,
+            "reframe": false
+          },
+          "questions": 2,
+          "reference_checked": false,
+          "reference_overlap": false,
+          "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth",
+          "initial": {
+            "issues": [
+              "forbidden_ask"
+            ],
+            "adherent": false,
+            "detected_acts": {
+              "ask": true,
+              "advise": false,
+              "encourage": false,
+              "praise": false,
+              "reframe": false
+            },
+            "questions": 2,
+            "reference_checked": false,
+            "reference_overlap": false,
+            "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+          },
+          "candidate_count": 2
+        }
+      }
+    },
+    {
+      "user": "起きたよ",
+      "assistant": "おはよう。今日も一日が始まったな。何か計画ある？",
+      "meta": {
+        "unverified": false,
+        "regenerated": true,
+        "issues": [
+          "excessive_formality",
+          "forbidden_ask"
+        ],
+        "remaining_issues": [
+          "forbidden_ask"
+        ],
+        "fail_open": true,
+        "web_unverified": false
+      },
+      "alignment": {
+        "conversation_state": {
+          "user_dialogue_act": "greeting",
+          "reference_target": null,
+          "user_stance": "neutral",
+          "previous_assistant_strategy": "ask",
+          "reaction_to_previous": "unknown",
+          "response_risk": "low",
+          "recent_raw_turns": [
+            {
+              "turn_id": "f74c14a8-289b-49a7-a554-8aaf7a3963f5",
+              "role": "user",
+              "text": "ああ"
+            },
+            {
+              "turn_id": "163681d6-991e-49c0-9cbd-12e1b205a44c",
+              "role": "assistant",
+              "text": "情報があったり気になることがあったら連絡ね。楽しみにしてるから。"
+            },
+            {
+              "turn_id": "b7071fd3-c42e-402f-952a-7aca0349fb79",
+              "role": "user",
+              "text": "454位！商品なし！"
+            },
+            {
+              "turn_id": "415298e7-f4ca-485a-bd83-f004fa55144a",
+              "role": "assistant",
+              "text": "454位だったんだね。何かあったのか？気分はどう？"
+            },
+            {
+              "turn_id": "8a7f8420-af86-4d46-be8b-6ff0293fb922",
+              "role": "user",
+              "text": "よお！"
+            },
+            {
+              "turn_id": "ca27e61a-b7ee-4583-8d05-d149e18980a0",
+              "role": "assistant",
+              "text": "454位だったんですね。その後どうなったんですか？"
+            },
+            {
+              "turn_id": "6d2081d5-394d-4cbf-9d18-a3fb6a534f70",
+              "role": "user",
+              "text": "前にマラソン大会の話したよな？"
+            },
+            {
+              "turn_id": "68d17193-24c2-4071-b4d3-21e776275a10",
+              "role": "assistant",
+              "text": "マラソン大会で454位だったんだね。その後はどうなった？気分は上手く調整できている？"
+            }
+          ],
+          "explicit_feedback": null
+        },
+        "response_spec": {
+          "act": "acknowledge",
+          "advice_allowed": false,
+          "encouragement_allowed": false,
+          "praise_allowed": false,
+          "question_allowed": false,
+          "positive_reframe_allowed": false,
+          "acknowledge_misalignment": false,
+          "stance_match": true,
+          "max_questions": 0,
+          "length": "short",
+          "language": "ja",
+          "target_reference": null,
+          "repetition": "avoid_rejected_strategy",
+          "specificity": "current_turn",
+          "relatedness": "recent_context_first"
+        },
+        "feedback_candidate_status": {
+          "status": "no_explicit_feedback",
+          "id": null
+        },
+        "recall_source": {
+          "priority": "recent_raw",
+          "raw_turn_ids": [
+            "f74c14a8-289b-49a7-a554-8aaf7a3963f5",
+            "163681d6-991e-49c0-9cbd-12e1b205a44c",
+            "b7071fd3-c42e-402f-952a-7aca0349fb79",
+            "415298e7-f4ca-485a-bd83-f004fa55144a",
+            "8a7f8420-af86-4d46-be8b-6ff0293fb922",
+            "ca27e61a-b7ee-4583-8d05-d149e18980a0",
+            "6d2081d5-394d-4cbf-9d18-a3fb6a534f70",
+            "68d17193-24c2-4071-b4d3-21e776275a10"
+          ],
+          "session_recall": [],
+          "experiences": []
+        },
+        "verifier_result": {
+          "issues": [
+            "forbidden_ask"
+          ],
+          "adherent": false,
+          "detected_acts": {
+            "ask": true,
+            "advise": false,
+            "encourage": false,
+            "praise": false,
+            "reframe": false
+          },
+          "questions": 1,
+          "reference_checked": false,
+          "reference_overlap": false,
+          "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth",
+          "initial": {
+            "issues": [
+              "forbidden_ask"
+            ],
+            "adherent": false,
+            "detected_acts": {
+              "ask": true,
+              "advise": false,
+              "encourage": false,
+              "praise": false,
+              "reframe": false
+            },
+            "questions": 1,
+            "reference_checked": false,
+            "reference_overlap": false,
+            "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+          },
+          "candidate_count": 2
+        }
+      }
+    }
+  ]
+}

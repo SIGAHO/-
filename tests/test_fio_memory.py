@@ -442,7 +442,9 @@ class IntegrationTests(unittest.TestCase):
         self.chat.turn('星空を見た')
         fio = FIOMemory(self.path)
         self.assertEqual(len(fio.recorder.records), 1)
-        self.assertEqual(len(fio.experiences.all()), 1)
+        self.assertEqual([r['kind'] for r in fio.experiences.all()].count('turn'), 1)
+        self.assertEqual({r['kind'] for r in fio.experiences.all()}, {'turn', 'assistant_response'})
+        self.assertEqual(len(fio.experiences.all()), 2)
 
     def test_replay_no_sidecar_mutation(self):
         self.chat.turn('星空を見た')

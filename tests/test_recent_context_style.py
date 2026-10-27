@@ -15,6 +15,12 @@ from companion_core.models import SourceType
 class RecentContextTests(unittest.TestCase):
     def session(self, replies=('参加するの？', '走る側か。', '準備は万端？', 'わかった。')):
         session = ChatSession(FakeModelAdapter(replies))
+        # Isolate raw-context wiring from policy candidate ranking: these
+        # historical scripted questions intentionally violate the new policy.
+        # Full PolicyVerifier is exercised by test_alignment, without this mock.
+        patcher = patch.object(session.policy_verifier, 'verify', return_value={'issues': [], 'adherent': True})
+        patcher.start()
+        self.addCleanup(patcher.stop)
         self.addCleanup(session.close)
         return session
 

@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "base_model": "Qwen/Qwen2.5-14B-Instruct",
+  "inference_model": "qwen2.5:14b",
+  "method": "select_after_human_review",
+  "quantization": "QLoRA NF4 4bit, double quantization, bf16 compute if supported",
+  "lora": {"r": 16, "alpha": 32, "dropout": 0.05, "target_modules": ["q_proj", "k_proj", "v_proj", "o_proj"]},
+  "training": {"max_length": 1024, "per_device_batch_size": 1, "gradient_accumulation_steps": 8, "gradient_checkpointing": true},
+  "base_weights_read_only": true,
+  "adapter_output": "data/adapters/<base-revision>/<dataset-sha256>/<run-id>/",
+  "activation": "manual after dev evaluation and a single untouched blind evaluation",
+  "rollback": "unload adapter and select previous adapter manifest; base is unchanged",
+  "blind_holdout": "never used for optimization, method choice or threshold adjustment",
+  "execution_enabled": false
+}

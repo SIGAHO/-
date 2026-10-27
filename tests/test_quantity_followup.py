@@ -17,6 +17,11 @@ class QuantityFollowupTests(unittest.TestCase):
         fake = FakeModelAdapter(['どうだった？', 'タイムはどうだった？', '7キロ走ったんだね。'])
         chat = ChatSession(fake)
         self.addCleanup(chat.close)
+        # Keep the historical scripted timing question as a router fixture.
+        # Policy rejection/ranking of unsolicited questions is tested separately.
+        verifier = patch.object(chat.policy_verifier, 'verify', return_value={'issues': [], 'adherent': True})
+        verifier.start()
+        self.addCleanup(verifier.stop)
         chat.turn('マラソン大会終わったわ')
         chat.turn('４５４位！商品なし！')
         with patch.object(chat.core.knowledge, 'evaluate', side_effect=AssertionError('external gate called')):

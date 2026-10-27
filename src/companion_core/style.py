@@ -111,11 +111,17 @@ class StyleValidator:
             parts.pop()
         return reply[:end].strip()
 
-    def process(self, reply, messages, adapter, style):
+    def process(self, reply, messages, adapter, style, *, policy_check=None, response_spec=None, risk='low'):
         user_text = next((m['content'] for m in reversed(messages) if m['role'] == 'user'), '')
         def check(text):
             return self.violations(text, style) + self.language_issues(text, user_text)
-        issues = check(reply)
+        def policy(text):
+            return policy_check(text)['issues'] if policy_check else []
+        issues = check(reply) + policy(reply)
+        # Low risk has one policy candidate. A style/language rewrite retains
+        # the existing bounded repair path; medium/high may repair policy too.
+        if risk == 'low' and issues and not check(reply):
+            return reply, {'regenerated': False, 'issues': issues, 'remaining_issues': issues, 'fail_open': True}
         if not issues:
             return reply, {"regenerated": False, "issues": []}
         rewrite = {"role": "system", "content":
@@ -128,8 +134,13 @@ class StyleValidator:
                    "元の内容に挨拶・説明・質問を足さない。定型の申し出と無意味な末尾質問を削る。返答本文だけを出す。"}
         # Keep the bounded rewrite a transformation task. Replaying the entire
         # conversation can make a small model answer the user all over again.
+        if response_spec is not None:
+            rewrite['content'] += ('\nMemoryは知識、PolicyPlannerは会話行為、あなたは日本語化を担当。'
+                'response_specはCPUの制御信号。指定actと許可属性を守り、不要な助言・励まし・質問を除く。'
+                'acknowledge_misalignment=trueなら自分の返答のずれを短く受け止める。')
         candidate = adapter.generate([rewrite, {"role": "user", "content": json.dumps(
             {"draft": reply, "style": style,
+             "response_spec": response_spec,
              "other_language_requested": self.other_language_requested(user_text)}, ensure_ascii=False)}])
         if not isinstance(candidate, str) or not candidate.strip():
             from .model_adapter import ModelError
@@ -142,11 +153,11 @@ class StyleValidator:
         # complete boilerplate tails, never cut substantive text or code.
         original = self.clean_tail(reply) or reply
         candidate = self.clean_tail(candidate.strip())
-        if not candidate or check(candidate):
+        if not candidate or check(candidate) or policy(candidate):
             choices = [x for x in (original, candidate) if x]
             # A more casual rewrite must not replace clean Japanese with a
             # foreign/malformed sentence. Prefer language integrity, then style.
-            candidate = min(choices, key=lambda x: (len(self.language_issues(x, user_text)), len(check(x)), len(x)))
-        remaining = check(candidate)
+            candidate = min(choices, key=lambda x: (len(self.language_issues(x, user_text)), len(policy(x)), len(check(x)), len(x)))
+        remaining = check(candidate) + policy(candidate)
         return candidate, {"regenerated": True, "issues": issues,
                            "remaining_issues": remaining, "fail_open": bool(remaining)}

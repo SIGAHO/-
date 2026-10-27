@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "counts": {
+    "candidates": 0,
+    "human_approved": 0,
+    "teacher_generated": 0
+  },
+  "trusted_train": 0,
+  "trusted_dev": 0,
+  "pairs": 0,
+  "singles": 0,
+  "method_candidate": "insufficient_approved_data",
+  "gpu_name_total_free_MiB": "NVIDIA GeForce RTX 3060, 12288 MiB, 838 MiB",
+  "training_started": false,
+  "hardware_fit": "not_established",
+  "blockers": [
+    "human-reviewed diverse train/dev data and untouched session holdout required",
+    "pin HF base revision/tokenizer and compatible trainer versions",
+    "profile actual QLoRA activation/optimizer memory; GGUF cannot train",
+    "store versioned adapter manifest and verify unload rollback"
+  ],
+  "config": {
+    "schema_version": 1,
+    "base_model": "Qwen/Qwen2.5-14B-Instruct",
+    "inference_model": "qwen2.5:14b",
+    "method": "select_after_human_review",
+    "quantization": "QLoRA NF4 4bit, double quantization, bf16 compute if supported",
+    "lora": {
+      "r": 16,
+      "alpha": 32,
+      "dropout": 0.05,
+      "target_modules": [
+        "q_proj",
+        "k_proj",
+        "v_proj",
+        "o_proj"
+      ]
+    },
+    "training": {
+      "max_length": 1024,
+      "per_device_batch_size": 1,
+      "gradient_accumulation_steps": 8,
+      "gradient_checkpointing": true
+    },
+    "base_weights_read_only": true,
+    "adapter_output": "data/adapters/<base-revision>/<dataset-sha256>/<run-id>/",
+    "activation": "manual after dev evaluation and a single untouched blind evaluation",
+    "rollback": "unload adapter and select previous adapter manifest; base is unchanged",
+    "blind_holdout": "never used for optimization, method choice or threshold adjustment",
+    "execution_enabled": false
+  }
+}

@@ -8,7 +8,10 @@ from .intent import IntentRouter
 from .encoding import clean_input
 from .retrieval import RetrievalEngine
 from .fio_memory import FIOMemory
+from .alignment import PolicyPlanner, PolicyVerifier
 import threading
+import copy
+from dataclasses import replace
 
 
 class ChatSession:
@@ -17,6 +20,9 @@ class ChatSession:
         self.adapter = adapter
         self.prompts = PromptBuilder(style_profile)
         self.validator = StyleValidator()
+        self.planner = PolicyPlanner()
+        self.policy_verifier = PolicyVerifier()
+        self.alignment_trace = {}
         self.last_response_meta = {}
         self.turn_lock = threading.RLock()
         self.pending_provenance = None
@@ -25,12 +31,21 @@ class ChatSession:
         self.fio.recover(self.core.events.events)
 
     def generate_reply(self, context, messages):
+        reply = self._generate_reply(context, messages)
+        if 'verifier_result' not in context:
+            context['verifier_result'] = self.policy_verifier.verify(
+                reply, self.planned_spec, self.planned_state, context['user_input'])
+            context['verifier_result'].update(candidate_count=0, cpu_bypass=True)
+        self.alignment_trace['verifier_result'] = context['verifier_result']
+        return reply
+
+    def _generate_reply(self, context, messages):
         self.pending_provenance = None
         self.last_response_meta = {}
         if context['intent'] == 'ambiguous_followup':
             self.pending_provenance = {'intent': 'ambiguous_followup', 'sources': [{'kind': 'assistant_generated', 'fact_evidence': False}], 'generated': False, 'referent': context.get('previous_assistant')}
             self.last_response_meta = {'unverified': False, 'regenerated': False, 'cpu': True}
-            return ('直前の返答について、どの部分が引っかかった？' if context.get('previous_assistant')
+            return ('直前の返答の受け取り方がずれてた。' if context.get('previous_assistant')
                     else '直前の返答はまだない。何についての反応か教えて。')
         if context['intent'] == 'time_calculation':
             self.pending_provenance = self.core.provenance.capture(context, generated=False)
@@ -57,8 +72,27 @@ class ChatSession:
             raise ModelError("モデルが空の応答を返しました")
         if clean_input(reply) != reply:
             raise ModelError('モデル応答に不正なUnicodeが含まれています')
+        state = self.planned_state
+        spec = self.planned_spec
+        style = self.prompts.style.context(context['user_input'])
+        if state.response_risk == 'low' and (self.validator.violations(reply, style)
+                                             or self.validator.language_issues(reply, context['user_input'])):
+            # Output corruption/style defects raise the observed response risk;
+            # an unchanged low-risk turn never receives a second candidate.
+            state = replace(state, response_risk='medium')
+            self.planned_state = state
+            context['conversation_state']['response_risk'] = 'medium'
+            context['conversation_state']['risk_escalation'] = 'observed_output_style_or_language'
+        verify = lambda text: self.policy_verifier.verify(text, spec, state, context['user_input'])
+        initial_verifier = copy.deepcopy(verify(reply))
         reply, meta = self.validator.process(reply.strip(), messages, self.adapter,
-                                             self.prompts.style.context(context["user_input"]))
+                                             style,
+                                             policy_check=verify, response_spec=spec.to_dict(),
+                                             risk=state.response_risk)
+        context['verifier_result'] = copy.deepcopy(verify(reply))
+        context['verifier_result']['initial'] = initial_verifier
+        context['verifier_result']['candidate_count'] = 2 if meta.get('regenerated') else 1
+        self.alignment_trace['verifier_result'] = context['verifier_result']
         self.last_response_meta = {"unverified": False, **meta,
                                    'web_unverified': bool(context.get('external_evidence'))}
         if clean_input(reply) != reply:
@@ -67,10 +101,20 @@ class ChatSession:
         return reply + self.retrieval.citations(context)
 
     def prepare_reply(self, context, events):
+        self.planned_state = self.planner.observe(context['user_input'], events, context['intent'])
+        self.planned_spec = self.planner.plan(self.planned_state, context['user_input'], context['intent'])
+        context['conversation_state'] = self.planned_state.to_dict()
+        context['response_spec'] = self.planned_spec.to_dict()
         self.fio.begin(self.core, context)
         result = self.retrieval.retrieve(context)
         self.retrieval.attach(context, result)
         self.fio.retrieved()
+        self.alignment_trace = {key: context.get(key) for key in
+                                ('conversation_state', 'response_spec', 'feedback_candidate_status')}
+        self.alignment_trace['recall_source'] = {
+            'priority': 'recent_raw', 'raw_turn_ids': [r['turn_id'] for r in self.planned_state.recent_raw_turns],
+            'session_recall': [r.get('hit_turn_id') for r in context.get('session_recall', [])],
+            'experiences': [r['id'] for r in context.get('salient_experiences', [])]}
         return self.prompts.build(context, events)
 
     def turn(self, text, *, correction_key=None, event_id=None):
@@ -90,7 +134,7 @@ class ChatSession:
             return reply
 
     def status(self):
-        return self.core.status()
+        return {**self.core.status(), 'conversation_alignment': self.alignment_trace}
 
     def close(self):
         self.fio.close()

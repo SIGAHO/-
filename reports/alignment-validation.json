@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "baseline": "b3c52d3c40f0651d62c5358f33466b8c70854131",
+  "existing_unit_tests": 389,
+  "new_unit_tests": 83,
+  "new_multiturn_cases_included_in_new_unit": 63,
+  "unit_total": 472,
+  "unit_validation": "initial_full_run_460_then_targeted_rechecks_and_12_additional_tests_not_a_second_full_run",
+  "initial_full_run": {
+    "total": 460,
+    "failures": 13,
+    "errors": 6
+  },
+  "resolved": "socket restrictions rechecked outside sandbox; actual regression failures corrected; targeted final runs passed",
+  "behavior": {
+    "total": 107,
+    "passed": 107
+  },
+  "final_affected_run": {
+    "total": 137,
+    "passed": 137
+  },
+  "hardening_recheck": {
+    "total": 80,
+    "passed": 80
+  },
+  "daemon_recheck": {
+    "total": 20,
+    "passed": 20,
+    "note": "19 in daemon run plus the one updated status schema assertion rechecked separately"
+  },
+  "fio_integration_recheck": {
+    "total": 22,
+    "passed": 22
+  },
+  "fio_chat_durability": {
+    "turns": 500,
+    "checks": 13,
+    "passed": 13
+  },
+  "corpus": {
+    "utterances": 7000,
+    "dialogues": 638,
+    "replay_passed": 638,
+    "historical_invariant_failures": 0
+  },
+  "qwen_smoke": {
+    "turns": 12,
+    "generation_success": 12,
+    "conversation_aborts": 0,
+    "cpu_verifier_adherent": 2,
+    "cpu_verifier_nonadherent": 10,
+    "quality_pass_claimed": false,
+    "training_records_exported": 0
+  },
+  "preference_dataset": {
+    "real_records": 0,
+    "human_approved": 0,
+    "teacher_generated": 0,
+    "scripted_feedback_candidates_discarded": 1
+  }
+}

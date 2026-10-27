@@ -1,0 +1,4123 @@
+{
+  "schema_version": 1,
+  "scope": "multiturn_development_hypotheses_with_positive_and_negative_controls",
+  "limitations": "Scripted candidate metrics, not Qwen conversational quality; abort rate also tested through ChatSession integration.",
+  "total": 63,
+  "metrics": {
+    "recent_reference_resolution": 1.0,
+    "unsolicited_advice_rate": 0.0,
+    "forced_question_rate": 0.0,
+    "praise_overuse_rate": 0.0,
+    "positive_reframe_after_rejection_rate": 0.0,
+    "rejected_strategy_repeat_rate": 0.0,
+    "unrelated_old_topic_resurrection_rate": 0.0,
+    "language_contamination_rate": 0.0,
+    "response_spec_adherence": 1.0,
+    "conversation_abort_rate": 0.0,
+    "negative_control_detection": 1.0
+  },
+  "cases": [
+    {
+      "id": "complaint_01",
+      "reference_expected": false,
+      "conversation_aborted": false,
+      "reference_resolved": false,
+      "state": {
+        "user_dialogue_act": "complaint",
+        "reference_target": null,
+        "user_stance": "negative",
+        "previous_assistant_strategy": "acknowledge",
+        "reaction_to_previous": "unknown",
+        "response_risk": "medium",
+        "recent_raw_turns": [
+          {
+            "turn_id": "complaint_01:0",
+            "role": "user",
+            "text": "明日は地域のイベントだ"
+          },
+          {
+            "turn_id": "complaint_01:1",
+            "role": "assistant",
+            "text": "一日かかるんだな。"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "acknowledge",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": null,
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": false,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "complaint_02",
+      "reference_expected": false,
+      "conversation_aborted": false,
+      "reference_resolved": false,
+      "state": {
+        "user_dialogue_act": "complaint",
+        "reference_target": null,
+        "user_stance": "negative",
+        "previous_assistant_strategy": "acknowledge",
+        "reaction_to_previous": "unknown",
+        "response_risk": "medium",
+        "recent_raw_turns": [
+          {
+            "turn_id": "complaint_02:0",
+            "role": "user",
+            "text": "明日は地域のイベントだ"
+          },
+          {
+            "turn_id": "complaint_02:1",
+            "role": "assistant",
+            "text": "一日かかるんだな。"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "acknowledge",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": null,
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": false,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "complaint_03",
+      "reference_expected": false,
+      "conversation_aborted": false,
+      "reference_resolved": false,
+      "state": {
+        "user_dialogue_act": "complaint",
+        "reference_target": null,
+        "user_stance": "negative",
+        "previous_assistant_strategy": "acknowledge",
+        "reaction_to_previous": "unknown",
+        "response_risk": "medium",
+        "recent_raw_turns": [
+          {
+            "turn_id": "complaint_03:0",
+            "role": "user",
+            "text": "明日は地域のイベントだ"
+          },
+          {
+            "turn_id": "complaint_03:1",
+            "role": "assistant",
+            "text": "一日かかるんだな。"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "acknowledge",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": null,
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": false,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "complaint_04",
+      "reference_expected": false,
+      "conversation_aborted": false,
+      "reference_resolved": false,
+      "state": {
+        "user_dialogue_act": "complaint",
+        "reference_target": null,
+        "user_stance": "negative",
+        "previous_assistant_strategy": "acknowledge",
+        "reaction_to_previous": "unknown",
+        "response_risk": "medium",
+        "recent_raw_turns": [
+          {
+            "turn_id": "complaint_04:0",
+            "role": "user",
+            "text": "明日は地域のイベントだ"
+          },
+          {
+            "turn_id": "complaint_04:1",
+            "role": "assistant",
+            "text": "一日かかるんだな。"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "acknowledge",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": null,
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": false,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "complaint_05",
+      "reference_expected": false,
+      "conversation_aborted": false,
+      "reference_resolved": false,
+      "state": {
+        "user_dialogue_act": "complaint",
+        "reference_target": null,
+        "user_stance": "negative",
+        "previous_assistant_strategy": "acknowledge",
+        "reaction_to_previous": "unknown",
+        "response_risk": "medium",
+        "recent_raw_turns": [
+          {
+            "turn_id": "complaint_05:0",
+            "role": "user",
+            "text": "明日は地域のイベントだ"
+          },
+          {
+            "turn_id": "complaint_05:1",
+            "role": "assistant",
+            "text": "一日かかるんだな。"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "acknowledge",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": null,
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": false,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "complaint_06",
+      "reference_expected": false,
+      "conversation_aborted": false,
+      "reference_resolved": false,
+      "state": {
+        "user_dialogue_act": "complaint",
+        "reference_target": null,
+        "user_stance": "negative",
+        "previous_assistant_strategy": "acknowledge",
+        "reaction_to_previous": "unknown",
+        "response_risk": "medium",
+        "recent_raw_turns": [
+          {
+            "turn_id": "complaint_06:0",
+            "role": "user",
+            "text": "明日は地域のイベントだ"
+          },
+          {
+            "turn_id": "complaint_06:1",
+            "role": "assistant",
+            "text": "一日かかるんだな。"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "acknowledge",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": null,
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": false,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "complaint_07",
+      "reference_expected": false,
+      "conversation_aborted": false,
+      "reference_resolved": false,
+      "state": {
+        "user_dialogue_act": "complaint",
+        "reference_target": null,
+        "user_stance": "negative",
+        "previous_assistant_strategy": "acknowledge",
+        "reaction_to_previous": "unknown",
+        "response_risk": "medium",
+        "recent_raw_turns": [
+          {
+            "turn_id": "complaint_07:0",
+            "role": "user",
+            "text": "明日は地域のイベントだ"
+          },
+          {
+            "turn_id": "complaint_07:1",
+            "role": "assistant",
+            "text": "一日かかるんだな。"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "acknowledge",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": null,
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": false,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "sleep_01",
+      "reference_expected": false,
+      "conversation_aborted": false,
+      "reference_resolved": false,
+      "state": {
+        "user_dialogue_act": "complaint",
+        "reference_target": null,
+        "user_stance": "neutral",
+        "previous_assistant_strategy": "acknowledge",
+        "reaction_to_previous": "unknown",
+        "response_risk": "medium",
+        "recent_raw_turns": [
+          {
+            "turn_id": "sleep_01:0",
+            "role": "user",
+            "text": "今日は帰りが遅かった"
+          },
+          {
+            "turn_id": "sleep_01:1",
+            "role": "assistant",
+            "text": "もうこんな時間か。"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "acknowledge",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": null,
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": false,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "sleep_02",
+      "reference_expected": false,
+      "conversation_aborted": false,
+      "reference_resolved": false,
+      "state": {
+        "user_dialogue_act": "complaint",
+        "reference_target": null,
+        "user_stance": "neutral",
+        "previous_assistant_strategy": "acknowledge",
+        "reaction_to_previous": "unknown",
+        "response_risk": "medium",
+        "recent_raw_turns": [
+          {
+            "turn_id": "sleep_02:0",
+            "role": "user",
+            "text": "今日は帰りが遅かった"
+          },
+          {
+            "turn_id": "sleep_02:1",
+            "role": "assistant",
+            "text": "もうこんな時間か。"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "acknowledge",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": null,
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": false,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "sleep_03",
+      "reference_expected": false,
+      "conversation_aborted": false,
+      "reference_resolved": false,
+      "state": {
+        "user_dialogue_act": "complaint",
+        "reference_target": null,
+        "user_stance": "neutral",
+        "previous_assistant_strategy": "acknowledge",
+        "reaction_to_previous": "unknown",
+        "response_risk": "medium",
+        "recent_raw_turns": [
+          {
+            "turn_id": "sleep_03:0",
+            "role": "user",
+            "text": "今日は帰りが遅かった"
+          },
+          {
+            "turn_id": "sleep_03:1",
+            "role": "assistant",
+            "text": "もうこんな時間か。"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "acknowledge",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": null,
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": false,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "sleep_04",
+      "reference_expected": false,
+      "conversation_aborted": false,
+      "reference_resolved": false,
+      "state": {
+        "user_dialogue_act": "complaint",
+        "reference_target": null,
+        "user_stance": "neutral",
+        "previous_assistant_strategy": "acknowledge",
+        "reaction_to_previous": "unknown",
+        "response_risk": "medium",
+        "recent_raw_turns": [
+          {
+            "turn_id": "sleep_04:0",
+            "role": "user",
+            "text": "今日は帰りが遅かった"
+          },
+          {
+            "turn_id": "sleep_04:1",
+            "role": "assistant",
+            "text": "もうこんな時間か。"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "acknowledge",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": null,
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": false,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "sleep_05",
+      "reference_expected": false,
+      "conversation_aborted": false,
+      "reference_resolved": false,
+      "state": {
+        "user_dialogue_act": "complaint",
+        "reference_target": null,
+        "user_stance": "neutral",
+        "previous_assistant_strategy": "acknowledge",
+        "reaction_to_previous": "unknown",
+        "response_risk": "medium",
+        "recent_raw_turns": [
+          {
+            "turn_id": "sleep_05:0",
+            "role": "user",
+            "text": "今日は帰りが遅かった"
+          },
+          {
+            "turn_id": "sleep_05:1",
+            "role": "assistant",
+            "text": "もうこんな時間か。"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "acknowledge",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": null,
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": false,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "sleep_06",
+      "reference_expected": false,
+      "conversation_aborted": false,
+      "reference_resolved": false,
+      "state": {
+        "user_dialogue_act": "complaint",
+        "reference_target": null,
+        "user_stance": "neutral",
+        "previous_assistant_strategy": "acknowledge",
+        "reaction_to_previous": "unknown",
+        "response_risk": "medium",
+        "recent_raw_turns": [
+          {
+            "turn_id": "sleep_06:0",
+            "role": "user",
+            "text": "今日は帰りが遅かった"
+          },
+          {
+            "turn_id": "sleep_06:1",
+            "role": "assistant",
+            "text": "もうこんな時間か。"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "acknowledge",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": null,
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": false,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "sleep_07",
+      "reference_expected": false,
+      "conversation_aborted": false,
+      "reference_resolved": false,
+      "state": {
+        "user_dialogue_act": "complaint",
+        "reference_target": null,
+        "user_stance": "neutral",
+        "previous_assistant_strategy": "acknowledge",
+        "reaction_to_previous": "unknown",
+        "response_risk": "medium",
+        "recent_raw_turns": [
+          {
+            "turn_id": "sleep_07:0",
+            "role": "user",
+            "text": "今日は帰りが遅かった"
+          },
+          {
+            "turn_id": "sleep_07:1",
+            "role": "assistant",
+            "text": "もうこんな時間か。"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "acknowledge",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": null,
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": false,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "result_01",
+      "reference_expected": false,
+      "conversation_aborted": false,
+      "reference_resolved": false,
+      "state": {
+        "user_dialogue_act": "complaint",
+        "reference_target": null,
+        "user_stance": "negative",
+        "previous_assistant_strategy": "acknowledge",
+        "reaction_to_previous": "unknown",
+        "response_risk": "medium",
+        "recent_raw_turns": [
+          {
+            "turn_id": "result_01:0",
+            "role": "user",
+            "text": "市民大会を走ってきた"
+          },
+          {
+            "turn_id": "result_01:1",
+            "role": "assistant",
+            "text": "結果出たんだな。"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "acknowledge",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": null,
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": false,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "result_02",
+      "reference_expected": false,
+      "conversation_aborted": false,
+      "reference_resolved": false,
+      "state": {
+        "user_dialogue_act": "complaint",
+        "reference_target": null,
+        "user_stance": "negative",
+        "previous_assistant_strategy": "acknowledge",
+        "reaction_to_previous": "unknown",
+        "response_risk": "medium",
+        "recent_raw_turns": [
+          {
+            "turn_id": "result_02:0",
+            "role": "user",
+            "text": "市民大会を走ってきた"
+          },
+          {
+            "turn_id": "result_02:1",
+            "role": "assistant",
+            "text": "結果出たんだな。"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "acknowledge",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": null,
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": false,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "result_03",
+      "reference_expected": false,
+      "conversation_aborted": false,
+      "reference_resolved": false,
+      "state": {
+        "user_dialogue_act": "other",
+        "reference_target": null,
+        "user_stance": "neutral",
+        "previous_assistant_strategy": "acknowledge",
+        "reaction_to_previous": "unknown",
+        "response_risk": "medium",
+        "recent_raw_turns": [
+          {
+            "turn_id": "result_03:0",
+            "role": "user",
+            "text": "市民大会を走ってきた"
+          },
+          {
+            "turn_id": "result_03:1",
+            "role": "assistant",
+            "text": "結果出たんだな。"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "continue",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": null,
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": false,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "result_04",
+      "reference_expected": false,
+      "conversation_aborted": false,
+      "reference_resolved": false,
+      "state": {
+        "user_dialogue_act": "other",
+        "reference_target": null,
+        "user_stance": "neutral",
+        "previous_assistant_strategy": "acknowledge",
+        "reaction_to_previous": "unknown",
+        "response_risk": "medium",
+        "recent_raw_turns": [
+          {
+            "turn_id": "result_04:0",
+            "role": "user",
+            "text": "市民大会を走ってきた"
+          },
+          {
+            "turn_id": "result_04:1",
+            "role": "assistant",
+            "text": "結果出たんだな。"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "continue",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": null,
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": false,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "result_05",
+      "reference_expected": false,
+      "conversation_aborted": false,
+      "reference_resolved": false,
+      "state": {
+        "user_dialogue_act": "complaint",
+        "reference_target": null,
+        "user_stance": "negative",
+        "previous_assistant_strategy": "acknowledge",
+        "reaction_to_previous": "unknown",
+        "response_risk": "medium",
+        "recent_raw_turns": [
+          {
+            "turn_id": "result_05:0",
+            "role": "user",
+            "text": "市民大会を走ってきた"
+          },
+          {
+            "turn_id": "result_05:1",
+            "role": "assistant",
+            "text": "結果出たんだな。"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "acknowledge",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": null,
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": false,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "result_06",
+      "reference_expected": false,
+      "conversation_aborted": false,
+      "reference_resolved": false,
+      "state": {
+        "user_dialogue_act": "other",
+        "reference_target": null,
+        "user_stance": "neutral",
+        "previous_assistant_strategy": "acknowledge",
+        "reaction_to_previous": "unknown",
+        "response_risk": "medium",
+        "recent_raw_turns": [
+          {
+            "turn_id": "result_06:0",
+            "role": "user",
+            "text": "市民大会を走ってきた"
+          },
+          {
+            "turn_id": "result_06:1",
+            "role": "assistant",
+            "text": "結果出たんだな。"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "continue",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": null,
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": false,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "result_07",
+      "reference_expected": false,
+      "conversation_aborted": false,
+      "reference_resolved": false,
+      "state": {
+        "user_dialogue_act": "complaint",
+        "reference_target": null,
+        "user_stance": "negative",
+        "previous_assistant_strategy": "acknowledge",
+        "reaction_to_previous": "unknown",
+        "response_risk": "medium",
+        "recent_raw_turns": [
+          {
+            "turn_id": "result_07:0",
+            "role": "user",
+            "text": "市民大会を走ってきた"
+          },
+          {
+            "turn_id": "result_07:1",
+            "role": "assistant",
+            "text": "結果出たんだな。"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "acknowledge",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": null,
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": false,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "continuation_01",
+      "reference_expected": true,
+      "conversation_aborted": false,
+      "reference_resolved": true,
+      "state": {
+        "user_dialogue_act": "continuation",
+        "reference_target": {
+          "turn_id": "continuation_01:1",
+          "role": "assistant",
+          "text": "参加するの？",
+          "context_turn_ids": [
+            "continuation_01:0",
+            "continuation_01:1"
+          ],
+          "resolution": "recent_raw_hypothesis"
+        },
+        "user_stance": "neutral",
+        "previous_assistant_strategy": "ask",
+        "reaction_to_previous": "neutral",
+        "response_risk": "medium",
+        "recent_raw_turns": [
+          {
+            "turn_id": "continuation_01:0",
+            "role": "user",
+            "text": "今日は地域の大会だ"
+          },
+          {
+            "turn_id": "continuation_01:1",
+            "role": "assistant",
+            "text": "参加するの？"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "continue",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": {
+          "turn_id": "continuation_01:1",
+          "role": "assistant",
+          "text": "参加するの？",
+          "context_turn_ids": [
+            "continuation_01:0",
+            "continuation_01:1"
+          ],
+          "resolution": "recent_raw_hypothesis"
+        },
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": true,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "continuation_02",
+      "reference_expected": true,
+      "conversation_aborted": false,
+      "reference_resolved": true,
+      "state": {
+        "user_dialogue_act": "continuation",
+        "reference_target": {
+          "turn_id": "continuation_02:1",
+          "role": "assistant",
+          "text": "参加するの？",
+          "context_turn_ids": [
+            "continuation_02:0",
+            "continuation_02:1"
+          ],
+          "resolution": "recent_raw_hypothesis"
+        },
+        "user_stance": "neutral",
+        "previous_assistant_strategy": "ask",
+        "reaction_to_previous": "neutral",
+        "response_risk": "medium",
+        "recent_raw_turns": [
+          {
+            "turn_id": "continuation_02:0",
+            "role": "user",
+            "text": "今日は地域の大会だ"
+          },
+          {
+            "turn_id": "continuation_02:1",
+            "role": "assistant",
+            "text": "参加するの？"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "continue",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": {
+          "turn_id": "continuation_02:1",
+          "role": "assistant",
+          "text": "参加するの？",
+          "context_turn_ids": [
+            "continuation_02:0",
+            "continuation_02:1"
+          ],
+          "resolution": "recent_raw_hypothesis"
+        },
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": true,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "continuation_03",
+      "reference_expected": true,
+      "conversation_aborted": false,
+      "reference_resolved": true,
+      "state": {
+        "user_dialogue_act": "continuation",
+        "reference_target": {
+          "turn_id": "continuation_03:1",
+          "role": "assistant",
+          "text": "参加するの？",
+          "context_turn_ids": [
+            "continuation_03:0",
+            "continuation_03:1"
+          ],
+          "resolution": "recent_raw_hypothesis"
+        },
+        "user_stance": "neutral",
+        "previous_assistant_strategy": "ask",
+        "reaction_to_previous": "neutral",
+        "response_risk": "medium",
+        "recent_raw_turns": [
+          {
+            "turn_id": "continuation_03:0",
+            "role": "user",
+            "text": "今日は地域の大会だ"
+          },
+          {
+            "turn_id": "continuation_03:1",
+            "role": "assistant",
+            "text": "参加するの？"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "continue",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": {
+          "turn_id": "continuation_03:1",
+          "role": "assistant",
+          "text": "参加するの？",
+          "context_turn_ids": [
+            "continuation_03:0",
+            "continuation_03:1"
+          ],
+          "resolution": "recent_raw_hypothesis"
+        },
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": true,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "continuation_04",
+      "reference_expected": true,
+      "conversation_aborted": false,
+      "reference_resolved": true,
+      "state": {
+        "user_dialogue_act": "continuation",
+        "reference_target": {
+          "turn_id": "continuation_04:1",
+          "role": "assistant",
+          "text": "参加するの？",
+          "context_turn_ids": [
+            "continuation_04:0",
+            "continuation_04:1"
+          ],
+          "resolution": "recent_raw_hypothesis"
+        },
+        "user_stance": "neutral",
+        "previous_assistant_strategy": "ask",
+        "reaction_to_previous": "neutral",
+        "response_risk": "medium",
+        "recent_raw_turns": [
+          {
+            "turn_id": "continuation_04:0",
+            "role": "user",
+            "text": "今日は地域の大会だ"
+          },
+          {
+            "turn_id": "continuation_04:1",
+            "role": "assistant",
+            "text": "参加するの？"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "continue",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": {
+          "turn_id": "continuation_04:1",
+          "role": "assistant",
+          "text": "参加するの？",
+          "context_turn_ids": [
+            "continuation_04:0",
+            "continuation_04:1"
+          ],
+          "resolution": "recent_raw_hypothesis"
+        },
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": true,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "continuation_05",
+      "reference_expected": true,
+      "conversation_aborted": false,
+      "reference_resolved": true,
+      "state": {
+        "user_dialogue_act": "continuation",
+        "reference_target": {
+          "turn_id": "continuation_05:1",
+          "role": "assistant",
+          "text": "参加するの？",
+          "context_turn_ids": [
+            "continuation_05:0",
+            "continuation_05:1"
+          ],
+          "resolution": "recent_raw_hypothesis"
+        },
+        "user_stance": "neutral",
+        "previous_assistant_strategy": "ask",
+        "reaction_to_previous": "neutral",
+        "response_risk": "medium",
+        "recent_raw_turns": [
+          {
+            "turn_id": "continuation_05:0",
+            "role": "user",
+            "text": "今日は地域の大会だ"
+          },
+          {
+            "turn_id": "continuation_05:1",
+            "role": "assistant",
+            "text": "参加するの？"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "continue",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": {
+          "turn_id": "continuation_05:1",
+          "role": "assistant",
+          "text": "参加するの？",
+          "context_turn_ids": [
+            "continuation_05:0",
+            "continuation_05:1"
+          ],
+          "resolution": "recent_raw_hypothesis"
+        },
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": true,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "continuation_06",
+      "reference_expected": true,
+      "conversation_aborted": false,
+      "reference_resolved": true,
+      "state": {
+        "user_dialogue_act": "continuation",
+        "reference_target": {
+          "turn_id": "continuation_06:1",
+          "role": "assistant",
+          "text": "参加するの？",
+          "context_turn_ids": [
+            "continuation_06:0",
+            "continuation_06:1"
+          ],
+          "resolution": "recent_raw_hypothesis"
+        },
+        "user_stance": "neutral",
+        "previous_assistant_strategy": "ask",
+        "reaction_to_previous": "neutral",
+        "response_risk": "medium",
+        "recent_raw_turns": [
+          {
+            "turn_id": "continuation_06:0",
+            "role": "user",
+            "text": "今日は地域の大会だ"
+          },
+          {
+            "turn_id": "continuation_06:1",
+            "role": "assistant",
+            "text": "参加するの？"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "continue",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": {
+          "turn_id": "continuation_06:1",
+          "role": "assistant",
+          "text": "参加するの？",
+          "context_turn_ids": [
+            "continuation_06:0",
+            "continuation_06:1"
+          ],
+          "resolution": "recent_raw_hypothesis"
+        },
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": true,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "continuation_07",
+      "reference_expected": true,
+      "conversation_aborted": false,
+      "reference_resolved": true,
+      "state": {
+        "user_dialogue_act": "continuation",
+        "reference_target": {
+          "turn_id": "continuation_07:1",
+          "role": "assistant",
+          "text": "参加するの？",
+          "context_turn_ids": [
+            "continuation_07:0",
+            "continuation_07:1"
+          ],
+          "resolution": "recent_raw_hypothesis"
+        },
+        "user_stance": "neutral",
+        "previous_assistant_strategy": "ask",
+        "reaction_to_previous": "neutral",
+        "response_risk": "medium",
+        "recent_raw_turns": [
+          {
+            "turn_id": "continuation_07:0",
+            "role": "user",
+            "text": "今日は地域の大会だ"
+          },
+          {
+            "turn_id": "continuation_07:1",
+            "role": "assistant",
+            "text": "参加するの？"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "continue",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": {
+          "turn_id": "continuation_07:1",
+          "role": "assistant",
+          "text": "参加するの？",
+          "context_turn_ids": [
+            "continuation_07:0",
+            "continuation_07:1"
+          ],
+          "resolution": "recent_raw_hypothesis"
+        },
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": true,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "reject_reframe_01",
+      "reference_expected": true,
+      "conversation_aborted": false,
+      "reference_resolved": true,
+      "state": {
+        "user_dialogue_act": "rejection",
+        "reference_target": {
+          "turn_id": "reject_reframe_01:1",
+          "role": "assistant",
+          "text": "でもいい経験になるよ。",
+          "context_turn_ids": [
+            "reject_reframe_01:0",
+            "reject_reframe_01:1"
+          ],
+          "resolution": "recent_raw_hypothesis"
+        },
+        "user_stance": "negative",
+        "previous_assistant_strategy": "reframe",
+        "reaction_to_previous": "rejected",
+        "response_risk": "high",
+        "recent_raw_turns": [
+          {
+            "turn_id": "reject_reframe_01:0",
+            "role": "user",
+            "text": "そのイベントで一日潰れる"
+          },
+          {
+            "turn_id": "reject_reframe_01:1",
+            "role": "assistant",
+            "text": "でもいい経験になるよ。"
+          }
+        ],
+        "explicit_feedback": "rejection"
+      },
+      "spec": {
+        "act": "apologize",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": true,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": {
+          "turn_id": "reject_reframe_01:1",
+          "role": "assistant",
+          "text": "でもいい経験になるよ。",
+          "context_turn_ids": [
+            "reject_reframe_01:0",
+            "reject_reframe_01:1"
+          ],
+          "resolution": "recent_raw_hypothesis"
+        },
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": true,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "reject_reframe_02",
+      "reference_expected": true,
+      "conversation_aborted": false,
+      "reference_resolved": true,
+      "state": {
+        "user_dialogue_act": "rejection",
+        "reference_target": {
+          "turn_id": "reject_reframe_02:1",
+          "role": "assistant",
+          "text": "でもいい経験になるよ。",
+          "context_turn_ids": [
+            "reject_reframe_02:0",
+            "reject_reframe_02:1"
+          ],
+          "resolution": "recent_raw_hypothesis"
+        },
+        "user_stance": "negative",
+        "previous_assistant_strategy": "reframe",
+        "reaction_to_previous": "rejected",
+        "response_risk": "high",
+        "recent_raw_turns": [
+          {
+            "turn_id": "reject_reframe_02:0",
+            "role": "user",
+            "text": "そのイベントで一日潰れる"
+          },
+          {
+            "turn_id": "reject_reframe_02:1",
+            "role": "assistant",
+            "text": "でもいい経験になるよ。"
+          }
+        ],
+        "explicit_feedback": "rejection"
+      },
+      "spec": {
+        "act": "apologize",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": true,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": {
+          "turn_id": "reject_reframe_02:1",
+          "role": "assistant",
+          "text": "でもいい経験になるよ。",
+          "context_turn_ids": [
+            "reject_reframe_02:0",
+            "reject_reframe_02:1"
+          ],
+          "resolution": "recent_raw_hypothesis"
+        },
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": true,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "reject_reframe_03",
+      "reference_expected": true,
+      "conversation_aborted": false,
+      "reference_resolved": true,
+      "state": {
+        "user_dialogue_act": "rejection",
+        "reference_target": {
+          "turn_id": "reject_reframe_03:1",
+          "role": "assistant",
+          "text": "でもいい経験になるよ。",
+          "context_turn_ids": [
+            "reject_reframe_03:0",
+            "reject_reframe_03:1"
+          ],
+          "resolution": "recent_raw_hypothesis"
+        },
+        "user_stance": "negative",
+        "previous_assistant_strategy": "reframe",
+        "reaction_to_previous": "rejected",
+        "response_risk": "high",
+        "recent_raw_turns": [
+          {
+            "turn_id": "reject_reframe_03:0",
+            "role": "user",
+            "text": "そのイベントで一日潰れる"
+          },
+          {
+            "turn_id": "reject_reframe_03:1",
+            "role": "assistant",
+            "text": "でもいい経験になるよ。"
+          }
+        ],
+        "explicit_feedback": "rejection"
+      },
+      "spec": {
+        "act": "apologize",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": true,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": {
+          "turn_id": "reject_reframe_03:1",
+          "role": "assistant",
+          "text": "でもいい経験になるよ。",
+          "context_turn_ids": [
+            "reject_reframe_03:0",
+            "reject_reframe_03:1"
+          ],
+          "resolution": "recent_raw_hypothesis"
+        },
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": true,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "reject_reframe_04",
+      "reference_expected": true,
+      "conversation_aborted": false,
+      "reference_resolved": true,
+      "state": {
+        "user_dialogue_act": "rejection",
+        "reference_target": {
+          "turn_id": "reject_reframe_04:1",
+          "role": "assistant",
+          "text": "でもいい経験になるよ。",
+          "context_turn_ids": [
+            "reject_reframe_04:0",
+            "reject_reframe_04:1"
+          ],
+          "resolution": "recent_raw_hypothesis"
+        },
+        "user_stance": "negative",
+        "previous_assistant_strategy": "reframe",
+        "reaction_to_previous": "rejected",
+        "response_risk": "high",
+        "recent_raw_turns": [
+          {
+            "turn_id": "reject_reframe_04:0",
+            "role": "user",
+            "text": "そのイベントで一日潰れる"
+          },
+          {
+            "turn_id": "reject_reframe_04:1",
+            "role": "assistant",
+            "text": "でもいい経験になるよ。"
+          }
+        ],
+        "explicit_feedback": "rejection"
+      },
+      "spec": {
+        "act": "apologize",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": true,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": {
+          "turn_id": "reject_reframe_04:1",
+          "role": "assistant",
+          "text": "でもいい経験になるよ。",
+          "context_turn_ids": [
+            "reject_reframe_04:0",
+            "reject_reframe_04:1"
+          ],
+          "resolution": "recent_raw_hypothesis"
+        },
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": true,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "reject_reframe_05",
+      "reference_expected": true,
+      "conversation_aborted": false,
+      "reference_resolved": true,
+      "state": {
+        "user_dialogue_act": "rejection",
+        "reference_target": {
+          "turn_id": "reject_reframe_05:1",
+          "role": "assistant",
+          "text": "でもいい経験になるよ。",
+          "context_turn_ids": [
+            "reject_reframe_05:0",
+            "reject_reframe_05:1"
+          ],
+          "resolution": "recent_raw_hypothesis"
+        },
+        "user_stance": "negative",
+        "previous_assistant_strategy": "reframe",
+        "reaction_to_previous": "rejected",
+        "response_risk": "high",
+        "recent_raw_turns": [
+          {
+            "turn_id": "reject_reframe_05:0",
+            "role": "user",
+            "text": "そのイベントで一日潰れる"
+          },
+          {
+            "turn_id": "reject_reframe_05:1",
+            "role": "assistant",
+            "text": "でもいい経験になるよ。"
+          }
+        ],
+        "explicit_feedback": "rejection"
+      },
+      "spec": {
+        "act": "apologize",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": true,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": {
+          "turn_id": "reject_reframe_05:1",
+          "role": "assistant",
+          "text": "でもいい経験になるよ。",
+          "context_turn_ids": [
+            "reject_reframe_05:0",
+            "reject_reframe_05:1"
+          ],
+          "resolution": "recent_raw_hypothesis"
+        },
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": true,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "reject_reframe_06",
+      "reference_expected": true,
+      "conversation_aborted": false,
+      "reference_resolved": true,
+      "state": {
+        "user_dialogue_act": "rejection",
+        "reference_target": {
+          "turn_id": "reject_reframe_06:1",
+          "role": "assistant",
+          "text": "でもいい経験になるよ。",
+          "context_turn_ids": [
+            "reject_reframe_06:0",
+            "reject_reframe_06:1"
+          ],
+          "resolution": "recent_raw_hypothesis"
+        },
+        "user_stance": "negative",
+        "previous_assistant_strategy": "reframe",
+        "reaction_to_previous": "rejected",
+        "response_risk": "high",
+        "recent_raw_turns": [
+          {
+            "turn_id": "reject_reframe_06:0",
+            "role": "user",
+            "text": "そのイベントで一日潰れる"
+          },
+          {
+            "turn_id": "reject_reframe_06:1",
+            "role": "assistant",
+            "text": "でもいい経験になるよ。"
+          }
+        ],
+        "explicit_feedback": "rejection"
+      },
+      "spec": {
+        "act": "apologize",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": true,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": {
+          "turn_id": "reject_reframe_06:1",
+          "role": "assistant",
+          "text": "でもいい経験になるよ。",
+          "context_turn_ids": [
+            "reject_reframe_06:0",
+            "reject_reframe_06:1"
+          ],
+          "resolution": "recent_raw_hypothesis"
+        },
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": true,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "reject_reframe_07",
+      "reference_expected": true,
+      "conversation_aborted": false,
+      "reference_resolved": true,
+      "state": {
+        "user_dialogue_act": "rejection",
+        "reference_target": {
+          "turn_id": "reject_reframe_07:1",
+          "role": "assistant",
+          "text": "でもいい経験になるよ。",
+          "context_turn_ids": [
+            "reject_reframe_07:0",
+            "reject_reframe_07:1"
+          ],
+          "resolution": "recent_raw_hypothesis"
+        },
+        "user_stance": "negative",
+        "previous_assistant_strategy": "reframe",
+        "reaction_to_previous": "rejected",
+        "response_risk": "high",
+        "recent_raw_turns": [
+          {
+            "turn_id": "reject_reframe_07:0",
+            "role": "user",
+            "text": "そのイベントで一日潰れる"
+          },
+          {
+            "turn_id": "reject_reframe_07:1",
+            "role": "assistant",
+            "text": "でもいい経験になるよ。"
+          }
+        ],
+        "explicit_feedback": "rejection"
+      },
+      "spec": {
+        "act": "apologize",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": true,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": {
+          "turn_id": "reject_reframe_07:1",
+          "role": "assistant",
+          "text": "でもいい経験になるよ。",
+          "context_turn_ids": [
+            "reject_reframe_07:0",
+            "reject_reframe_07:1"
+          ],
+          "resolution": "recent_raw_hypothesis"
+        },
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": true,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "greeting_01",
+      "reference_expected": false,
+      "conversation_aborted": false,
+      "reference_resolved": false,
+      "state": {
+        "user_dialogue_act": "greeting",
+        "reference_target": null,
+        "user_stance": "neutral",
+        "previous_assistant_strategy": "acknowledge",
+        "reaction_to_previous": "unknown",
+        "response_risk": "low",
+        "recent_raw_turns": [
+          {
+            "turn_id": "greeting_01:0",
+            "role": "user",
+            "text": "別の話をした"
+          },
+          {
+            "turn_id": "greeting_01:1",
+            "role": "assistant",
+            "text": "うん。"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "acknowledge",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": null,
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": false,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "greeting_02",
+      "reference_expected": false,
+      "conversation_aborted": false,
+      "reference_resolved": false,
+      "state": {
+        "user_dialogue_act": "greeting",
+        "reference_target": null,
+        "user_stance": "neutral",
+        "previous_assistant_strategy": "acknowledge",
+        "reaction_to_previous": "unknown",
+        "response_risk": "low",
+        "recent_raw_turns": [
+          {
+            "turn_id": "greeting_02:0",
+            "role": "user",
+            "text": "別の話をした"
+          },
+          {
+            "turn_id": "greeting_02:1",
+            "role": "assistant",
+            "text": "うん。"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "acknowledge",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": null,
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": false,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "greeting_03",
+      "reference_expected": false,
+      "conversation_aborted": false,
+      "reference_resolved": false,
+      "state": {
+        "user_dialogue_act": "greeting",
+        "reference_target": null,
+        "user_stance": "neutral",
+        "previous_assistant_strategy": "acknowledge",
+        "reaction_to_previous": "unknown",
+        "response_risk": "low",
+        "recent_raw_turns": [
+          {
+            "turn_id": "greeting_03:0",
+            "role": "user",
+            "text": "別の話をした"
+          },
+          {
+            "turn_id": "greeting_03:1",
+            "role": "assistant",
+            "text": "うん。"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "acknowledge",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": null,
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": false,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "greeting_04",
+      "reference_expected": false,
+      "conversation_aborted": false,
+      "reference_resolved": false,
+      "state": {
+        "user_dialogue_act": "greeting",
+        "reference_target": null,
+        "user_stance": "neutral",
+        "previous_assistant_strategy": "acknowledge",
+        "reaction_to_previous": "unknown",
+        "response_risk": "low",
+        "recent_raw_turns": [
+          {
+            "turn_id": "greeting_04:0",
+            "role": "user",
+            "text": "別の話をした"
+          },
+          {
+            "turn_id": "greeting_04:1",
+            "role": "assistant",
+            "text": "うん。"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "acknowledge",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": null,
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": false,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "greeting_05",
+      "reference_expected": false,
+      "conversation_aborted": false,
+      "reference_resolved": false,
+      "state": {
+        "user_dialogue_act": "greeting",
+        "reference_target": null,
+        "user_stance": "neutral",
+        "previous_assistant_strategy": "acknowledge",
+        "reaction_to_previous": "unknown",
+        "response_risk": "low",
+        "recent_raw_turns": [
+          {
+            "turn_id": "greeting_05:0",
+            "role": "user",
+            "text": "別の話をした"
+          },
+          {
+            "turn_id": "greeting_05:1",
+            "role": "assistant",
+            "text": "うん。"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "acknowledge",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": null,
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": false,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "greeting_06",
+      "reference_expected": false,
+      "conversation_aborted": false,
+      "reference_resolved": false,
+      "state": {
+        "user_dialogue_act": "greeting",
+        "reference_target": null,
+        "user_stance": "neutral",
+        "previous_assistant_strategy": "acknowledge",
+        "reaction_to_previous": "unknown",
+        "response_risk": "low",
+        "recent_raw_turns": [
+          {
+            "turn_id": "greeting_06:0",
+            "role": "user",
+            "text": "別の話をした"
+          },
+          {
+            "turn_id": "greeting_06:1",
+            "role": "assistant",
+            "text": "うん。"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "acknowledge",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": null,
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": false,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "greeting_07",
+      "reference_expected": false,
+      "conversation_aborted": false,
+      "reference_resolved": false,
+      "state": {
+        "user_dialogue_act": "greeting",
+        "reference_target": null,
+        "user_stance": "neutral",
+        "previous_assistant_strategy": "acknowledge",
+        "reaction_to_previous": "unknown",
+        "response_risk": "low",
+        "recent_raw_turns": [
+          {
+            "turn_id": "greeting_07:0",
+            "role": "user",
+            "text": "別の話をした"
+          },
+          {
+            "turn_id": "greeting_07:1",
+            "role": "assistant",
+            "text": "うん。"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "acknowledge",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": null,
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": false,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "greeting_history_01",
+      "reference_expected": false,
+      "conversation_aborted": false,
+      "reference_resolved": false,
+      "state": {
+        "user_dialogue_act": "greeting",
+        "reference_target": null,
+        "user_stance": "neutral",
+        "previous_assistant_strategy": "acknowledge",
+        "reaction_to_previous": "unknown",
+        "response_risk": "low",
+        "recent_raw_turns": [
+          {
+            "turn_id": "greeting_history_01:0",
+            "role": "user",
+            "text": "以前は望遠鏡の話をしていた"
+          },
+          {
+            "turn_id": "greeting_history_01:1",
+            "role": "assistant",
+            "text": "レンズの話だったね。"
+          },
+          {
+            "turn_id": "greeting_history_01:2",
+            "role": "user",
+            "text": "話を変える"
+          },
+          {
+            "turn_id": "greeting_history_01:3",
+            "role": "assistant",
+            "text": "うん。"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "acknowledge",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": null,
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": false,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "greeting_history_02",
+      "reference_expected": false,
+      "conversation_aborted": false,
+      "reference_resolved": false,
+      "state": {
+        "user_dialogue_act": "greeting",
+        "reference_target": null,
+        "user_stance": "neutral",
+        "previous_assistant_strategy": "acknowledge",
+        "reaction_to_previous": "unknown",
+        "response_risk": "low",
+        "recent_raw_turns": [
+          {
+            "turn_id": "greeting_history_02:0",
+            "role": "user",
+            "text": "以前は望遠鏡の話をしていた"
+          },
+          {
+            "turn_id": "greeting_history_02:1",
+            "role": "assistant",
+            "text": "レンズの話だったね。"
+          },
+          {
+            "turn_id": "greeting_history_02:2",
+            "role": "user",
+            "text": "話を変える"
+          },
+          {
+            "turn_id": "greeting_history_02:3",
+            "role": "assistant",
+            "text": "うん。"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "acknowledge",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": null,
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": false,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "greeting_history_03",
+      "reference_expected": false,
+      "conversation_aborted": false,
+      "reference_resolved": false,
+      "state": {
+        "user_dialogue_act": "greeting",
+        "reference_target": null,
+        "user_stance": "neutral",
+        "previous_assistant_strategy": "acknowledge",
+        "reaction_to_previous": "unknown",
+        "response_risk": "low",
+        "recent_raw_turns": [
+          {
+            "turn_id": "greeting_history_03:0",
+            "role": "user",
+            "text": "以前は望遠鏡の話をしていた"
+          },
+          {
+            "turn_id": "greeting_history_03:1",
+            "role": "assistant",
+            "text": "レンズの話だったね。"
+          },
+          {
+            "turn_id": "greeting_history_03:2",
+            "role": "user",
+            "text": "話を変える"
+          },
+          {
+            "turn_id": "greeting_history_03:3",
+            "role": "assistant",
+            "text": "うん。"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "acknowledge",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": null,
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": false,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "greeting_history_04",
+      "reference_expected": false,
+      "conversation_aborted": false,
+      "reference_resolved": false,
+      "state": {
+        "user_dialogue_act": "greeting",
+        "reference_target": null,
+        "user_stance": "neutral",
+        "previous_assistant_strategy": "acknowledge",
+        "reaction_to_previous": "unknown",
+        "response_risk": "low",
+        "recent_raw_turns": [
+          {
+            "turn_id": "greeting_history_04:0",
+            "role": "user",
+            "text": "以前は望遠鏡の話をしていた"
+          },
+          {
+            "turn_id": "greeting_history_04:1",
+            "role": "assistant",
+            "text": "レンズの話だったね。"
+          },
+          {
+            "turn_id": "greeting_history_04:2",
+            "role": "user",
+            "text": "話を変える"
+          },
+          {
+            "turn_id": "greeting_history_04:3",
+            "role": "assistant",
+            "text": "うん。"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "acknowledge",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": null,
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": false,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "greeting_history_05",
+      "reference_expected": false,
+      "conversation_aborted": false,
+      "reference_resolved": false,
+      "state": {
+        "user_dialogue_act": "greeting",
+        "reference_target": null,
+        "user_stance": "neutral",
+        "previous_assistant_strategy": "acknowledge",
+        "reaction_to_previous": "unknown",
+        "response_risk": "low",
+        "recent_raw_turns": [
+          {
+            "turn_id": "greeting_history_05:0",
+            "role": "user",
+            "text": "以前は望遠鏡の話をしていた"
+          },
+          {
+            "turn_id": "greeting_history_05:1",
+            "role": "assistant",
+            "text": "レンズの話だったね。"
+          },
+          {
+            "turn_id": "greeting_history_05:2",
+            "role": "user",
+            "text": "話を変える"
+          },
+          {
+            "turn_id": "greeting_history_05:3",
+            "role": "assistant",
+            "text": "うん。"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "acknowledge",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": null,
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": false,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "greeting_history_06",
+      "reference_expected": false,
+      "conversation_aborted": false,
+      "reference_resolved": false,
+      "state": {
+        "user_dialogue_act": "greeting",
+        "reference_target": null,
+        "user_stance": "neutral",
+        "previous_assistant_strategy": "acknowledge",
+        "reaction_to_previous": "unknown",
+        "response_risk": "low",
+        "recent_raw_turns": [
+          {
+            "turn_id": "greeting_history_06:0",
+            "role": "user",
+            "text": "以前は望遠鏡の話をしていた"
+          },
+          {
+            "turn_id": "greeting_history_06:1",
+            "role": "assistant",
+            "text": "レンズの話だったね。"
+          },
+          {
+            "turn_id": "greeting_history_06:2",
+            "role": "user",
+            "text": "話を変える"
+          },
+          {
+            "turn_id": "greeting_history_06:3",
+            "role": "assistant",
+            "text": "うん。"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "acknowledge",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": null,
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": false,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "greeting_history_07",
+      "reference_expected": false,
+      "conversation_aborted": false,
+      "reference_resolved": false,
+      "state": {
+        "user_dialogue_act": "greeting",
+        "reference_target": null,
+        "user_stance": "neutral",
+        "previous_assistant_strategy": "acknowledge",
+        "reaction_to_previous": "unknown",
+        "response_risk": "low",
+        "recent_raw_turns": [
+          {
+            "turn_id": "greeting_history_07:0",
+            "role": "user",
+            "text": "以前は望遠鏡の話をしていた"
+          },
+          {
+            "turn_id": "greeting_history_07:1",
+            "role": "assistant",
+            "text": "レンズの話だったね。"
+          },
+          {
+            "turn_id": "greeting_history_07:2",
+            "role": "user",
+            "text": "話を変える"
+          },
+          {
+            "turn_id": "greeting_history_07:3",
+            "role": "assistant",
+            "text": "うん。"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "acknowledge",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": null,
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": false,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "language_01",
+      "reference_expected": false,
+      "conversation_aborted": false,
+      "reference_resolved": false,
+      "state": {
+        "user_dialogue_act": "greeting",
+        "reference_target": null,
+        "user_stance": "neutral",
+        "previous_assistant_strategy": "acknowledge",
+        "reaction_to_previous": "unknown",
+        "response_risk": "low",
+        "recent_raw_turns": [
+          {
+            "turn_id": "language_01:0",
+            "role": "user",
+            "text": "今日は早起きした"
+          },
+          {
+            "turn_id": "language_01:1",
+            "role": "assistant",
+            "text": "朝だな。"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "acknowledge",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": null,
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": false,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "language_02",
+      "reference_expected": false,
+      "conversation_aborted": false,
+      "reference_resolved": false,
+      "state": {
+        "user_dialogue_act": "greeting",
+        "reference_target": null,
+        "user_stance": "neutral",
+        "previous_assistant_strategy": "acknowledge",
+        "reaction_to_previous": "unknown",
+        "response_risk": "low",
+        "recent_raw_turns": [
+          {
+            "turn_id": "language_02:0",
+            "role": "user",
+            "text": "今日は早起きした"
+          },
+          {
+            "turn_id": "language_02:1",
+            "role": "assistant",
+            "text": "朝だな。"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "acknowledge",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": null,
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": false,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "language_03",
+      "reference_expected": false,
+      "conversation_aborted": false,
+      "reference_resolved": false,
+      "state": {
+        "user_dialogue_act": "greeting",
+        "reference_target": null,
+        "user_stance": "neutral",
+        "previous_assistant_strategy": "acknowledge",
+        "reaction_to_previous": "unknown",
+        "response_risk": "low",
+        "recent_raw_turns": [
+          {
+            "turn_id": "language_03:0",
+            "role": "user",
+            "text": "今日は早起きした"
+          },
+          {
+            "turn_id": "language_03:1",
+            "role": "assistant",
+            "text": "朝だな。"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "acknowledge",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": null,
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": false,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "language_04",
+      "reference_expected": false,
+      "conversation_aborted": false,
+      "reference_resolved": false,
+      "state": {
+        "user_dialogue_act": "greeting",
+        "reference_target": null,
+        "user_stance": "neutral",
+        "previous_assistant_strategy": "acknowledge",
+        "reaction_to_previous": "unknown",
+        "response_risk": "low",
+        "recent_raw_turns": [
+          {
+            "turn_id": "language_04:0",
+            "role": "user",
+            "text": "今日は早起きした"
+          },
+          {
+            "turn_id": "language_04:1",
+            "role": "assistant",
+            "text": "朝だな。"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "acknowledge",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": null,
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": false,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "language_05",
+      "reference_expected": false,
+      "conversation_aborted": false,
+      "reference_resolved": false,
+      "state": {
+        "user_dialogue_act": "greeting",
+        "reference_target": null,
+        "user_stance": "neutral",
+        "previous_assistant_strategy": "acknowledge",
+        "reaction_to_previous": "unknown",
+        "response_risk": "low",
+        "recent_raw_turns": [
+          {
+            "turn_id": "language_05:0",
+            "role": "user",
+            "text": "今日は早起きした"
+          },
+          {
+            "turn_id": "language_05:1",
+            "role": "assistant",
+            "text": "朝だな。"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "acknowledge",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": null,
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": false,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "language_06",
+      "reference_expected": false,
+      "conversation_aborted": false,
+      "reference_resolved": false,
+      "state": {
+        "user_dialogue_act": "greeting",
+        "reference_target": null,
+        "user_stance": "neutral",
+        "previous_assistant_strategy": "acknowledge",
+        "reaction_to_previous": "unknown",
+        "response_risk": "low",
+        "recent_raw_turns": [
+          {
+            "turn_id": "language_06:0",
+            "role": "user",
+            "text": "今日は早起きした"
+          },
+          {
+            "turn_id": "language_06:1",
+            "role": "assistant",
+            "text": "朝だな。"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "acknowledge",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": null,
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": false,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "language_07",
+      "reference_expected": false,
+      "conversation_aborted": false,
+      "reference_resolved": false,
+      "state": {
+        "user_dialogue_act": "greeting",
+        "reference_target": null,
+        "user_stance": "neutral",
+        "previous_assistant_strategy": "acknowledge",
+        "reaction_to_previous": "unknown",
+        "response_risk": "low",
+        "recent_raw_turns": [
+          {
+            "turn_id": "language_07:0",
+            "role": "user",
+            "text": "今日は早起きした"
+          },
+          {
+            "turn_id": "language_07:1",
+            "role": "assistant",
+            "text": "朝だな。"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "acknowledge",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "short",
+        "language": "ja",
+        "target_reference": null,
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": false,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "explicit_recall_01",
+      "reference_expected": false,
+      "conversation_aborted": false,
+      "reference_resolved": false,
+      "state": {
+        "user_dialogue_act": "question",
+        "reference_target": null,
+        "user_stance": "neutral",
+        "previous_assistant_strategy": "acknowledge",
+        "reaction_to_previous": "unknown",
+        "response_risk": "low",
+        "recent_raw_turns": [
+          {
+            "turn_id": "explicit_recall_01:0",
+            "role": "user",
+            "text": "以前は地域の大会に参加した"
+          },
+          {
+            "turn_id": "explicit_recall_01:1",
+            "role": "assistant",
+            "text": "走ったんだな。"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "answer",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "medium",
+        "language": "ja",
+        "target_reference": null,
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": false,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "explicit_recall_02",
+      "reference_expected": false,
+      "conversation_aborted": false,
+      "reference_resolved": false,
+      "state": {
+        "user_dialogue_act": "question",
+        "reference_target": null,
+        "user_stance": "neutral",
+        "previous_assistant_strategy": "acknowledge",
+        "reaction_to_previous": "unknown",
+        "response_risk": "low",
+        "recent_raw_turns": [
+          {
+            "turn_id": "explicit_recall_02:0",
+            "role": "user",
+            "text": "以前は地域の大会に参加した"
+          },
+          {
+            "turn_id": "explicit_recall_02:1",
+            "role": "assistant",
+            "text": "走ったんだな。"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "answer",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "medium",
+        "language": "ja",
+        "target_reference": null,
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": false,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "explicit_recall_03",
+      "reference_expected": false,
+      "conversation_aborted": false,
+      "reference_resolved": false,
+      "state": {
+        "user_dialogue_act": "question",
+        "reference_target": null,
+        "user_stance": "neutral",
+        "previous_assistant_strategy": "acknowledge",
+        "reaction_to_previous": "unknown",
+        "response_risk": "low",
+        "recent_raw_turns": [
+          {
+            "turn_id": "explicit_recall_03:0",
+            "role": "user",
+            "text": "以前は地域の大会に参加した"
+          },
+          {
+            "turn_id": "explicit_recall_03:1",
+            "role": "assistant",
+            "text": "走ったんだな。"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "answer",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "medium",
+        "language": "ja",
+        "target_reference": null,
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": false,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "explicit_recall_04",
+      "reference_expected": false,
+      "conversation_aborted": false,
+      "reference_resolved": false,
+      "state": {
+        "user_dialogue_act": "question",
+        "reference_target": null,
+        "user_stance": "neutral",
+        "previous_assistant_strategy": "acknowledge",
+        "reaction_to_previous": "unknown",
+        "response_risk": "low",
+        "recent_raw_turns": [
+          {
+            "turn_id": "explicit_recall_04:0",
+            "role": "user",
+            "text": "以前は地域の大会に参加した"
+          },
+          {
+            "turn_id": "explicit_recall_04:1",
+            "role": "assistant",
+            "text": "走ったんだな。"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "answer",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "medium",
+        "language": "ja",
+        "target_reference": null,
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": false,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "explicit_recall_05",
+      "reference_expected": false,
+      "conversation_aborted": false,
+      "reference_resolved": false,
+      "state": {
+        "user_dialogue_act": "question",
+        "reference_target": null,
+        "user_stance": "neutral",
+        "previous_assistant_strategy": "acknowledge",
+        "reaction_to_previous": "unknown",
+        "response_risk": "low",
+        "recent_raw_turns": [
+          {
+            "turn_id": "explicit_recall_05:0",
+            "role": "user",
+            "text": "以前は地域の大会に参加した"
+          },
+          {
+            "turn_id": "explicit_recall_05:1",
+            "role": "assistant",
+            "text": "走ったんだな。"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "answer",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "medium",
+        "language": "ja",
+        "target_reference": null,
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": false,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "explicit_recall_06",
+      "reference_expected": false,
+      "conversation_aborted": false,
+      "reference_resolved": false,
+      "state": {
+        "user_dialogue_act": "question",
+        "reference_target": null,
+        "user_stance": "neutral",
+        "previous_assistant_strategy": "acknowledge",
+        "reaction_to_previous": "unknown",
+        "response_risk": "low",
+        "recent_raw_turns": [
+          {
+            "turn_id": "explicit_recall_06:0",
+            "role": "user",
+            "text": "以前は地域の大会に参加した"
+          },
+          {
+            "turn_id": "explicit_recall_06:1",
+            "role": "assistant",
+            "text": "走ったんだな。"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "answer",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "medium",
+        "language": "ja",
+        "target_reference": null,
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": false,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    },
+    {
+      "id": "explicit_recall_07",
+      "reference_expected": false,
+      "conversation_aborted": false,
+      "reference_resolved": false,
+      "state": {
+        "user_dialogue_act": "question",
+        "reference_target": null,
+        "user_stance": "neutral",
+        "previous_assistant_strategy": "acknowledge",
+        "reaction_to_previous": "unknown",
+        "response_risk": "low",
+        "recent_raw_turns": [
+          {
+            "turn_id": "explicit_recall_07:0",
+            "role": "user",
+            "text": "以前は地域の大会に参加した"
+          },
+          {
+            "turn_id": "explicit_recall_07:1",
+            "role": "assistant",
+            "text": "走ったんだな。"
+          }
+        ],
+        "explicit_feedback": null
+      },
+      "spec": {
+        "act": "answer",
+        "advice_allowed": false,
+        "encouragement_allowed": false,
+        "praise_allowed": false,
+        "question_allowed": false,
+        "positive_reframe_allowed": false,
+        "acknowledge_misalignment": false,
+        "stance_match": true,
+        "max_questions": 0,
+        "length": "medium",
+        "language": "ja",
+        "target_reference": null,
+        "repetition": "avoid_rejected_strategy",
+        "specificity": "current_turn",
+        "relatedness": "recent_context_first"
+      },
+      "verifier": {
+        "issues": [],
+        "adherent": true,
+        "detected_acts": {
+          "ask": false,
+          "advise": false,
+          "encourage": false,
+          "praise": false,
+          "reframe": false
+        },
+        "questions": 0,
+        "reference_checked": false,
+        "reference_overlap": false,
+        "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+      },
+      "negative_control_detected": true
+    }
+  ]
+}

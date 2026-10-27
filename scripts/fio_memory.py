@@ -66,7 +66,11 @@ def probe(model=False, turns=100, timeout=180):
             session = ChatSession(adapter, path)
             checks['durability_confirmed_count'] = len(session.fio.recorder.records) == turns
             checks['durability_replay_count'] = len(session.core.events.events) == 2*turns
-            checks['durability_experience_count'] = len(session.fio.experiences.all()) == turns
+            kinds = [r['kind'] for r in session.fio.experiences.all()]
+            checks['durability_experience_count'] = kinds.count('turn') == turns
+            checks['durability_response_policy_count'] = kinds.count('assistant_response') == turns
+            checks['durability_reaction_chain_count'] = kinds.count('next_user_reaction') == turns - 1
+            checks['durability_total_experience_count'] = len(kinds) == 3 * turns - 1
         config = HeatConfig(half_life_seconds=100)
         independent = FIOMemory(heat_config=config)
         independent.experiences.append(id='heat-probe', kind='correction', turn_id='probe', timestamp=0,

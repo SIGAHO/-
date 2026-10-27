@@ -110,7 +110,7 @@ Memory・OpenLoop・訂正Stateの派生IDと作成時刻はイベントから�
 ## 学習資産・事実の境界
 
 - 旧Breaktailの教師データ、Teacher Store、自己生成学習データ、LoRA / adapter / checkpointは再利用しません。
-- 学習経路はありません。対象モデルに教師文・正解ラベル・採点基準を作らせません。
+- 学習実行はありません。人間承認付き選好データの準備経路はありますが、対象モデルに教師文・正解ラベル・採点基準を作らせません。
 - `ModelAdapter` は推論APIの抽象化であり、学習用adapter資産ではありません。
 - AI応答は `assistant_generated` としてログにのみ保存し、State・Verified Memoryへ自動昇格させません。Replayでも同じ境界です。
 - ユーザー申告の記憶は検証済みの客観的事実ではありません。訂正記憶の旧値はアーカイブします。
@@ -361,3 +361,31 @@ python experiments/run_all.py --no-write
 実装・検証結果は [FIO Memory v1 report](reports/fio-memory-v1.md)。
 同義語・長い省略の意味検索、全履歴規模での性能保証、会話品質の保証は対象外です。
 SQLiteのFTS5有効ビルドが必要です。Index破損時は上記 `--rebuild-index` で検証済みJSONLから再作成できます。
+
+## Architecture: Conversation Alignment v1
+
+`Memory → ConversationState → PolicyPlanner / ResponseSpec → Generator → PolicyVerifier → Feedback`
+
+- **Memory = 何を知っているか**。既存FIO Session JSONL原文、FTS5、Experience heat、訂正・Provenance・Replay・Web Retrievalは維持。
+- **ConversationState = 今の会話で何が起きているか**。直近4往復の原文を最優先し、発話行為、参照先のturn ID、stance、前の実際の返答strategy、反応、riskをCPUで推定。永続事実とは分離し、短い継続は直前1〜3往復へ接続する。
+- **Policy = 何をするか**。CPUのPolicyPlannerがact、助言・励まし・称賛・質問・reframeの許可、質問数、長さ、対象を決める。不満や眠気はacknowledge、拒否後はずれを受け止める。単語の禁止を積み上げて返答方針を決める方式にはしない。
+- **Generator = どう言うか**。Qwen2.5:14bはResponseSpecをcontrol signalとして受け取り、日本語化する。直近原文はrole付き履歴に保持し、CPU JSONへ重複コピーしない。挨拶では古い補助Topic/Memoryを抑制する。
+- **Verifier = 方針に沿ったか**。行為・質問数・否定済みstrategyの反復・明らかな参照喪失・言語混在を検査し、StyleValidatorは補助とする。低riskのpolicy候補は1つ。medium/highで違反があった場合のみ最大2候補を比較し、再生成は全体で最大1回。出力の口調/言語問題でriskをmediumへ上げる場合もtraceへ残す。残存する非安全性違反はfail-open。通信失敗や不正応答は従来通りModelError。
+- **Feedback = 次の改善データ**。`assistant_response → next_user_reaction`をcausation_idで連結。policy_spec、生成文、verifier結果、明示feedback、拒否strategyをExperienceへ保存する。拒否時は過去の関連失敗をrecallし、参照したExperienceだけを確認後reinforce。heatは正しさではない。
+
+`/status`の`conversation_alignment`でState / Spec / verifier / recall source / 承認待ちcandidate状況を確認できる。通常返答へ内部traceは出さない。chatとdaemonは同じ経路を使う。再起動時は短期状態を原文から次ターンに再構築し、過去のdebug traceそのものは復元しない。
+
+選好候補は`<event-log>.fio.preferences/`に保存。実ユーザーの明示的な拒否・訂正・返答承認を最優先ソースとし、「ああ」などから正解を推定しない。候補は常に人間承認待ちで、別の人間reviewが候補hashと一致して初めてtrusted exportへ進む。外部teacher候補にはteacher_generated=trueを必須とし、target Qwenをteacherとして使わない。同じsessionはSHA-256によるgroup splitでtrain/dev/blindを跨がない。blindは学習・閾値調整へexportしない。
+
+[選好schema・承認/export操作・QLoRA設定](training/preferences/README.md)と`training/preferences/adapter-config.json`を用意した。学習・モデルdownload・adapter適用は行わない。単独good/badならKTO、pair主体ならDPO/SimPOの候補だが、承認済みデータとVRAM実測が先。baseを保存し、adapterを版管理してunloadでrollbackする。
+
+```powershell
+python -m unittest discover -s tests -v
+python experiments/run_all.py --no-write
+python scripts/policy_suite.py
+# 実モデルは12ターンだけ。毎回実行する必要はない
+python scripts/alignment_smoke.py
+python scripts/training_readiness.py --store data/events.jsonl.fio.preferences
+```
+
+63件のmulti-turn suiteは開発用の工学的仮説で、教師正解や未使用blindではない。完全一致ではなく行為・参照・停止のmetricsとnegative controlを評価する。有限のCPU言語検査は意味理解の保証ではなく、実Qwenで質問や励ましの残存が確認された。成功した機械テストを会話品質の証明にしない。詳細は[Conversation Alignment v1実装報告](reports/conversation-alignment-v1.md)。

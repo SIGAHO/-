@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "breaktail/preferences/v1",
+  "type": "object",
+  "required": [
+    "id",
+    "session_id",
+    "turn_id",
+    "schema_version",
+    "context",
+    "raw_turn_ids",
+    "response_spec",
+    "chosen",
+    "rejected",
+    "source_type",
+    "teacher_model",
+    "teacher_generated",
+    "human_approved",
+    "provenance",
+    "split"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "session_id": {
+      "type": "string"
+    },
+    "turn_id": {
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1
+    },
+    "context": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "raw_turn_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "response_spec": {
+      "type": "object"
+    },
+    "chosen": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "rejected": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "source_type": {
+      "enum": [
+        "real_user_feedback",
+        "human_authored_approved",
+        "external_teacher_candidate"
+      ]
+    },
+    "teacher_model": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "teacher_generated": {
+      "type": "boolean"
+    },
+    "human_approved": {
+      "type": "boolean"
+    },
+    "provenance": {
+      "type": "object"
+    },
+    "split": {
+      "enum": [
+        "train",
+        "dev",
+        "blind_holdout"
+      ]
+    }
+  },
+  "anyOf": [
+    {
+      "properties": {
+        "chosen": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "rejected": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  ]
+}

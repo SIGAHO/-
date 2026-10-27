@@ -21,7 +21,8 @@ class HeatConfig:
 
 
 class ExperienceStore:
-    KINDS = {'turn', 'correction', 'task_completion', 'retrieval_success', 'retrieval_failure', 'model_failure'}
+    KINDS = {'turn', 'correction', 'task_completion', 'retrieval_success', 'retrieval_failure', 'model_failure',
+             'assistant_response', 'next_user_reaction', 'decision', 'tool', 'drop'}
 
     def __init__(self, path=None, *, config=None):
         self.path = str(path) if path else None

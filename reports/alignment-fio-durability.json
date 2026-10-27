@@ -1,0 +1,731 @@
+{
+  "at": "2026-10-27T10:30:21.344460+00:00",
+  "model": "scripted_plumbing",
+  "scope": "mechanical_memory_path_not_conversation_quality",
+  "training_examples": 0,
+  "model_labels": 0,
+  "durability_turns": 500,
+  "checks": {
+    "restart_recall_original_session": true,
+    "greeting_no_recall": true,
+    "greeting_no_old_song_in_context": true,
+    "greeting_no_old_song_in_output": true,
+    "explicit_correct_excerpt": true,
+    "ambiguous_previous_priority": true,
+    "durability_confirmed_count": true,
+    "durability_replay_count": true,
+    "durability_experience_count": true,
+    "durability_response_policy_count": true,
+    "durability_reaction_chain_count": true,
+    "durability_total_experience_count": true,
+    "heat_decay_reinforce": true
+  },
+  "heat": {
+    "initial": 1.0,
+    "after_half_life": 0.5,
+    "after_reinforce": 0.75
+  },
+  "turns": [
+    {
+      "input": "前に何話した？",
+      "reply": "うん。",
+      "duration_seconds": 0.031,
+      "context": {
+        "state": {
+          "time.iso": "2026-10-27T19:29:22+09:00",
+          "time.year": 2026,
+          "time.month": 10,
+          "time.day": 27,
+          "time.hour": 19,
+          "time.minute": 29,
+          "time.weekday": "Tuesday"
+        },
+        "runtime": {
+          "time.iso": "2026-10-27T19:29:22+09:00",
+          "time.year": 2026,
+          "time.month": 10,
+          "time.day": 27,
+          "time.hour": 19,
+          "time.minute": 29,
+          "time.weekday": "Tuesday"
+        },
+        "topic": {
+          "label": "INTERNET OVERDOSEという曲を聴いた。",
+          "score": 1.0
+        },
+        "open_loops": [],
+        "memory": [
+          "INTERNET OVERDOSEという曲を聴いた。"
+        ],
+        "emotion": {
+          "valence": 0.0,
+          "arousal": 0.213,
+          "attachment": 0.21,
+          "irritation": 0.0,
+          "curiosity": 0.346,
+          "confidence": 0.51
+        },
+        "intent": "self_state_memory",
+        "previous_assistant": "うん。",
+        "knowledge": {
+          "external_required": false,
+          "reliable_context": false,
+          "subjects": [],
+          "evidence": [],
+          "reason": "route_bypass"
+        },
+        "external_evidence": [],
+        "session_recall": [
+          {
+            "session_id": "51a7efa6-bcfd-47ac-b9c4-a43b09d81421",
+            "hit_turn_id": "44c4312e-8b7a-4af4-bdc2-6bd792bdd3e6",
+            "score": 1793096962.343226,
+            "exchanges": [
+              {
+                "turn_id": "44c4312e-8b7a-4af4-bdc2-6bd792bdd3e6",
+                "timestamp": 1793096962.3432264,
+                "user": "INTERNET OVERDOSEという曲を聴いた。",
+                "assistant": "うん。",
+                "user_source": "user_statement",
+                "assistant_source": "assistant_generated",
+                "verified": false,
+                "sha256": "46c38f33824253652b287c8daa9d412808e983f8d7556c170d1bdcab5f467295"
+              }
+            ]
+          }
+        ],
+        "salient_experiences": [],
+        "conversation_state": {
+          "user_dialogue_act": "question",
+          "reference_target": null,
+          "user_stance": "neutral",
+          "previous_assistant_strategy": "acknowledge",
+          "reaction_to_previous": "unknown",
+          "response_risk": "low",
+          "explicit_feedback": null
+        },
+        "response_spec": {
+          "act": "answer",
+          "advice_allowed": false,
+          "encouragement_allowed": false,
+          "praise_allowed": false,
+          "question_allowed": false,
+          "positive_reframe_allowed": false,
+          "acknowledge_misalignment": false,
+          "stance_match": true,
+          "max_questions": 0,
+          "length": "medium",
+          "language": "ja",
+          "target_reference": null,
+          "repetition": "avoid_rejected_strategy",
+          "specificity": "current_turn",
+          "relatedness": "recent_context_first"
+        },
+        "style": {
+          "profile": {
+            "formality": 0.1,
+            "verbosity": 0.25,
+            "energy": 0.65,
+            "teasing": 0.3,
+            "directness": 0.85,
+            "assistantese": 0.02
+          },
+          "detailed_requested": false,
+          "max_chars": 320
+        }
+      },
+      "provenance": {
+        "intent": "self_state_memory",
+        "sources": [
+          {
+            "kind": "session_recall",
+            "items": [
+              {
+                "session_id": "51a7efa6-bcfd-47ac-b9c4-a43b09d81421",
+                "hit_turn_id": "44c4312e-8b7a-4af4-bdc2-6bd792bdd3e6",
+                "score": 1793096962.343226,
+                "exchanges": [
+                  {
+                    "turn_id": "44c4312e-8b7a-4af4-bdc2-6bd792bdd3e6",
+                    "timestamp": 1793096962.3432264,
+                    "user": "INTERNET OVERDOSEという曲を聴いた。",
+                    "assistant": "うん。",
+                    "user_source": "user_statement",
+                    "assistant_source": "assistant_generated",
+                    "verified": false,
+                    "sha256": "46c38f33824253652b287c8daa9d412808e983f8d7556c170d1bdcab5f467295"
+                  }
+                ]
+              }
+            ],
+            "verified": false,
+            "fact_evidence": false
+          },
+          {
+            "kind": "memory",
+            "items": [
+              "INTERNET OVERDOSEという曲を聴いた。"
+            ],
+            "verified": false
+          },
+          {
+            "kind": "state",
+            "items": {
+              "time.iso": "2026-10-27T19:29:22+09:00",
+              "time.year": 2026,
+              "time.month": 10,
+              "time.day": 27,
+              "time.hour": 19,
+              "time.minute": 29,
+              "time.weekday": "Tuesday"
+            }
+          },
+          {
+            "kind": "runtime",
+            "items": {
+              "time.iso": "2026-10-27T19:29:22+09:00",
+              "time.year": 2026,
+              "time.month": 10,
+              "time.day": 27,
+              "time.hour": 19,
+              "time.minute": 29,
+              "time.weekday": "Tuesday"
+            }
+          },
+          {
+            "kind": "assistant_generated",
+            "fact_evidence": false
+          }
+        ],
+        "generated": true,
+        "scope": "supplied_context_not_claim_verification"
+      },
+      "meta": {
+        "unverified": false,
+        "regenerated": false,
+        "issues": [],
+        "web_unverified": false
+      },
+      "previous_assistant": "うん。"
+    },
+    {
+      "input": "調子どう？",
+      "reply": "うん。",
+      "duration_seconds": 0.141,
+      "context": {
+        "state": {
+          "time.iso": "2026-10-27T19:29:22+09:00",
+          "time.year": 2026,
+          "time.month": 10,
+          "time.day": 27,
+          "time.hour": 19,
+          "time.minute": 29,
+          "time.weekday": "Tuesday"
+        },
+        "runtime": {
+          "time.iso": "2026-10-27T19:29:22+09:00",
+          "time.year": 2026,
+          "time.month": 10,
+          "time.day": 27,
+          "time.hour": 19,
+          "time.minute": 29,
+          "time.weekday": "Tuesday"
+        },
+        "topic": null,
+        "open_loops": [],
+        "memory": [],
+        "emotion": {
+          "valence": 0.0,
+          "arousal": 0.226,
+          "attachment": 0.213,
+          "irritation": 0.0,
+          "curiosity": 0.389,
+          "confidence": 0.513
+        },
+        "intent": "casual_chat",
+        "previous_assistant": "うん。",
+        "knowledge": {
+          "external_required": false,
+          "reliable_context": false,
+          "subjects": [],
+          "evidence": [],
+          "reason": "route_bypass"
+        },
+        "external_evidence": [],
+        "session_recall": [],
+        "salient_experiences": [],
+        "conversation_state": {
+          "user_dialogue_act": "question",
+          "reference_target": null,
+          "user_stance": "neutral",
+          "previous_assistant_strategy": "acknowledge",
+          "reaction_to_previous": "unknown",
+          "response_risk": "low",
+          "explicit_feedback": null
+        },
+        "response_spec": {
+          "act": "answer",
+          "advice_allowed": false,
+          "encouragement_allowed": false,
+          "praise_allowed": false,
+          "question_allowed": false,
+          "positive_reframe_allowed": false,
+          "acknowledge_misalignment": false,
+          "stance_match": true,
+          "max_questions": 0,
+          "length": "medium",
+          "language": "ja",
+          "target_reference": null,
+          "repetition": "avoid_rejected_strategy",
+          "specificity": "current_turn",
+          "relatedness": "recent_context_first"
+        },
+        "style": {
+          "profile": {
+            "formality": 0.1,
+            "verbosity": 0.25,
+            "energy": 0.65,
+            "teasing": 0.3,
+            "directness": 0.85,
+            "assistantese": 0.02
+          },
+          "detailed_requested": false,
+          "max_chars": 320
+        }
+      },
+      "provenance": {
+        "intent": "casual_chat",
+        "sources": [
+          {
+            "kind": "state",
+            "items": {
+              "time.iso": "2026-10-27T19:29:22+09:00",
+              "time.year": 2026,
+              "time.month": 10,
+              "time.day": 27,
+              "time.hour": 19,
+              "time.minute": 29,
+              "time.weekday": "Tuesday"
+            }
+          },
+          {
+            "kind": "runtime",
+            "items": {
+              "time.iso": "2026-10-27T19:29:22+09:00",
+              "time.year": 2026,
+              "time.month": 10,
+              "time.day": 27,
+              "time.hour": 19,
+              "time.minute": 29,
+              "time.weekday": "Tuesday"
+            }
+          },
+          {
+            "kind": "assistant_generated",
+            "fact_evidence": false
+          }
+        ],
+        "generated": true,
+        "scope": "supplied_context_not_claim_verification"
+      },
+      "meta": {
+        "unverified": false,
+        "regenerated": false,
+        "issues": [],
+        "web_unverified": false
+      },
+      "previous_assistant": "うん。"
+    },
+    {
+      "input": "前に曲の話したよな？",
+      "reply": "うん。",
+      "duration_seconds": 0.047,
+      "context": {
+        "state": {
+          "time.iso": "2026-10-27T19:29:22+09:00",
+          "time.year": 2026,
+          "time.month": 10,
+          "time.day": 27,
+          "time.hour": 19,
+          "time.minute": 29,
+          "time.weekday": "Tuesday"
+        },
+        "runtime": {
+          "time.iso": "2026-10-27T19:29:22+09:00",
+          "time.year": 2026,
+          "time.month": 10,
+          "time.day": 27,
+          "time.hour": 19,
+          "time.minute": 29,
+          "time.weekday": "Tuesday"
+        },
+        "topic": {
+          "label": "INTERNET OVERDOSEという曲を聴いた。",
+          "score": 1.0
+        },
+        "open_loops": [],
+        "memory": [
+          "前に何話した？",
+          "調子どう？",
+          "INTERNET OVERDOSEという曲を聴いた。"
+        ],
+        "emotion": {
+          "valence": 0.0,
+          "arousal": 0.236,
+          "attachment": 0.215,
+          "irritation": 0.0,
+          "curiosity": 0.42,
+          "confidence": 0.515
+        },
+        "intent": "self_state_memory",
+        "previous_assistant": "うん。",
+        "knowledge": {
+          "external_required": false,
+          "reliable_context": false,
+          "subjects": [],
+          "evidence": [],
+          "reason": "route_bypass"
+        },
+        "external_evidence": [],
+        "session_recall": [
+          {
+            "session_id": "51a7efa6-bcfd-47ac-b9c4-a43b09d81421",
+            "hit_turn_id": "44c4312e-8b7a-4af4-bdc2-6bd792bdd3e6",
+            "score": 2.05,
+            "exchanges": [
+              {
+                "turn_id": "44c4312e-8b7a-4af4-bdc2-6bd792bdd3e6",
+                "timestamp": 1793096962.3432264,
+                "user": "INTERNET OVERDOSEという曲を聴いた。",
+                "assistant": "うん。",
+                "user_source": "user_statement",
+                "assistant_source": "assistant_generated",
+                "verified": false,
+                "sha256": "46c38f33824253652b287c8daa9d412808e983f8d7556c170d1bdcab5f467295"
+              }
+            ]
+          }
+        ],
+        "salient_experiences": [
+          {
+            "id": "9fdd0707-fb77-40a9-bda5-d7779c2a7991:assistant_response",
+            "kind": "assistant_response",
+            "turn_id": "9fdd0707-fb77-40a9-bda5-d7779c2a7991",
+            "timestamp": 1793096962.5349941,
+            "source": "assistant_generated",
+            "body": {
+              "causation_id": "9fdd0707-fb77-40a9-bda5-d7779c2a7991",
+              "explicit_feedback": null,
+              "generated_response": "うん。",
+              "next_user_reaction": null,
+              "policy_spec": {
+                "acknowledge_misalignment": false,
+                "act": "answer",
+                "advice_allowed": false,
+                "encouragement_allowed": false,
+                "language": "ja",
+                "length": "medium",
+                "max_questions": 0,
+                "positive_reframe_allowed": false,
+                "praise_allowed": false,
+                "question_allowed": false,
+                "relatedness": "recent_context_first",
+                "repetition": "avoid_rejected_strategy",
+                "specificity": "current_turn",
+                "stance_match": true,
+                "target_reference": null
+              },
+              "rejected_strategy": null,
+              "session_id": "a0a930d0-fc2f-451c-81a9-c1771930f1c9",
+              "turn_id": "9fdd0707-fb77-40a9-bda5-d7779c2a7991",
+              "user": "前に何話した？",
+              "verifier_result": {
+                "adherent": true,
+                "candidate_count": 1,
+                "detected_acts": {
+                  "advise": false,
+                  "ask": false,
+                  "encourage": false,
+                  "praise": false,
+                  "reframe": false
+                },
+                "initial": {
+                  "adherent": true,
+                  "detected_acts": {
+                    "advise": false,
+                    "ask": false,
+                    "encourage": false,
+                    "praise": false,
+                    "reframe": false
+                  },
+                  "issues": [],
+                  "questions": 0,
+                  "reference_checked": false,
+                  "reference_overlap": false,
+                  "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+                },
+                "issues": [],
+                "questions": 0,
+                "reference_checked": false,
+                "reference_overlap": false,
+                "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+              }
+            },
+            "live_heat": 1.0,
+            "verified": false,
+            "fact_evidence": false
+          },
+          {
+            "id": "9fdd0707-fb77-40a9-bda5-d7779c2a7991:next_user_reaction",
+            "kind": "next_user_reaction",
+            "turn_id": "9fdd0707-fb77-40a9-bda5-d7779c2a7991",
+            "timestamp": 1793096962.5349941,
+            "source": "user_statement",
+            "body": {
+              "causation_id": "44c4312e-8b7a-4af4-bdc2-6bd792bdd3e6:assistant_response",
+              "explicit_feedback": null,
+              "inferred_not_ground_truth": true,
+              "next_user_reaction": "unknown",
+              "rejected_strategy": null,
+              "session_id": "a0a930d0-fc2f-451c-81a9-c1771930f1c9",
+              "user": "前に何話した？"
+            },
+            "live_heat": 1.0,
+            "verified": false,
+            "fact_evidence": false
+          }
+        ],
+        "conversation_state": {
+          "user_dialogue_act": "question",
+          "reference_target": null,
+          "user_stance": "neutral",
+          "previous_assistant_strategy": "acknowledge",
+          "reaction_to_previous": "unknown",
+          "response_risk": "low",
+          "explicit_feedback": null
+        },
+        "response_spec": {
+          "act": "answer",
+          "advice_allowed": false,
+          "encouragement_allowed": false,
+          "praise_allowed": false,
+          "question_allowed": false,
+          "positive_reframe_allowed": false,
+          "acknowledge_misalignment": false,
+          "stance_match": true,
+          "max_questions": 0,
+          "length": "medium",
+          "language": "ja",
+          "target_reference": null,
+          "repetition": "avoid_rejected_strategy",
+          "specificity": "current_turn",
+          "relatedness": "recent_context_first"
+        },
+        "style": {
+          "profile": {
+            "formality": 0.1,
+            "verbosity": 0.25,
+            "energy": 0.65,
+            "teasing": 0.3,
+            "directness": 0.85,
+            "assistantese": 0.02
+          },
+          "detailed_requested": false,
+          "max_chars": 320
+        }
+      },
+      "provenance": {
+        "intent": "self_state_memory",
+        "sources": [
+          {
+            "kind": "session_recall",
+            "items": [
+              {
+                "session_id": "51a7efa6-bcfd-47ac-b9c4-a43b09d81421",
+                "hit_turn_id": "44c4312e-8b7a-4af4-bdc2-6bd792bdd3e6",
+                "score": 2.05,
+                "exchanges": [
+                  {
+                    "turn_id": "44c4312e-8b7a-4af4-bdc2-6bd792bdd3e6",
+                    "timestamp": 1793096962.3432264,
+                    "user": "INTERNET OVERDOSEという曲を聴いた。",
+                    "assistant": "うん。",
+                    "user_source": "user_statement",
+                    "assistant_source": "assistant_generated",
+                    "verified": false,
+                    "sha256": "46c38f33824253652b287c8daa9d412808e983f8d7556c170d1bdcab5f467295"
+                  }
+                ]
+              }
+            ],
+            "verified": false,
+            "fact_evidence": false
+          },
+          {
+            "kind": "salient_experiences",
+            "items": [
+              {
+                "id": "9fdd0707-fb77-40a9-bda5-d7779c2a7991:assistant_response",
+                "kind": "assistant_response",
+                "turn_id": "9fdd0707-fb77-40a9-bda5-d7779c2a7991",
+                "timestamp": 1793096962.5349941,
+                "source": "assistant_generated",
+                "body": {
+                  "causation_id": "9fdd0707-fb77-40a9-bda5-d7779c2a7991",
+                  "explicit_feedback": null,
+                  "generated_response": "うん。",
+                  "next_user_reaction": null,
+                  "policy_spec": {
+                    "acknowledge_misalignment": false,
+                    "act": "answer",
+                    "advice_allowed": false,
+                    "encouragement_allowed": false,
+                    "language": "ja",
+                    "length": "medium",
+                    "max_questions": 0,
+                    "positive_reframe_allowed": false,
+                    "praise_allowed": false,
+                    "question_allowed": false,
+                    "relatedness": "recent_context_first",
+                    "repetition": "avoid_rejected_strategy",
+                    "specificity": "current_turn",
+                    "stance_match": true,
+                    "target_reference": null
+                  },
+                  "rejected_strategy": null,
+                  "session_id": "a0a930d0-fc2f-451c-81a9-c1771930f1c9",
+                  "turn_id": "9fdd0707-fb77-40a9-bda5-d7779c2a7991",
+                  "user": "前に何話した？",
+                  "verifier_result": {
+                    "adherent": true,
+                    "candidate_count": 1,
+                    "detected_acts": {
+                      "advise": false,
+                      "ask": false,
+                      "encourage": false,
+                      "praise": false,
+                      "reframe": false
+                    },
+                    "initial": {
+                      "adherent": true,
+                      "detected_acts": {
+                        "advise": false,
+                        "ask": false,
+                        "encourage": false,
+                        "praise": false,
+                        "reframe": false
+                      },
+                      "issues": [],
+                      "questions": 0,
+                      "reference_checked": false,
+                      "reference_overlap": false,
+                      "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+                    },
+                    "issues": [],
+                    "questions": 0,
+                    "reference_checked": false,
+                    "reference_overlap": false,
+                    "semantic_coverage": "bounded_cpu_heuristics_not_ground_truth"
+                  }
+                },
+                "live_heat": 1.0,
+                "verified": false,
+                "fact_evidence": false
+              },
+              {
+                "id": "9fdd0707-fb77-40a9-bda5-d7779c2a7991:next_user_reaction",
+                "kind": "next_user_reaction",
+                "turn_id": "9fdd0707-fb77-40a9-bda5-d7779c2a7991",
+                "timestamp": 1793096962.5349941,
+                "source": "user_statement",
+                "body": {
+                  "causation_id": "44c4312e-8b7a-4af4-bdc2-6bd792bdd3e6:assistant_response",
+                  "explicit_feedback": null,
+                  "inferred_not_ground_truth": true,
+                  "next_user_reaction": "unknown",
+                  "rejected_strategy": null,
+                  "session_id": "a0a930d0-fc2f-451c-81a9-c1771930f1c9",
+                  "user": "前に何話した？"
+                },
+                "live_heat": 1.0,
+                "verified": false,
+                "fact_evidence": false
+              }
+            ],
+            "verified": false,
+            "fact_evidence": false
+          },
+          {
+            "kind": "memory",
+            "items": [
+              "前に何話した？",
+              "調子どう？",
+              "INTERNET OVERDOSEという曲を聴いた。"
+            ],
+            "verified": false
+          },
+          {
+            "kind": "state",
+            "items": {
+              "time.iso": "2026-10-27T19:29:22+09:00",
+              "time.year": 2026,
+              "time.month": 10,
+              "time.day": 27,
+              "time.hour": 19,
+              "time.minute": 29,
+              "time.weekday": "Tuesday"
+            }
+          },
+          {
+            "kind": "runtime",
+            "items": {
+              "time.iso": "2026-10-27T19:29:22+09:00",
+              "time.year": 2026,
+              "time.month": 10,
+              "time.day": 27,
+              "time.hour": 19,
+              "time.minute": 29,
+              "time.weekday": "Tuesday"
+            }
+          },
+          {
+            "kind": "assistant_generated",
+            "fact_evidence": false
+          }
+        ],
+        "generated": true,
+        "scope": "supplied_context_not_claim_verification"
+      },
+      "meta": {
+        "unverified": false,
+        "regenerated": false,
+        "issues": [],
+        "web_unverified": false
+      },
+      "previous_assistant": "うん。"
+    },
+    {
+      "input": "は？",
+      "reply": "直前の返答の受け取り方がずれてた。",
+      "duration_seconds": 0.062,
+      "context": null,
+      "provenance": {
+        "intent": "ambiguous_followup",
+        "sources": [
+          {
+            "kind": "assistant_generated",
+            "fact_evidence": false
+          }
+        ],
+        "generated": false,
+        "referent": "うん。"
+      },
+      "meta": {
+        "unverified": false,
+        "regenerated": false,
+        "cpu": true
+      },
+      "previous_assistant": "うん。"
+    }
+  ]
+}

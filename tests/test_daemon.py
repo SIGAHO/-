@@ -134,7 +134,8 @@ class DaemonTests(unittest.TestCase):
         self.daemon()
         before = self.path.read_bytes()
         status = DaemonClient(self.path).status()
-        self.assertEqual(set(status), {"current_time", "open_loops", "topic", "emotion", "last_pc_observation"})
+        self.assertEqual(set(status), {"current_time", "open_loops", "topic", "emotion", "last_pc_observation", "conversation_alignment"})
+        self.assertEqual(status['conversation_alignment'], {})
         self.assertEqual(before, self.path.read_bytes())
 
     def test_auth_rejected(self):
