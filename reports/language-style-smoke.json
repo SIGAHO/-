@@ -1,0 +1,78 @@
+{
+  "model": "qwen2.5:14b",
+  "scope": "four_turn_observation_with_user_supplied_mixed_history_not_quality_proof",
+  "turns": [
+    {
+      "user": "眠い！",
+      "reply": "眠いんですね。ゆっくり休んで、元気を取り戻しましょう。☕️",
+      "meta": {
+        "unverified": false,
+        "regenerated": false,
+        "issues": [],
+        "web_unverified": false
+      },
+      "calls": [
+        {
+          "stage": "generation",
+          "reply": "眠いんですね。ゆっくり休んで、元気を取り戻しましょう。☕️"
+        }
+      ]
+    },
+    {
+      "user": "hmm",
+      "reply": "何か考え中のことあるのか？手伝えることがあったら言ってね。",
+      "meta": {
+        "unverified": false,
+        "regenerated": true,
+        "issues": [
+          "excessive_formality"
+        ],
+        "remaining_issues": [],
+        "fail_open": false,
+        "web_unverified": false
+      },
+      "calls": [
+        {
+          "stage": "generation",
+          "reply": "何か考え中のことでもあるんですか？なにか手伝えることがあったら教えてくださいね。"
+        },
+        {
+          "stage": "rewrite",
+          "reply": "何か考え中のことあるのか？手伝えることがあったら言ってね。"
+        }
+      ]
+    },
+    {
+      "user": "お前が俺の代わりにソフトを作ってくれるゆめ",
+      "reply": "ソフトウェア作成の夢か。手伝いたいけど、実際には自分で頑張るしかないよね。何か具体的なアイデアや問題があれば、アドバイスできるよ。",
+      "meta": {
+        "unverified": false,
+        "regenerated": false,
+        "issues": [],
+        "web_unverified": false
+      },
+      "calls": [
+        {
+          "stage": "generation",
+          "reply": "ソフトウェア作成の夢か。手伝いたいけど、実際には自分で頑張るしかないよね。何か具体的なアイデアや問題があれば、アドバイスできるよ。"
+        }
+      ]
+    },
+    {
+      "user": "めがさめた！！",
+      "reply": "また夢の中だったのか？その夢、結構本気で欲しいね。頑張って自分で作っちゃう？",
+      "meta": {
+        "unverified": false,
+        "regenerated": false,
+        "issues": [],
+        "web_unverified": false
+      },
+      "calls": [
+        {
+          "stage": "generation",
+          "reply": "また夢の中だったのか？その夢、結構本気で欲しいね。頑張って自分で作っちゃう？"
+        }
+      ]
+    }
+  ]
+}
