@@ -1,0 +1,7 @@
+test_paired_conditions_keep_identical_history_and_nonpolicy_context (test_generation_comparison.ComparisonIntegrityTests.test_paired_conditions_keep_identical_history_and_nonpolicy_context) ... ok
+test_short_directive_preserves_explicit_advice_permission (test_generation_comparison.ComparisonIntegrityTests.test_short_directive_preserves_explicit_advice_permission) ... ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.878s
+
+OK
