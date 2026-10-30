@@ -238,6 +238,16 @@ class ExperienceTests(unittest.TestCase):
     def add(self, id='e1', ts=0, kind='correction', body=None, source='user_statement'):
         return self.store.append(id=id, kind=kind, turn_id='t', timestamp=ts, source=source, body=body or {'user': '望遠鏡は赤じゃなくて青'})
 
+    def test_long_experience_is_omitted_without_negation_reversal(self):
+        original = '背景。' * 196 + '私は大会に参加したわけではない。'
+        self.add(body={'user': original, 'target': '大会'}, ts=0)
+        raw = self.store.all()[0]['body']
+        item = self.store.salient('大会', now=0)[0]
+        self.assertIsNone(item['body']['user'])
+        self.assertIn('user', item['omitted_body_fields'])
+        self.assertEqual(self.store.all()[0]['body'], raw)
+        self.assertEqual(item['body']['target'], '大会')
+
     def test_decay_half_life(self):
         self.add()
         self.assertAlmostEqual(self.store.live_heat(self.store.all()[0], 100), .5)

@@ -6,6 +6,18 @@ from companion_core.chat import ChatSession
 from companion_core.model_adapter import FakeModelAdapter
 
 class ContextRetryTests(unittest.TestCase):
+    def test_guided_retry_uses_detected_act_without_fabricating_history(self):
+        adapter = FakeModelAdapter(['おかえり。今日はどうだった？', 'おかえり。'])
+        chat = ChatSession(adapter, prompt_mode='character-guided')
+        try:
+            self.assertEqual(chat.turn('ただいま'), 'おかえり。')
+            original, retry = adapter.requests
+            self.assertEqual(original[1:], retry[1:])
+            self.assertIn('質問をせず相手の発言を受け止める', retry[0]['content'])
+            self.assertNotIn('今日はどうだった', str(retry))
+        finally:
+            chat.close()
+
     def test_experiment_retry_seed_is_distinct_and_recorded(self):
         import io, json, tempfile
         from unittest.mock import patch
@@ -68,6 +80,8 @@ class ContextRetryTests(unittest.TestCase):
         self.assertTrue(planner.plan(state, 'やり方を教えてほしい').advice_allowed)
         self.assertTrue(Acts.advice.search('疲れてるならゆっくり休んでください。'))
         self.assertFalse(Acts.advice.search('昨日はゆっくり休んでた。'))
+        self.assertTrue(Acts.advice.search('体休めてきた方がいいよ。'))
+        self.assertFalse(Acts.advice.search('昨日より今日の方がいい。'))
 
     def test_rejection_scope_does_not_cancel_separate_advice_request(self):
         from companion_core.alignment import PolicyPlanner

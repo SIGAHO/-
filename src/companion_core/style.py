@@ -132,7 +132,7 @@ class StyleValidator:
             return ['instruction_leak']
         return []
 
-    def process(self, reply, messages, adapter, style, *, policy_check=None, response_spec=None, risk='low', retry_full_context=False, reject_unreadable=False):
+    def process(self, reply, messages, adapter, style, *, policy_check=None, response_spec=None, risk='low', retry_full_context=False, reject_unreadable=False, guided_retry=False):
         user_text = next((m['content'] for m in reversed(messages) if m['role'] == 'user'), '')
         def integrity(text):
             return self.language_issues(text, user_text) + (self.instruction_leaks(text, user_text) if reject_unreadable else [])
@@ -167,6 +167,15 @@ class StyleValidator:
             retry_messages = [dict(m) for m in messages]
             retry_messages[0]['content'] += ('\n再生成: 直近のユーザー発言に、上記の会話文脈から一度だけ返答する。'
                 '会話内容の事実を変えず、求められていない質問や助言を加えない。返答本文のみ。')
+            if guided_retry:
+                guidance = {'forbidden_ask': '質問をせず相手の発言を受け止める。',
+                            'too_many_questions': '追加の質問をしない。',
+                            'forbidden_advise': '解決策や行動の勧めを出さず、その話に反応する。',
+                            'forbidden_encourage': '励ましを足さず、相手の話を受け止める。',
+                            'forbidden_reframe': '結果に別の価値や教訓を付けず、そのまま受け取る。',
+                            'missing_misalignment_acknowledgment': '直前の自分のずれを短く認める。',
+                            'rejected_strategy_repeat': '相手に断られた返し方は繰り返さない。'}
+                retry_messages[0]['content'] += ''.join(guidance[issue] for issue in dict.fromkeys(issues) if issue in guidance)
         else:
             retry_messages = [rewrite, {"role": "user", "content": json.dumps(
                 {"draft": reply, "style": style,

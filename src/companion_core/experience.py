@@ -108,7 +108,8 @@ class ExperienceStore:
                 scored.append((coverage * heat, row, body, heat))
         selected = sorted(scored, key=lambda x: (-x[0], -x[1]['timestamp'], x[1]['id']))[:limit]
         result = [{'id': r['id'], 'kind': r['kind'], 'turn_id': r['turn_id'], 'timestamp': r['timestamp'],
-                   'source': r['source'], 'body': {k: (v[:600] if isinstance(v, str) else v) for k, v in b.items()},
+                   'source': r['source'], 'body': {k: (None if isinstance(v, str) and len(v) > 600 else v) for k, v in b.items()},
+                   'omitted_body_fields': [k for k, v in b.items() if isinstance(v, str) and len(v) > 600],
                    'live_heat': round(h, 6), 'verified': False, 'fact_evidence': False}
                   for _, r, b, h in selected]
         if reinforce:

@@ -55,6 +55,11 @@ class CharacterRoutingTests(unittest.TestCase):
             self.assertTrue(chat.alignment_trace['verifier_result']['cpu_bypass'])
             self.assertFalse(chat.core.provenance.last['generated'])
             self.assertEqual(chat.adapter.requests, [])
+            chat.turn('富士山の高さは何メートル？')
+            explanation = chat.turn('その情報はどこから？')
+            self.assertIn('disabled', explanation)
+            self.assertIn('今回の外部検索', explanation)
+            self.assertNotIn('過去の経験記録（未検証）', explanation)
         finally:
             chat.close()
 

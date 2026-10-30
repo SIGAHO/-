@@ -47,6 +47,9 @@ class ProvenanceResponder:
             if not records:
                 return '直前の記憶照会では、条件に合う保存済みユーザー申告が見つからなかった。'
             return '直前の記憶照会は、保存済みのユーザー申告「' + '」「'.join(records) + '」を引用した。外部事実としての確認はしていない。'
+        if 'retrieval_status' in self.last:
+            status = self.last['retrieval_status']
+            return '直前の文は、今回の外部検索の状態（' + str(status) + '）に基づく固定の未確認通知。事実の回答や過去の経験記録を根拠にしたものではない。'
         calculation = self.last.get('calculation')
         if calculation:
             return ('直前の回答は、あなたの入力「' + calculation['input'] +

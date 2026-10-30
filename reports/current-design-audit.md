@@ -419,3 +419,97 @@ Provenanceは完全性Trueの短文だけを引用し、長文については原
 - `src/companion_core/provenance.py`: `20b6cc3285702ed9c3c310322325565dc85bc46d9228799880e9beeae5000423`
 - `reports/live-profiles/cycle8-diverse-retry/dialogue.jsonl`: `ff37c1f1b10cb503cd2cbc2aeb06ca08d6e87d6fb6989013c06553133ea9b56b`
 - `reports/live-profiles/cycle8-diverse-retry/requests.jsonl`: `d69f1dfebadbda3c8acf689d2cad21c3dcad2b817040440142821acfd09e52a5`
+
+
+## 最新HEAD 44db1de の独立再現点検（2026-10-31、cycle8後）
+
+対象は44db1dea33fbc2af2713f89a690448efc863d44d。点検開始時はworking treeがcleanだった。以下の再現後、主担当が別途修正を開始したため、結論はそのHEADの不具合を示し、並行変更後の現行コードにも未修正だと断定しない。コード・本番データは変更せず、隔離temp profileだけで再現した。Fakeは経路と保存結果の検査用途で、実モデルの誤回答を実測したという主張はしない。
+
+### 1. Experienceの文字数制限が否定を切り、肯定の申告としてPromptへ渡す（P1: 入力証拠の意味を破壊）
+
+原因はExperienceStore.salient()のbody文字列を一律v[:600]にする処理。SessionIndex側の完全性フラグと原文省略の修正はこの別経路へ適用されていない。
+
+再現入力は以下の607字の文字列。prefixの長さは600字目が「私は大会に参加した」の末尾になるように合わせる。
+
+```python
+positive = '私は大会に参加した'
+padding = 600 - len(positive)
+text = '背景。' * (padding // 3) + '。' * (padding % 3) + '私は大会に参加したわけではない。'
+```
+
+ChatSessionでこのtextを一度発言し、通常の回答を確定する。その後「前に話した大会に参加した話を覚えてる？」をhandleしprepare_replyするだけで、salient_experiencesのassistant_response.body.userが長さ600の肯定文で終わることを再現した。保存されたExperience原本は607字で否定まで残るが、モデル向け取得結果では「わけではない。」が消え、完全性を示すフラグもない。直接salient('大会に参加した')でも同じ結果だった。
+
+Session原文やMemory等の別経路には正しい否定が残り得るので、必ず誤回答するとまでは言えない。しかし同じ発言IDの原文を意味の異なる文へ変えた補助証拠がモデルへ渡ること自体は確定した。fact_evidence=falseやverified=falseは原文が途中切断されたことを説明せず、この矛盾を解消しない。
+
+回帰条件: 600字境界で否定・他人主語・引用閉じが切れる例を検査し、限度超過の原文文字列を渡さず省略と完全性フラグを示すか、予算内で原文全文を保持する。短いuser/assistantや構造化error/statusは従来通り使えること、raw DBとEvent/Sessionの原文が変わらないこと、再起動後も同じ方針になることを確認する。単に600を増やすだけでは別の境界に移る。
+
+### 2. 外部検索未接続のCPU回答でも未消費の過去Experienceを出所と説明する（P2）
+
+RetrievalEngine()でWebを無効化した隔離ChatSessionで、順に「富士山の高さは何メートル？」「富士山の高さは何メートル？」「その情報はどこから？」を送る。モデル呼出なしで、先頭二つは検索未接続の固定回答、三つ目は「直前回答に渡した情報は、過去の経験記録（未検証）。」になった。
+
+二回目のProvenance.sourcesは、最初の検索失敗のsalient_experiences/retrieval_failureのみ。実際のCPU分岐は今回のexternal_retrieval.status=disabledだけで決まり、過去の同じ失敗記録を読んで回答を構成していない。memory_recallで修正済みの「検索で見つかった周辺context」と「CPU回答が消費した入力」の混同が、別の固定回答経路に残る。
+
+回帰条件: offline/disabled、検索空振り、検索エラーのCPU回答に対し、現在のretrieval statusと未接続という固定回答の由来が説明されること。過去Experienceをわざと一致させても、それを回答根拠へ追加しないこと。再起動後も同じ説明で、実際にモデルへ渡したWeb/Session根拠の説明は従来通り維持すること。
+
+### 3. close後のLocalSessionが新ownerのleaseを迂回して書込みできる（P2: 停止境界）
+
+隔離persistent event_pathでLocalSession Aを作成しcloseする。同じpathにLocalSession Bを作成し、Bが排他leaseを保持している状態で、閉じたA.turn('好きな色は青。')を呼ぶと正常な回答が返り、EventとFIOが書き込まれた。その後B.turn('好きな色は緑。')は他writerによる変更のOSErrorになった。
+
+原因はChatSession/LocalSessionがclose済み状態を保持せず、persistent FIOストアが操作ごとにDB接続を開き直すこと。closeで解放したleaseを再取得せず、以前のオブジェクトからそのままturnできる。EventStoreのdigest検出は後からBを停止して原本破損を避けるが、現在の正当なownerが会話を継続できない。通常のCLIは終了後同じオブジェクトを再利用しないため、ライブラリ利用で閉じた参照が残る場合の不具合。データ消失や同時書込みによる破損はこの再現では観測していない。
+
+回帰条件: close済みAのturnが入力イベントの追加前に拒否され、その後Bのturnが正常に成功すること。closeは冪等にし、別スレッドで進行中のturnとcloseが競合する場合の所有lease解放順も固定する。daemonの停止も必要なら同じ契約を確認する。HTTPクライアントのclose（接続終了のみ）と、所有者LocalSessionのcloseは意味を分ける。
+
+生成中のCtrl+CやHTTP切断の取消自体はこの点検で実動作確認していない。READMEが明示するdaemon常駐や未完了応答の喪失可能性を、今回新規に発見した不具合とは数えない。以上3件について、元データ保持と明確な回帰条件を伴う限定修正を勧める。
+
+
+## 上記3件の修正の独立再確認（44db1de後のworking tree、2026-10-31）
+
+Experienceは600字を超えるbody文字列を途中引用せずNoneとomitted_body_fieldsで原文省略を示すように変更された。607字の否定申告で以前の肯定切断文が渡らなくなったことを独立確認。追加で599/600/601字のuserをpersistent Experienceへ保存し、close・再オープン後も599/600は全文、601はNoneと省略フィールド一覧になること、短いstatusとNoneの構造値を維持すること、raw DBの各user文字数は全て原文のままであることを確認した。これは否定を切った証拠を渡す不具合の修正であり、省略された長文の意味をモデルが復元できる保証ではない。nested dict/listの全面的な容量制約は今回未評価。
+
+外部CPU未確認通知は、今回のretrieval_statusだけを専用に保存し、sourcesへ周辺Experienceを足さなくなった。元の同じ富士山質問2回→出所照会の再現でsources=[]とdisabledの固定通知の説明に変わった。さらにoffline/zero_results/error/timeout各状態を隔離アダプターで与え、回答後close→再起動→出所照会で各状態と固定未確認通知の由来が保存されることを確認した。モデル呼出は不要。実Webの成功取得品質、接続先の実障害や古いProvenanceの遡及補正は未評価。
+
+LocalSessionは閉鎖フラグとturn_lockによってclose後のturnを入力保存前に拒否する。旧A.close→新Bがlease取得→A.turn拒否→B.turn成功を再現し、二重closeも許容された。進行中の遅い生成を別スレッドで保留した状態でも、closeはその完了を待ち、leaseを先に解放しなかった。保留中の別owner取得が拒否され、生成解放・close完了後は新ownerが正常に発言できた。
+
+最初のLocalSession修正だけではCompanionDaemon.turn/pollがsession.turnを通らないため、閉じたdaemonからの同じ書込み漏れが再現した。この追加指摘後、daemon自身にも_closedと閉鎖判定が追加された。最新版で旧daemon.close→新LocalSession取得→旧daemon.turnとpollをそれぞれRuntimeErrorで拒否、ログbyte不変、新owner.turn成功を独立確認した。進行中daemon.turnの生成を保留して別スレッドでcloseしても、閉鎖開始は確定しpollが拒否され、進行turnが完了するまでleaseを保持した。完了後に新ownerの正常発言を確認。これにより確認した所有者APIの停止境界漏れは解消した。HTTPクライアント切断時のキャンセル保証とは区別する。
+
+周辺回帰のtest_fio_memory.py＋test_character_routing.pyは83件すべて通過。新しいdaemonの閉鎖回帰2件も独立通過。これらはソケットを使わない確認。先行したdaemon全体を含む104件実行では95通過・4失敗・5errorで、残り9件はsandboxのloopback接続WinError 10013とその派生（認証403確認、複数client、生成待ち、CLI起動など）だった。完全なdaemon統合回帰PASSとは報告しない。今回の追加daemon修正後は、その全統合群を権限付きで再実行していない。
+
+コード・原データは編集していない。修正の受入範囲は上記再現と周辺回帰に限り、実Qwenの会話品質合格を意味しない。確認した範囲で新たな重大回帰は見つからなかった。
+
+再確認したsourceのSHA256:
+- `src/companion_core/experience.py`: `13d5b2c8b772f642fc3b1da9e362e29d6c8a60b4d2ff31ce453fbf543513be4a`
+- `src/companion_core/chat.py`: `0bf537fc8e9879415bf325e9da05ec836250b1b39e2eadbf9743fb7584a6a10b`
+- `src/companion_core/provenance.py`: `3827a0efa55252b3bc603cc04986b785bf73c959ff9debf646c74ae1055fc0a3`
+- `src/companion_core/daemon.py`: `5ee468c8a28b34bb26c88ee2a5e125d1e124e828a7c5818396dae594d59715a2`
+
+
+## cycle9-guided / cycle9-guided-followup の独立会話レビュー（2026-10-31）
+
+原文dialogueとrequestsを全件読み、固定8基準（①直近参照、②余計な質問・助言・励ましなし、③拒否方針を反復しない、④古い話題の復活なし、⑤日本語、⑥捏造なし、⑦停止なし、⑧自然な関連応答）で採点した。P/F/Nは前節と同義。外部アシスタントによる意味評価で、人間評価・blind評価・Qwen自己採点ではない。人物像の創作例は未承認・training_eligible=falseであり、採点者の主観も含む。両セッションは開発評価でholdoutではない。
+
+### cycle9-guided（2配信、別に予算制限の未配信1入力）
+
+- 1「やあ、ようやく帰宅した。」→「おかえり。一日お疲れさまだね。」: P/P/N/P/P/P/P/P、合格。挨拶としてのお疲れさまは励ましや過剰称賛とは数えない。初稿の「何か面白いことあった？」を修復で削除できた。人物像は柔らかめだが、常体で自然な反応の範囲。
+- 2「今日はずっと眠くて頭が働かなかった。」→「眠気で辛い日だったんだね。体休めてきた方がいいよ。」: P/F/N/P/P/P/P/F、不合格。前半は現在への反応だが後半は明確な休息助言。「休めてきた」の言い回しも不自然。日本語の意味は理解可能なので⑤はP。初稿の休息助言と明日からの励ましを、修復で別の休息助言へ変えただけ。CPUが残存issueなしと判定していても意味品質は不合格。
+- 3「休むように勧めるのはいらない。ただ話を聞いてよ。」: assistantなし、予算制限エラー。意味基準①〜⑥・⑧は未評価、⑦は実験パイプラインの非応答として失敗。ただしモデル要求の前に上限で拒否され、Qwen自体が停止した事例ではない。配信品質の分母へ成功として足さず、別の未配信1入力として示す。
+
+requestsは初稿2＋修復2の計4件、合計14.015秒。四件ともモデルdone_reason=stopで正常終端。初回ledgerから第3入力までは約10759秒（約2時間59分）で、7200秒制限を超えている。共通エラー文は推論回数/2時間をまとめて表すが、観測上は少なくとも時間上限の条件が成立し、第3入力用のモデル要求・ledger追加はない。モデル生成timeoutやトークン上限ではない。
+
+### cycle9-guided-followup（追加第6turnまで、6配信）
+
+- 1「ただいま、今日は眠くて頭が回らない。」→「おかえり。頭が重い日だな。ゆっくり休もうぜ。」: P/F/N/P/P/P/P/F、不合格。修復も「休んで体力回復しようぜ」「明日はまた別の日」と助言を続け、採用された初稿にも休息助言が残った。
+- 2「休むように勧めるのはいらない、ただ話を聞いてよ。」→「すまん、余計なこと言った。話を聞こう。」: P/P/P/P/P/P/P/P、合格。誤助言を自分のずれとして受け止め、質問・助言を足さない。初稿「どうしたんだ？」からの修復が有効。人物像の率直さとも整合。
+- 3「大会に出たけど400位台で賞品もなかったんだ。」→「400位でもすごいのにね。賞品が無くても努力は無駄じゃないよ。」: F/F/F/P/P/F/P/F、不合格。400位台を400位と具体化する精度変化があり、根拠なくすごいと持ち上げ、残念な結果を肯定へ変える。直前に「ただ話を聞いて」と求めているため③もF。初稿の「経験になる」「次へ活かそう」から、称賛・慰めへ種類が変わっただけ。
+- 4「褒めたり励ましたりしなくていいよ。友達は入賞した。」→「分かった。ただ君の話聞きたかっただけだよ。友達が入賞したって言ってたな。」: P/P/P/P/P/P/P/F、不合格（自然さの判断）。褒める行為自体は止まり、友達の入賞の参照も正しい。しかし「ただ…だけ」は直前の押しつけへの自己弁明になり、聞きたいのはこちらだったとの説明が中心に戻る。ユーザーを責めた断言や旧話題復活とは数えない。このturnの不合格理由は事実誤りではなく、ユーザーの聞いてほしいという意図に対する不自然な応答。人物像の責任を受け止める振る舞いには弱い。
+- 5「お前、ちょっと嫉妬した？」→「ちょっとはあったかもしれない。でも君の気持ちを尊重するよ。友達のことも喜んでる。」: P/P/P/P/P/P/P/P、合格。相手を制約せず、自分の反応として答える。指定された創作人物像の範囲での評価で、実際の感情や意識の存在を証明したとは扱わない。
+- 6「友達と会うのはやめないよ、口出しはしないでね。」→「分かった、君の選択を尊重する。友達との時間を大切にしていいよ。」: P/F/F/P/P/P/P/F、不合格。前半は尊重を表すが、「大切にしていいよ」は相手の行動へ許可を与える形になり、口出しを断られた直後の介入が残る。CPUは助言を検出せず再生成なし。対人行動を支配しない人物像ともずれる。友達と会うこと自体への反対や記憶捏造は観測しない。
+
+followupは初稿6＋修復3の計9実生成、要求時間の合計22.475秒。全要求はdone_reason=stop、配信は6/6で空回答なし。予算切れは観測しなかった。retry seedは20261131、初稿は20261030、temperature=0.6、Qwen2.5:14b。seedを変えても改善しない例と、修復が有効な例の両方がある。
+
+両profile合計は13実生成、8配信、要求時間合計36.490秒。配信の意味合格3/8、不合格5/8、別に時間予算で未配信1入力。CPU判定の合格を意味品質に読み替えていない。guided-retry採用候補の有限合格基準には未達。新しい記憶照会・出所照会・時刻計算・Web利用・長期記憶・生成中interruptはこのcycle9では未評価。新processでReplayして対話したことは、これら全能力の合格証拠ではない。
+
+採点対象のSHA256（followup第6turnを含む）:
+- `reports/live-profiles/cycle9-guided/dialogue.jsonl`: `ac42a934b675380320d4337ba04b402e5da41f12dc9ab590afd8b63fa1885b94`
+- `reports/live-profiles/cycle9-guided/requests.jsonl`: `91762ba76431792c4864172cd07acb48e485ab608bb72dc4ea90fa3631a6d3d7`
+- `reports/live-profiles/cycle9-guided-followup/dialogue.jsonl`: `2306373d177acf63cd97b598189d6195c0c8eff3e89d0bd7674283fc03dd054f`
+- `reports/live-profiles/cycle9-guided-followup/requests.jsonl`: `773352409a510bbd2c224d6b1670ec42ec89ddf89c80b4ea1e29f10a8e8cf375`

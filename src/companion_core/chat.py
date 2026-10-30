@@ -25,6 +25,7 @@ class ChatSession:
         self.alignment_trace = {}
         self.last_response_meta = {}
         self.turn_lock = threading.RLock()
+        self._closed = False
         self.pending_provenance = None
         self.retrieval = retrieval if retrieval is not None else RetrievalEngine.from_environment()
         self.fio = FIOMemory(event_path, heat_config=heat_config)
@@ -65,8 +66,9 @@ class ChatSession:
             return reply
         if context["knowledge"]["external_required"] and not context.get('external_evidence'):
             self.last_response_meta = {"unverified": True, "regenerated": False, "cpu": True}
-            self.pending_provenance = self.core.provenance.capture({**context, "state": {}, "runtime": {}, "memory": [], "prompt_context": {}}, generated=False)
             status = context.get('external_retrieval', {}).get('status', 'disabled')
+            self.pending_provenance = self.core.provenance.capture({'intent': context['intent']}, generated=False)
+            self.pending_provenance['retrieval_status'] = status
             if status in {'disabled', 'offline'}:
                 return KnowledgeGate.unverified_reply()
             return 'そこはまだ未確認。外部検索で十分な根拠を取得できなかった（' + status + '）。推測では答えない。'
@@ -88,7 +90,7 @@ class ChatSession:
             context['conversation_state']['risk_escalation'] = 'observed_output_style_or_language'
         verify = lambda text: self.policy_verifier.verify(text, spec, state, context['user_input'])
         initial_verifier = copy.deepcopy(verify(reply))
-        if (self.prompts.mode in {'character-jp-repair', 'character-scene'} and state.response_risk == 'low'
+        if (self.prompts.mode in {'character-jp-repair', 'character-scene', 'character-guided'} and state.response_risk == 'low'
                 and not initial_verifier['adherent']):
             state = replace(state, response_risk='medium')
             self.planned_state = state
@@ -98,8 +100,9 @@ class ChatSession:
                                              style,
                                              policy_check=verify, response_spec=spec.to_dict(),
                                              risk=state.response_risk,
-                                             retry_full_context=self.prompts.mode in {'character-repair', 'character-jp-repair', 'character-scene'},
-                                             reject_unreadable=self.prompts.mode in {'character-repair', 'character-jp-repair', 'character-scene'})
+                                             retry_full_context=self.prompts.mode in {'character-repair', 'character-jp-repair', 'character-scene', 'character-guided'},
+                                             reject_unreadable=self.prompts.mode in {'character-repair', 'character-jp-repair', 'character-scene', 'character-guided'},
+                                             guided_retry=self.prompts.mode == 'character-guided')
         context['verifier_result'] = copy.deepcopy(verify(reply))
         context['verifier_result']['initial'] = initial_verifier
         context['verifier_result']['candidate_count'] = 2 if meta.get('regenerated') else 1
@@ -136,6 +139,8 @@ class ChatSession:
         if not isinstance(text, str) or not text.strip():
             raise ValueError('空入力は送信できません')
         with self.turn_lock:
+            if self._closed:
+                raise RuntimeError('終了したセッションには送信できません')
             context = self.core.handle(text, correction_key=correction_key, event_id=event_id)
             if self.core.last_runtime is not None:
                 context['runtime']['pc_observation'] = self.core.last_runtime
@@ -152,4 +157,7 @@ class ChatSession:
         return {**self.core.status(), 'conversation_alignment': self.alignment_trace}
 
     def close(self):
-        self.fio.close()
+        with self.turn_lock:
+            if not self._closed:
+                self._closed = True
+                self.fio.close()

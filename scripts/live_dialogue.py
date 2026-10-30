@@ -65,9 +65,10 @@ class RecordedAdapter(ModelAdapter):
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('--profile', required=True)
-    p.add_argument('--mode', choices=['legacy', 'compact', 'reaction', 'direct', 'anchored', 'character', 'character-repair', 'character-jp', 'character-jp-repair', 'character-minimal', 'character-scene'], default='legacy')
+    p.add_argument('--mode', choices=['legacy', 'compact', 'reaction', 'direct', 'anchored', 'character', 'character-repair', 'character-jp', 'character-jp-repair', 'character-minimal', 'character-scene', 'character-guided'], default='legacy')
     p.add_argument('--temperature', type=float, default=.6)
     p.add_argument('--retry-seed-delta', type=int, default=0, help='Experiment only: use a different seed for contextual retries')
+    p.add_argument('--max-attempts', type=int, default=60, help='Experiment inference cap, at most 60')
     p.add_argument('--experiment', help='New isolated inference budget name (letters, digits, hyphen)')
     p.add_argument('text', nargs='+')
     args = p.parse_args()
@@ -75,6 +76,8 @@ def main():
         p.error('profile must be an isolated simple name')
     if args.experiment and not args.experiment.replace('-', '').isalnum():
         p.error('experiment must be a simple name')
+    if not 1 <= args.max_attempts <= 60:
+        p.error('experiment inference cap must be between 1 and 60')
     directory = ROOT / 'reports/live-profiles' / args.profile
     directory.mkdir(parents=True, exist_ok=True)
     config = {'mode': args.mode, 'temperature': args.temperature, 'retry_seed_delta': args.retry_seed_delta, 'training_eligible': False,
@@ -89,7 +92,7 @@ def main():
         config_path.write_text(json.dumps(config, ensure_ascii=False, indent=2), encoding='utf-8')
     budget_name = ('live-experiment-' + args.experiment + '.jsonl' if args.experiment else
                    'live-character-followup-budget.jsonl' if args.mode == 'character' else 'live-budget.jsonl')
-    adapter = RecordedAdapter(directory, args.temperature, budget_name, 60 if args.experiment else
+    adapter = RecordedAdapter(directory, args.temperature, budget_name, args.max_attempts if args.experiment else
                               20 if args.mode == 'character' else 100, args.retry_seed_delta)
     session = ChatSession(adapter, directory / 'events.jsonl', retrieval=RetrievalEngine(), prompt_mode=args.mode)
     try:

@@ -36,6 +36,7 @@ class CompanionDaemon:
             self.interval = interval
             self.lock = threading.RLock()
             self.turn_lock = threading.Lock()
+            self._closed = False
             self.token = secrets.token_hex(32)
             self.stop = threading.Event()
         except BaseException:
@@ -46,6 +47,8 @@ class CompanionDaemon:
         sample = self.observer.observe()
         event = Event(kind="runtime_observation", payload=sample, source=SourceType.RUNTIME)
         with self.lock:
+            if self._closed:
+                raise RuntimeError('終了したdaemonは観測できません')
             changed = runtime_changed(self.previous, sample)
             # Append before changing live state, so disk failure never invents durability.
             if changed:
@@ -63,6 +66,8 @@ class CompanionDaemon:
         # Serialize conversations, but allow OS observations/status while LLM is busy.
         with self.turn_lock:
             with self.lock:
+                if self._closed:
+                    raise RuntimeError('終了したdaemonには送信できません')
                 ctx = self.session.core.handle(text, correction_key=correction_key, event_id=event_id)
                 ctx["runtime"]["pc_observation"] = self.session.core.last_runtime
                 events = list(self.session.core.events.events)
@@ -108,7 +113,7 @@ class CompanionDaemon:
                     self.respond(200, {"result": result})
                 except ModelError as exc:
                     self.respond(502, {"error": str(exc)})
-                except (ValueError, KeyError, TypeError, OSError) as exc:
+                except (ValueError, KeyError, TypeError, OSError, RuntimeError) as exc:
                     self.respond(400, {"error": str(exc)})
 
             def respond(self, code, body):
@@ -139,6 +144,10 @@ class CompanionDaemon:
             self.poll()
 
     def close(self):
+        with self.lock:
+            if self._closed:
+                return
+            self._closed = True
         if self.server is not None:
             if hasattr(self, "thread"):
                 self.server.shutdown()
@@ -148,8 +157,9 @@ class CompanionDaemon:
         if self.published:
             self.endpoint.unlink(missing_ok=True)
             self.published = False
-        self.session.close()
-        self.lease.close()
+        with self.turn_lock:
+            self.session.close()
+            self.lease.close()
 
 
 class DaemonClient:

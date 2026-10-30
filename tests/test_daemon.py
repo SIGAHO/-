@@ -91,6 +91,30 @@ class DaemonTests(unittest.TestCase):
         local.close()
         self.assertEqual(len(self.daemon().session.status()["open_loops"]), 1)
 
+    def test_closed_owner_cannot_write_after_new_owner_acquires_lease(self):
+        old = LocalSession(FakeModelAdapter(['了解。']), self.path)
+        old.close()
+        new = LocalSession(FakeModelAdapter(['了解。']), self.path)
+        self.addCleanup(new.close)
+        before = self.path.read_bytes() if self.path.exists() else b''
+        with self.assertRaises(RuntimeError):
+            old.turn('好きな色は青。')
+        self.assertEqual(self.path.read_bytes() if self.path.exists() else b'', before)
+        self.assertEqual(new.turn('ただいま'), '了解。')
+
+    def test_closed_daemon_cannot_write_after_local_owner_acquires_lease(self):
+        old = CompanionDaemon(FakeModelAdapter(['了解。']), self.path, observer=self.observer)
+        old.close()
+        new = LocalSession(FakeModelAdapter(['了解。']), self.path)
+        self.addCleanup(new.close)
+        before = self.path.read_bytes() if self.path.exists() else b''
+        with self.assertRaises(RuntimeError):
+            old.turn('好きな色は青。')
+        with self.assertRaises(RuntimeError):
+            old.poll()
+        self.assertEqual(self.path.read_bytes() if self.path.exists() else b'', before)
+        self.assertEqual(new.turn('ただいま'), '了解。')
+
     def test_second_daemon_refused(self):
         self.daemon()
         before = self.path.read_bytes()
