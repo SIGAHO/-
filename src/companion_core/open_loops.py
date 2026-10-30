@@ -1,7 +1,7 @@
 from __future__ import annotations
 import re
 from .models import OpenLoop
-from .textmath import cosine_text
+from .textmath import cosine_text, char_ngrams
 
 
 class OpenLoopTracker:
@@ -23,12 +23,18 @@ class OpenLoopTracker:
     BARE_DONE = re.compile(
         r"(?:終わった|終わり|完了(?:した)?|できた|済んだ|提出した|買った)(?:です|よ|ね)*[。！!\s]*"
     )
+    OTHER_SUBJECT = re.compile(r'(?:友達|友人|先生|家族|母|父|兄|姉|弟|妹|彼|彼女|他の人)(?:が|は)')
+    TASK_VERBS = re.compile(r'提出|確認|実装|調べ|買[いうっ]|作[るっ]|やる|やっ|終わ[ったりる]*|完了|できた|済んだ|あとで|予定|する|した')
 
     def __init__(self):
         self.loops: list[OpenLoop] = []
 
     def observe(self, text: str) -> None:
         text = text.strip()
+        # An example or quoted sentence is not itself the user's commitment.
+        # Outside-the-quote commitments remain eligible for observation.
+        if re.search(r'(?:という|といった|の)(?:例文|例|文章|発言)', text):
+            text = re.sub(r'「[^」]*」|『[^』]*』', '', text).strip()
         # A denial, question, or future condition is not completion evidence.
         # It must not fall through to task creation merely because it mentions
         # the existing task's verb. Mixed/ambiguous utterances stay unchanged.
@@ -44,7 +50,19 @@ class OpenLoopTracker:
                 self.loops.append(OpenLoop(text=text[:160]))
 
     def _auto_close(self, text: str) -> None:
+        # A different person's action is not evidence that the user's task
+        # was completed, even when the verbs happen to match.
         active = self.active()
+        if self.OTHER_SUBJECT.search(text):
+            return
+        # Unknown names can also be subjects (e.g. 田中が提出した).
+        # A leading task noun such as 宿題が終わった remains eligible.
+        subject = re.match(r'^([^、。\s]{1,16})が', text)
+        subject_text = subject[1].removesuffix('の') if subject else ''
+        subject_target = self.TASK_VERBS.sub('', subject_text).replace('作業', '').strip('のをはが')
+        matches_task = any(subject_text in loop.text or (subject_target and subject_target in loop.text) for loop in active)
+        if subject and subject_text not in ('私', '僕', '俺', '自分') and not matches_task:
+            return
         if self.BARE_DONE.fullmatch(text):
             # A subject-free completion is resolvable only with one pending task.
             if len(active) == 1:
@@ -55,7 +73,11 @@ class OpenLoopTracker:
             return
         score, loop = candidates[0]
         unique = len(candidates) == 1 or score - candidates[1][0] > 1e-12
-        if score >= 0.18 and unique:
+        # Shared verbs alone (e.g. two different things being submitted) do
+        # not identify the pending task. Keep ambiguous cases open.
+        task_words = set(char_ngrams(self.TASK_VERBS.sub('', loop.text)))
+        done_words = set(char_ngrams(self.TASK_VERBS.sub('', text)))
+        if score >= 0.18 and unique and task_words & done_words:
             loop.done = True
 
     def active(self) -> list[OpenLoop]:

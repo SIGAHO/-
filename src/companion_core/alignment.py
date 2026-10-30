@@ -17,11 +17,11 @@ def norm(text):
 
 class Acts:
     question = re.compile(r'[?？]|(?:何|どう|どこ|いつ|誰|どれ|なぜ).{0,25}(?:か|の|たい)[。!！]*$|(?:かな|ますか|だろうか)[。!！]*$')
-    advice = re.compile(r'(?:た|だ|し|寝|休|進め|やっ|備え|食べ|飲ん|行っ)(?:て|で)(?:ね|みて|みよう|ください|おこう)|(?:し|寝|備え|進め)よう|(?:休も|頑張ろ|やろ|取ろ)う|(?:した|する|寝た|休んだ)方が|べき|おすすめ|したらどう|するといい|しなよ')
+    advice = re.compile(r'(?:た|だ|し|寝|休|休ん|進め|やっ|備え|食べ|飲ん|行っ)(?:て|で)(?:ね|みて|みよう|ください|おこう)|(?:し|寝|備え|進め)よう|(?:休も|頑張ろ|やろ|取ろ)う|(?:した|する|寝た|休んだ)方が|べき|おすすめ|したらどう|するといい|しなよ')
     encourage = re.compile(r'頑張|がんば|応援|きっと.{0,12}(?:できる|大丈夫)|ファイト|負けるな|諦めないで')
     praise = re.compile(r'すごい|凄い|(?:すごく|凄く)(?:上手|優秀|立派)|素晴らし|立派|偉い|えらい|誇[りれ]|よくやった')
     reframe = re.compile(r'(?:でも|けど|むしろ|逆に).{0,35}(?:良い|いい|成長|経験|機会|価値|達成)|成長につなが|いい経験|達成感|順位より|結果より')
-    rejection = re.compile(r'そういうことじゃない|そうじゃない|それは違う|違うって|やめて|いらない|望んでない|求めてない|押し付け|励まさないで|質問しないで|褒めないで|助言しないで|(?:褒め|励まさ|質問し|助言し)なくていい')
+    rejection = re.compile(r'そういうことじゃない|そうじゃない|それは違う|違うって|やめて|いらない|望んでない|求めてない|押し付け|励まさないで|質問しないで|褒めないで|助言しないで|(?:褒め|励まさ|質問し|助言し)なくていい|(?:方法|手順|助言|アドバイス)(?:は|を|が)?(?:聞いてない|聞いていない|求めていない|求めてない|要らん|いらん|不要)')
     correction = re.compile(r'じゃなく|ではなく|訂正|違う[、,]|じゃない[。．、,]')
     approval = re.compile(r'^(?:その返し(?:が|で)いい|そういう返しがいい|今の返答(?:が|で)いい|今の返事(?:が|で)いい|その回答(?:が|で)いい)[。!！\s]*$')
     greeting = re.compile(r'^(?:よお|よう|やあ|おはよう|こんにちは|こんばんは|起きた|起きたよ|おーい|ただいま)[。!！\s]*$')
@@ -135,7 +135,7 @@ class PolicyPlanner:
     def plan(self, state, text, intent='casual_chat'):
         act = state.user_dialogue_act
         rejected = state.reaction_to_previous in {'rejected', 'corrected'}
-        requested_advice = bool(re.search(r'どうすれば|どうしたら|助言(?:して|がほしい)|アドバイス|方法|手順', text))
+        requested_advice = bool(re.search(r'どうすれば|どうしたら|助言(?:して|がほしい)|アドバイス|方法|手順|やり方(?:を|が)?(?:教えて|知りたい)', text)) and not Acts.rejection.search(text)
         response_act = ('apologize' if rejected else 'acknowledge' if act in {'greeting', 'complaint', 'factual_answer', 'confirmation'}
                         else 'celebrate' if act == 'celebration' else 'answer' if act == 'question'
                         else 'explain' if act == 'task' else 'joke' if act == 'joke' else 'continue')
@@ -165,7 +165,7 @@ class PolicyVerifier:
             issues.append('too_many_questions')
         if state.reaction_to_previous in {'rejected', 'corrected'} and detected.get(state.previous_assistant_strategy, False):
             issues.append('rejected_strategy_repeat')
-        acknowledged = bool(re.search(r'ごめん|すまん|すみません|ずれ|ズレ|違った|取り違|受け取|そうじゃなかった|見当違い', prose))
+        acknowledged = bool(re.search(r'ごめん|すまん|すまない|すみません|ずれ|ズレ|違った|取り違|受け取|そうじゃなかった|見当違い', prose))
         if (re.search(r'誤解した', prose) and not re.search(
                 r'(?:あなた|君|お前|そっち)(?:が|は)誤解した|誤解したのは(?:あなた|君|お前|そっち)', prose)):
             acknowledged = True

@@ -9,6 +9,25 @@ from companion_core.open_loops import OpenLoopTracker
 
 
 class OpenLoopBehaviorTests(unittest.TestCase):
+    def test_quoted_example_is_not_a_plan_but_quoted_plan_is(self):
+        tracker = OpenLoopTracker()
+        tracker.observe('「あとでレポートを提出する」という例文')
+        self.assertEqual(tracker.active(), [])
+        tracker.observe('「レポート提出」をあとでやる')
+        self.assertEqual(len(tracker.active()), 1)
+
+    def test_other_person_and_shared_verb_do_not_complete_user_task(self):
+        for text in ('友達が書類を提出した', '書類を提出した', '友達が宿題を提出した', '田中が宿題を提出した'):
+            with self.subTest(text=text):
+                tracker = OpenLoopTracker()
+                tracker.observe('あとで宿題を提出する')
+                tracker.observe(text)
+                self.assertEqual([x.text for x in tracker.active()], ['あとで宿題を提出する'])
+        tracker = OpenLoopTracker()
+        tracker.observe('あとで宿題を提出する')
+        tracker.observe('宿題を提出した')
+        self.assertEqual(tracker.active(), [])
+
     def test_bare_completion_closes_only_pending_task_without_deleting_it(self):
         for report in ("終わった", " 終わった！ ", "完了", "できた", "済んだ"):
             with self.subTest(report=report):
@@ -98,6 +117,14 @@ class OpenLoopBehaviorTests(unittest.TestCase):
 
 
 class CoreOpenLoopTests(unittest.TestCase):
+    def test_other_person_completion_remains_open_after_replay(self):
+        core = CompanionCore()
+        core.handle('あとで宿題を提出する')
+        core.handle('友達が書類を提出した')
+        self.assertEqual([x.text for x in core.open_loops.active()], ['あとで宿題を提出する'])
+        core.replay()
+        self.assertEqual([x.text for x in core.open_loops.active()], ['あとで宿題を提出する'])
+
     def test_context_and_replay_keep_completion(self):
         core = CompanionCore()
         self.assertEqual(core.handle("あとでやる")["open_loops"], ["あとでやる"])

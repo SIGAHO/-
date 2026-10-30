@@ -6,6 +6,39 @@ from companion_core.chat import ChatSession
 from companion_core.model_adapter import FakeModelAdapter
 
 class ContextRetryTests(unittest.TestCase):
+    def test_minimal_experiment_keeps_real_roles_without_example_turns(self):
+        adapter = FakeModelAdapter(['おかえり。', '眠いんだな。'])
+        chat = ChatSession(adapter, prompt_mode='character-minimal')
+        try:
+            chat.turn('ただいま')
+            chat.turn('眠い')
+            messages = adapter.requests[-1]
+            self.assertEqual([(m['role'], m['content']) for m in messages[1:]],
+                             [('user', 'ただいま'), ('assistant', 'おかえり。'), ('user', '眠い')])
+        finally:
+            chat.close()
+
+    def test_sumanai_acknowledges_a_rejected_strategy(self):
+        from companion_core.alignment import ConversationState, PolicyVerifier, ResponseSpec
+        state = ConversationState('correction', None, 'negative', 'advise', 'rejected', 'medium', [])
+        spec = ResponseSpec(acknowledge_misalignment=True)
+        result = PolicyVerifier().verify('すまない、友達との付き合いは尊重する。', spec, state, '口出しはやめて')
+        self.assertNotIn('missing_misalignment_acknowledgment', result['issues'])
+        self.assertIn('missing_misalignment_acknowledgment', PolicyVerifier().verify('分かった。', spec, state)['issues'])
+
+    def test_rejected_method_is_not_mistaken_for_an_advice_request(self):
+        from companion_core.alignment import Acts, PolicyPlanner
+        planner = PolicyPlanner()
+        for text in ('方法は聞いてない。ただ眠いと言っただけ', '手順は求めていない', 'アドバイスは要らん'):
+            with self.subTest(text=text):
+                state = planner.observe(text, [])
+                self.assertTrue(Acts.rejection.search(text))
+                self.assertFalse(planner.plan(state, text).advice_allowed)
+        state = planner.observe('やり方を教えてほしい', [])
+        self.assertTrue(planner.plan(state, 'やり方を教えてほしい').advice_allowed)
+        self.assertTrue(Acts.advice.search('疲れてるならゆっくり休んでください。'))
+        self.assertFalse(Acts.advice.search('昨日はゆっくり休んでた。'))
+
     def test_two_meta_leaks_report_deterministic_failure(self):
         leak = '修正後、以下が適切な返答です：おかえり。'
         chat = ChatSession(FakeModelAdapter([leak, leak]), prompt_mode='character-jp-repair')

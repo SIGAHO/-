@@ -7,6 +7,23 @@ from companion_core.chat import ChatSession
 from companion_core.model_adapter import FakeModelAdapter
 
 class CharacterRoutingTests(unittest.TestCase):
+    def test_jealousy_question_addressed_to_companion_is_not_web_search(self):
+        from companion_core.intent import IntentRouter
+        router = IntentRouter()
+        self.assertEqual(router.route('お前、ちょっと嫉妬した？'), 'casual_chat')
+        self.assertEqual(router.route('友達は嫉妬した？'), 'external_knowledge')
+
+    def test_time_pair_accepts_exact_hours_and_rejects_invalid_times(self):
+        from companion_core.cpu_answer import CPUAnswer
+        cpu = CPUAnswer()
+        facts = {'time.iso': '2026-10-30T08:00:00+09:00'}
+        for text, expected in [('9時から10時まで何分？', '60分。'),
+                               ('9時30分から10時まで何分？', '30分。'),
+                               ('9時から10時15分まで何分？', '75分。'),
+                               ('23時から1時まで何分？', '120分。')]:
+            self.assertEqual(cpu.answer(text, facts), expected)
+        self.assertIn('確定できない', cpu.answer('25時から10時まで何分？', facts))
+
     def test_fictional_character_examples_stay_out_of_memory(self):
         chat = ChatSession(FakeModelAdapter(['ただいま。']), prompt_mode='character')
         try:

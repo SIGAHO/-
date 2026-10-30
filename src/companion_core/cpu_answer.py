@@ -37,9 +37,10 @@ class CPUAnswer:
         t = normalized(text)
         n = datetime.fromisoformat(facts['time.iso'])
         try:
-            pair = re.fullmatch(r'(\d{1,2})[:時](\d{1,2})分?\s*(?:→|から)\s*(\d{1,2})[:時](\d{1,2})分?(?:まで)?(?:は|あと)?(?:何分)?[?。\s]*', t)
+            pair = re.fullmatch(r'(\d{1,2})(?::(\d{1,2})|時(?:(\d{1,2})分?)?)\s*(?:→|から)\s*(\d{1,2})(?::(\d{1,2})|時(?:(\d{1,2})分?)?)(?:まで)?(?:は|あと)?(?:何分)?[?。\s]*', t)
             if pair:
-                h, m, end_h, end_m = map(int, pair.groups())
+                h, end_h = int(pair[1]), int(pair[4])
+                m, end_m = int(pair[2] or pair[3] or 0), int(pair[5] or pair[6] or 0)
                 if not (0 <= h < 24 and 0 <= end_h < 24 and 0 <= m < 60 and 0 <= end_m < 60):
                     raise ValueError('invalid time')
                 return f'{(end_h * 60 + end_m - h * 60 - m) % 1440}分。'

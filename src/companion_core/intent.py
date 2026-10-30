@@ -30,7 +30,7 @@ class IntentRouter:
             return 'self_state_memory'
         # A question addressed to the companion about its conversational
         # reaction is not a request for an externally verifiable fact.
-        if re.fullmatch(r'(?:ちょっと|少し|少しは|ちょっとは)?(?:嫉妬した|やきもち焼いた|妬いた)[?。!\s]*', t):
+        if re.fullmatch(r'(?:(?:お前|君|あなた|Breaktail)[、,\s]*(?:は|が)?[、,\s]*)?(?:ちょっと|少し|少しは|ちょっとは)?(?:嫉妬した|やきもち焼いた|妬いた)[?。!\s]*', t, re.IGNORECASE):
             return 'casual_chat'
         if self.casual.fullmatch(t):
             return 'casual_chat'
