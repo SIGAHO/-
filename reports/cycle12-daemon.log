@@ -1,0 +1,29 @@
+test_incomplete_or_malformed_response_never_retries (test_daemon.DaemonProtocolTests.test_incomplete_or_malformed_response_never_retries) ... ok
+test_valid_502_remains_model_error (test_daemon.DaemonProtocolTests.test_valid_502_remains_model_error) ... ok
+test_auth_rejected (test_daemon.DaemonTests.test_auth_rejected) ... ok
+test_bad_interval (test_daemon.DaemonTests.test_bad_interval) ... ok
+test_chat_connect_and_cpu_context (test_daemon.DaemonTests.test_chat_connect_and_cpu_context) ... ok
+test_clock_uptime_progress_suppressed (test_daemon.DaemonTests.test_clock_uptime_progress_suppressed) ... ok
+test_closed_daemon_cannot_write_after_local_owner_acquires_lease (test_daemon.DaemonTests.test_closed_daemon_cannot_write_after_local_owner_acquires_lease) ... ok
+test_closed_owner_cannot_write_after_new_owner_acquires_lease (test_daemon.DaemonTests.test_closed_owner_cannot_write_after_new_owner_acquires_lease) ... ok
+test_failed_model_preserves_user_only (test_daemon.DaemonTests.test_failed_model_preserves_user_only) ... ok
+test_fallback_and_exclusive_local_owner (test_daemon.DaemonTests.test_fallback_and_exclusive_local_owner) ... ok
+test_foreground_diff_and_reboot (test_daemon.DaemonTests.test_foreground_diff_and_reboot) ... ok
+test_initial_runtime_event (test_daemon.DaemonTests.test_initial_runtime_event) ... ok
+test_low_level_stale_writer_fails_without_corruption (test_daemon.DaemonTests.test_low_level_stale_writer_fails_without_corruption) ... ok
+test_multiple_clients_serialized (test_daemon.DaemonTests.test_multiple_clients_serialized) ... ok
+test_os_observer_schema_and_optional_title (test_daemon.DaemonTests.test_os_observer_schema_and_optional_title) ... ok
+test_poll_continues_during_generation (test_daemon.DaemonTests.test_poll_continues_during_generation) ... ok
+test_process_diff_logged_once (test_daemon.DaemonTests.test_process_diff_logged_once) ... ok
+test_real_process_cli_observation_crash_and_replay (test_daemon.DaemonTests.test_real_process_cli_observation_crash_and_replay) ... ok
+test_restart_replay_and_suppression (test_daemon.DaemonTests.test_restart_replay_and_suppression) ... ok
+test_second_daemon_refused (test_daemon.DaemonTests.test_second_daemon_refused) ... ok
+test_source_gate_live_and_replay (test_daemon.DaemonTests.test_source_gate_live_and_replay) ... ok
+test_stale_endpoint_fallback (test_daemon.DaemonTests.test_stale_endpoint_fallback) ... ok
+test_status_only_requested_fields_no_log_write (test_daemon.DaemonTests.test_status_only_requested_fields_no_log_write) ... ok
+test_unreachable_live_daemon_cannot_fallback (test_daemon.DaemonTests.test_unreachable_live_daemon_cannot_fallback) ... ok
+
+----------------------------------------------------------------------
+Ran 24 tests in 13.224s
+
+OK

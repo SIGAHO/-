@@ -173,6 +173,7 @@ class StyleValidator:
                             'forbidden_advise': '解決策や行動の勧めを出さず、その話に反応する。',
                             'forbidden_encourage': '励ましを足さず、相手の話を受け止める。',
                             'forbidden_reframe': '結果に別の価値や教訓を付けず、そのまま受け取る。',
+                            'rank_precision_loss': '順位の「台」を正確な順位に変えず、曖昧さを保つ。',
                             'missing_misalignment_acknowledgment': '直前の自分のずれを短く認める。',
                             'rejected_strategy_repeat': '相手に断られた返し方は繰り返さない。'}
                 retry_messages[0]['content'] += ''.join(guidance[issue] for issue in dict.fromkeys(issues) if issue in guidance)

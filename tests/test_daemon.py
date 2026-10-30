@@ -29,6 +29,44 @@ class Observer:
         return dict(self.sample)
 
 
+class DaemonProtocolTests(unittest.TestCase):
+    def test_incomplete_or_malformed_response_never_retries(self):
+        import io
+        from http.client import IncompleteRead, BadStatusLine
+        from unittest.mock import Mock
+        from urllib.error import HTTPError
+        class Broken(io.BytesIO):
+            def read(self, *args):
+                raise IncompleteRead(b'partial', 5)
+        bad_502 = HTTPError('http://127.0.0.1', 502, 'bad', {}, Broken())
+        malformed_502 = HTTPError('http://127.0.0.1', 502, 'bad', {}, io.BytesIO(b'{'))
+        cases = [Broken(), io.BytesIO(b'{'), BadStatusLine('bad'), bad_502, malformed_502]
+        for failure in cases:
+            with self.subTest(failure=type(failure).__name__):
+                client = DaemonClient.__new__(DaemonClient)
+                client.url, client.token, client.timeout = 'http://127.0.0.1', 'token', 1
+                client.opener = Mock()
+                if isinstance(failure, Exception):
+                    client.opener.open.side_effect = failure
+                else:
+                    client.opener.open.return_value = failure
+                with self.assertRaisesRegex(OSError, '保存済みか確認'):
+                    client.turn('こんにちは')
+                self.assertEqual(client.opener.open.call_count, 1)
+
+    def test_valid_502_remains_model_error(self):
+        import io
+        from unittest.mock import Mock
+        from urllib.error import HTTPError
+        client = DaemonClient.__new__(DaemonClient)
+        client.url, client.token, client.timeout = 'http://127.0.0.1', 'token', 1
+        client.opener = Mock()
+        client.opener.open.side_effect = HTTPError(client.url, 502, 'bad', {}, io.BytesIO(b'{"error":"model failed"}'))
+        with self.assertRaisesRegex(ModelError, 'model failed'):
+            client.turn('こんにちは')
+        self.assertEqual(client.opener.open.call_count, 1)
+
+
 class DaemonTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()

@@ -6,6 +6,22 @@ from companion_core.chat import ChatSession
 from companion_core.model_adapter import FakeModelAdapter
 
 class ContextRetryTests(unittest.TestCase):
+    def test_guided_retry_preserves_rank_precision(self):
+        adapter = FakeModelAdapter(['450位だったのか。', '450位台だったのか。'])
+        chat = ChatSession(adapter, prompt_mode='character-fewshot')
+        try:
+            self.assertEqual(chat.turn('大会は450位台で賞品なし。'), '450位台だったのか。')
+            self.assertIn('順位の「台」を正確な順位に変えず', adapter.requests[-1][0]['content'])
+            self.assertIn('rank_precision_loss', chat.alignment_trace['verifier_result']['initial']['issues'])
+            self.assertNotIn('rank_precision_loss', chat.alignment_trace['verifier_result']['issues'])
+        finally:
+            chat.close()
+
+    def test_explicit_exact_rank_correction_is_not_flagged(self):
+        from companion_core.alignment import ConversationState, PolicyVerifier, ResponseSpec
+        state = ConversationState('correction', None, 'neutral', 'other', 'corrected', 'high', [])
+        result = PolicyVerifier().verify('450位だったのか。', ResponseSpec(), state, '450位台じゃなくて450位だった')
+        self.assertNotIn('rank_precision_loss', result['issues'])
     def test_guided_retry_uses_detected_act_without_fabricating_history(self):
         adapter = FakeModelAdapter(['おかえり。今日はどうだった？', 'おかえり。'])
         chat = ChatSession(adapter, prompt_mode='character-guided')
@@ -57,6 +73,19 @@ class ContextRetryTests(unittest.TestCase):
             messages = adapter.requests[0]
             self.assertIn('創作された未承認の口調例', messages[0]['content'])
             self.assertEqual([(m['role'], m['content']) for m in messages[1:]], [('user', 'ただいま')])
+        finally:
+            chat.close()
+
+    def test_fewshot_examples_remain_unapproved_and_out_of_memory(self):
+        adapter = FakeModelAdapter(['おかえり。'])
+        chat = ChatSession(adapter, prompt_mode='character-fewshot')
+        try:
+            chat.turn('ただいま')
+            messages = adapter.requests[0]
+            self.assertIn('架空の未承認の例', messages[0]['content'])
+            self.assertEqual([(m['role'], m['content']) for m in messages[1:]], [('user', 'ただいま')])
+            self.assertFalse(any('雨で靴が濡れた' in m.text for m in chat.core.memory.items))
+            self.assertFalse(any('雨で靴が濡れた' in e.payload.get('text', '') for e in chat.core.events.events))
         finally:
             chat.close()
 

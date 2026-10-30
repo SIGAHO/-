@@ -1,5 +1,6 @@
 """Authenticated loopback IPC. Only this process writes the shared event log."""
 import hmac
+from http.client import HTTPException
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 import math
@@ -181,11 +182,17 @@ class DaemonClient:
                 return json.load(response)["result"]
         except HTTPError as exc:
             if exc.code == 502:
-                raise ModelError(json.load(exc)["error"]) from exc
+                try:
+                    detail = json.load(exc)["error"]
+                    if not isinstance(detail, str):
+                        raise ValueError('invalid daemon error body')
+                except (OSError, HTTPException, ValueError, UnicodeError, KeyError, TypeError) as body_error:
+                    raise OSError('daemonの応答を確認できません。入力が保存済みか確認してから再接続してください') from body_error
+                raise ModelError(detail) from exc
             raise OSError(f"daemon IPC error: {exc.code}") from exc
-        except (URLError, TimeoutError) as exc:
+        except (OSError, HTTPException, UnicodeError, ValueError, KeyError, TypeError) as exc:
             # Never silently retry a possibly committed turn via a second writer.
-            raise OSError("daemon接続が切れました。/statusで状態を確認してから再接続してください") from exc
+            raise OSError("daemonの応答を確認できません。入力が保存済みか確認してから再接続してください") from exc
 
     def turn(self, text, *, correction_key=None, event_id=None):
         return self.request("/turn", {"text": text, "correction_key": correction_key, "event_id": event_id})

@@ -188,6 +188,13 @@ class PolicyVerifier:
             issues.append('missing_misalignment_acknowledgment')
         if state.user_stance == 'negative' and detected['reframe'] and spec.stance_match:
             issues.append('stance_mismatch')
+        # A range-like rank must not be turned into an exact rank. Preserve the
+        # qualification; lexical equality alone is not evidence of exactness.
+        for rank in re.findall(r'(\d+)位台', norm(user_text)):
+            exact_rank = r'(?<!\d)' + re.escape(rank) + r'位(?!台)'
+            if not re.search(exact_rank, norm(user_text)) and re.search(exact_rank, norm(prose)):
+                issues.append('rank_precision_loss')
+                break
         # Detect explicit referent loss. Absence of lexical overlap alone cannot
         # establish irrelevance for short natural acknowledgments.
         if spec.target_reference and re.search(r'何に|何の話|どの話|何について', prose):
