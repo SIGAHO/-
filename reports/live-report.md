@@ -370,7 +370,7 @@ git diff --check
 
 ## 保存先
 
-実装・実対話・独立評価のcommit: [722f23a](https://github.com/SIGAHO/-/commit/722f23ac9ba67fbf83a6d6850a8048f6306be44c)。対象は codex/breaktail-v2。mainの開始head fd1973e0a43e6917ab4e79835ba11689277d485f は変更しない。
+実装・実対話・独立評価のcommit: [57b2b52](https://github.com/SIGAHO/-/commit/57b2b52b05c0a9f4f25090b49ebf296c2f6558db)。対象は codex/breaktail-v2。mainの開始head fd1973e0a43e6917ab4e79835ba11689277d485f は変更しない。
 
 原文・FIOを含む70ファイルについて、記録したSHA256とGit保存blobのバイト一致、18個のSQLiteをread-onlyでintegrity確認済み。証跡の改行正規化を防ぐ専用属性を追加。
 
