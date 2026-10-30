@@ -55,7 +55,7 @@ class RecordedAdapter(ModelAdapter):
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('--profile', required=True)
-    p.add_argument('--mode', choices=['legacy', 'compact', 'reaction', 'direct', 'anchored', 'character'], default='legacy')
+    p.add_argument('--mode', choices=['legacy', 'compact', 'reaction', 'direct', 'anchored', 'character', 'character-repair'], default='legacy')
     p.add_argument('--temperature', type=float, default=.6)
     p.add_argument('--experiment', help='New isolated inference budget name (letters, digits, hyphen)')
     p.add_argument('text', nargs='+')

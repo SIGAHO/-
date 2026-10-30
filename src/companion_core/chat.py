@@ -90,7 +90,9 @@ class ChatSession:
         reply, meta = self.validator.process(reply.strip(), messages, self.adapter,
                                              style,
                                              policy_check=verify, response_spec=spec.to_dict(),
-                                             risk=state.response_risk)
+                                             risk=state.response_risk,
+                                             retry_full_context=self.prompts.mode == 'character-repair',
+                                             reject_unreadable=self.prompts.mode == 'character-repair')
         context['verifier_result'] = copy.deepcopy(verify(reply))
         context['verifier_result']['initial'] = initial_verifier
         context['verifier_result']['candidate_count'] = 2 if meta.get('regenerated') else 1
@@ -99,7 +101,9 @@ class ChatSession:
                                    'web_unverified': bool(context.get('external_evidence'))}
         if clean_input(reply) != reply:
             raise ModelError('モデル応答に不正なUnicodeが含まれています')
-        self.pending_provenance = self.core.provenance.capture(context, generated=True)
+        self.pending_provenance = self.core.provenance.capture(context, generated=not meta.get('quality_fallback', False))
+        if meta.get('quality_fallback'):
+            self.pending_provenance['fallback'] = meta['fallback_reason']
         return reply + self.retrieval.citations(context)
 
     def prepare_reply(self, context, events):

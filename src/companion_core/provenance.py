@@ -35,6 +35,10 @@ class ProvenanceResponder:
     def answer(self):
         if self.last is None:
             return '直前回答の出所記録はない。AIの発言だけでは事実を確認できない。'
+        if self.last.get('fallback') == 'both_candidates_language_mixing':
+            return '直前の文は、二つの生成候補に言語混在が検出されたため、システムが固定の失敗通知を返したもの。会話内容の事実根拠ではない。'
+        if self.last.get('fallback') == 'original_language_and_candidate_empty':
+            return '直前の文は、初稿の言語混在と書き直しの空文により、システムが固定の失敗通知を返したもの。会話内容の事実根拠ではない。'
         calculation = self.last.get('calculation')
         if calculation:
             return ('直前の回答は、あなたの入力「' + calculation['input'] +

@@ -48,7 +48,7 @@ class PersonalityStyleEngine:
 
 
 class StyleValidator:
-    protected = re.compile(r'```[\s\S]*?```|`[^`\n]+`|https?://\S+|「[^」]*」|『[^』]*』|"[^"\n]*"')
+    protected = re.compile(r'```[\s\S]*?```|`[^`\n]+`|https?://\S+|「[^」]*」|『[^』]*』|“[^”]*”|"[^"\n]*"')
     language_request = re.compile(r'(?:英語|中国語|韓国語|フランス語|ドイツ語|スペイン語)(?:で|に|への|訳)|原文のまま')
     chinese_grammar = re.compile(r'你|您|什么|怎么|吗|呢|吧|这个|那个|我们|谢谢|[见续]')
 
@@ -63,7 +63,7 @@ class StyleValidator:
         if self.other_language_requested(user_text):
             return []
         prose = self.protected.sub('', reply)
-        for sentence in re.split(r'[。！？!?\n]', prose):
+        for sentence in re.split(r'[。！？!?，,\n]', prose):
             if (len(re.findall(r'[\u4e00-\u9fff]', sentence)) >= 4
                     and not re.search(r'[ぁ-ゖァ-ヺ]', sentence)
                     and self.chinese_grammar.search(sentence)):
@@ -122,7 +122,7 @@ class StyleValidator:
             parts.pop()
         return reply[:end].strip()
 
-    def process(self, reply, messages, adapter, style, *, policy_check=None, response_spec=None, risk='low'):
+    def process(self, reply, messages, adapter, style, *, policy_check=None, response_spec=None, risk='low', retry_full_context=False, reject_unreadable=False):
         user_text = next((m['content'] for m in reversed(messages) if m['role'] == 'user'), '')
         def check(text):
             return self.violations(text, style) + self.language_issues(text, user_text)
@@ -149,10 +149,18 @@ class StyleValidator:
             rewrite['content'] += ('\nMemoryは知識、PolicyPlannerは会話行為、あなたは日本語化を担当。'
                 'response_specはCPUの制御信号。指定actと許可属性を守り、不要な助言・励まし・質問を除く。'
                 'acknowledge_misalignment=trueなら自分の返答のずれを短く受け止める。')
-        candidate = adapter.generate([rewrite, {"role": "user", "content": json.dumps(
-            {"draft": reply, "style": style,
-             "response_spec": response_spec,
-             "other_language_requested": self.other_language_requested(user_text)}, ensure_ascii=False)}])
+        if retry_full_context:
+            # Experimental alternative: regenerate from real conversation, not
+            # a broken draft. The original remains available for ranking.
+            retry_messages = [dict(m) for m in messages]
+            retry_messages[0]['content'] += ('\n再生成: 直近のユーザー発言に、上記の会話文脈から一度だけ返答する。'
+                '会話内容の事実を変えず、求められていない質問や助言を加えない。返答本文のみ。')
+        else:
+            retry_messages = [rewrite, {"role": "user", "content": json.dumps(
+                {"draft": reply, "style": style,
+                 "response_spec": response_spec,
+                 "other_language_requested": self.other_language_requested(user_text)}, ensure_ascii=False)}]
+        candidate = adapter.generate(retry_messages)
         if not isinstance(candidate, str) or not candidate.strip():
             from .model_adapter import ModelError
             raise ModelError("口調の再生成が空の応答を返しました")
@@ -164,6 +172,14 @@ class StyleValidator:
         # complete boilerplate tails, never cut substantive text or code.
         original = self.clean_tail(reply) or reply
         candidate = self.clean_tail(candidate.strip())
+        if (reject_unreadable and self.language_issues(original, user_text)
+                and (not candidate or self.language_issues(candidate, user_text))):
+            fallback = 'ごめん、返事がうまくまとまらなかった。'
+            return fallback, {'regenerated': True, 'issues': issues,
+                              'remaining_issues': check(fallback) + policy(fallback),
+                              'fail_open': False, 'quality_fallback': True,
+                              'fallback_reason': ('both_candidates_language_mixing' if candidate else
+                                                  'original_language_and_candidate_empty')}
         if not candidate or check(candidate) or policy(candidate):
             choices = [x for x in (original, candidate) if x]
             # A more casual rewrite must not replace clean Japanese with a

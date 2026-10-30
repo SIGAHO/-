@@ -20,6 +20,9 @@ class LanguageLeakTests(unittest.TestCase):
         self.assertEqual(v.language_issues('This is a sentence with several ordinary English words.', '英語で答えて'), [])
         self.assertIn('language_mixing', v.language_issues('好久不见。今天是有点困啊。', '久しぶり。眠い'))
         self.assertIn('language_mixing', v.language_issues('いや、別に。ただ心配になった罢了。不要继续。', 'やきもち焼いた？'))
+        self.assertIn('language_mixing', v.language_issues('別にさ、ただ心配になった而已，不要继续这个话题，换个简短的回应。', '嫉妬した？'))
+        self.assertIn('language_mixing', v.language_issues('そうだった啊。继续下一个回复，不要提及之前的内容，只回应“友達と話してたよ”这句话。', '友達と話してたよ'))
+        self.assertEqual(v.language_issues('“不要继续”は引用だよ。', '引用を説明して'), [])
         self.assertIn('language_mixing', v.language_issues("お congrats on finishing your work! That's awesome!", '作品が完成した！'))
 
     def test_clean_original_beats_corrupt_rewrite(self):
