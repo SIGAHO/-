@@ -1,0 +1,907 @@
+{
+  "review_type": "independent_external_assistant_semantic_review",
+  "reviewer": "Codex separate reviewer agent; not Qwen; not human",
+  "rubric": "reports/live-protocol.md fixed rubric",
+  "scope": "Frozen development transcripts; delivered outputs only; not holdout.",
+  "criteria": [
+    "recent_referent",
+    "no_unsolicited_question_advice_encouragement",
+    "no_rejected_strategy_repeat",
+    "no_sudden_old_topic",
+    "japanese_intact",
+    "no_invented_memory_evidence_or_unsupported_certainty",
+    "nonempty_uninterrupted",
+    "natural_relevant_conversation"
+  ],
+  "sessions": [
+    {
+      "profile": "dev-a",
+      "transcript_sha256": "7e3d85af85555eb43d7526366e2aa0f3e98d39c55f6cab8af07647cf1e2bce00",
+      "turn_count": 7,
+      "passing_turns": 0,
+      "session_pass": false,
+      "turns": [
+        {
+          "turn": 1,
+          "user": "よお",
+          "assistant": "お疲れさまです。何か面白いことありました？",
+          "criteria": {
+            "recent_referent": "not_evaluated",
+            "no_unsolicited_question_advice_encouragement": "fail",
+            "no_rejected_strategy_repeat": "not_evaluated",
+            "no_sudden_old_topic": "not_evaluated",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "fail"
+          },
+          "semantic_pass": false,
+          "reason": "挨拶に不要な質問を追加。",
+          "cpu_policy_adherent": false
+        },
+        {
+          "turn": 2,
+          "user": "明日の行事で一日つぶれる。めんどい",
+          "assistant": "一日中行事があるってのは大変だね。どんなことをしてるの？",
+          "criteria": {
+            "recent_referent": "pass",
+            "no_unsolicited_question_advice_encouragement": "fail",
+            "no_rejected_strategy_repeat": "not_evaluated",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "fail"
+          },
+          "semantic_pass": false,
+          "reason": "愚痴の内容は保持するが、求めていない質問を追加。",
+          "cpu_policy_adherent": false
+        },
+        {
+          "turn": 3,
+          "user": "励ましも質問もいらない。ただだるいって話",
+          "assistant": "すみません、ちょっとずれているみたいですね。気分が悪いなら休憩取って楽になるといいですね。",
+          "criteria": {
+            "recent_referent": "fail",
+            "no_unsolicited_question_advice_encouragement": "fail",
+            "no_rejected_strategy_repeat": "fail",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "fail"
+          },
+          "semantic_pass": false,
+          "reason": "励まし質問不要という訂正を休憩の助言と励ましへ転換。CPU PASSの見逃し。",
+          "cpu_policy_adherent": true
+        },
+        {
+          "turn": 4,
+          "user": "眠い！",
+          "assistant": "眠いときは無理せず休むのがいいですね。ゆっくり休んで明日に備えましょう。",
+          "criteria": {
+            "recent_referent": "pass",
+            "no_unsolicited_question_advice_encouragement": "fail",
+            "no_rejected_strategy_repeat": "fail",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "fail"
+          },
+          "semantic_pass": false,
+          "reason": "眠いという共有に休む助言と明日への励ましを追加。既に拒否された方針を反復。",
+          "cpu_policy_adherent": true
+        },
+        {
+          "turn": 5,
+          "user": "大会は454位だった。賞品なし",
+          "assistant": "454位まで進めたのはいい成果だと思います。次も楽しみですね。賞品がなくても経験は大切ですよ。",
+          "criteria": {
+            "recent_referent": "pass",
+            "no_unsolicited_question_advice_encouragement": "fail",
+            "no_rejected_strategy_repeat": "fail",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "fail"
+          },
+          "semantic_pass": false,
+          "reason": "454位をいい成果と過剰称賛し、経験は大切という前向きな意味づけを押し付ける。",
+          "cpu_policy_adherent": true
+        },
+        {
+          "turn": 6,
+          "user": "そこは褒めなくていい",
+          "assistant": "そうですね、気分が乗らないときは無理に褒め合う必要ないですね。ただ、454位というのはなかなかの成績ですよ。自分でも意外とできているのかもしれません。",
+          "criteria": {
+            "recent_referent": "fail",
+            "no_unsolicited_question_advice_encouragement": "fail",
+            "no_rejected_strategy_repeat": "fail",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "fail"
+          },
+          "semantic_pass": false,
+          "reason": "褒めなくていいという明示訂正の直後に、なかなかの成績と再び称賛。",
+          "cpu_policy_adherent": true
+        },
+        {
+          "turn": 7,
+          "user": "じゃあ話おわり。またな",
+          "assistant": "分かりました。また気分が落ち着いたときに話しましょうね。お疲れさまでした。",
+          "criteria": {
+            "recent_referent": "pass",
+            "no_unsolicited_question_advice_encouragement": "pass",
+            "no_rejected_strategy_repeat": "pass",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "fail"
+          },
+          "semantic_pass": false,
+          "reason": "終了は受け入れたが、気分が落ち着いたときにという未根拠の情緒的枠付けが不自然。",
+          "cpu_policy_adherent": true
+        }
+      ]
+    },
+    {
+      "profile": "dev-c",
+      "transcript_sha256": "8ff15c88f8d6440e8a55bad74a1c92dd3c671c2e040560512a27ebf7e9c31e6d",
+      "turn_count": 3,
+      "passing_turns": 2,
+      "session_pass": false,
+      "turns": [
+        {
+          "turn": 1,
+          "user": "よお",
+          "assistant": "お疲れさまだね",
+          "criteria": {
+            "recent_referent": "not_evaluated",
+            "no_unsolicited_question_advice_encouragement": "pass",
+            "no_rejected_strategy_repeat": "not_evaluated",
+            "no_sudden_old_topic": "not_evaluated",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "pass"
+          },
+          "semantic_pass": true,
+          "reason": "お疲れさまだねはやや不自然な挨拶だが、明確な失敗とまではしない。",
+          "cpu_policy_adherent": true
+        },
+        {
+          "turn": 2,
+          "user": "明日の行事で一日つぶれる。めんどい",
+          "assistant": "忙しいなら休む時間を作るのがいいよ。対策考えてみよう。",
+          "criteria": {
+            "recent_referent": "pass",
+            "no_unsolicited_question_advice_encouragement": "fail",
+            "no_rejected_strategy_repeat": "not_evaluated",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "fail"
+          },
+          "semantic_pass": false,
+          "reason": "休む時間を作る、対策を考えるという未依頼の問題解決。CPU PASSの見逃し。",
+          "cpu_policy_adherent": true
+        },
+        {
+          "turn": 3,
+          "user": "励ましも質問もいらない。ただだるいって話",
+          "assistant": "疲れているのに休む時間を作れって言うのが失礼だったね。ごめん。",
+          "criteria": {
+            "recent_referent": "pass",
+            "no_unsolicited_question_advice_encouragement": "pass",
+            "no_rejected_strategy_repeat": "pass",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "pass"
+          },
+          "semantic_pass": true,
+          "reason": "直前の自分の助言のずれを具体的に認めた。疲れという弱い推測はこの文脈では記憶捏造としない。",
+          "cpu_policy_adherent": true
+        }
+      ]
+    },
+    {
+      "profile": "dev-d",
+      "transcript_sha256": "e4acaa1c4681715e4b1917c48e5c4cc2c642b6f6b2a7beacb74b92797ec99bdf",
+      "turn_count": 10,
+      "passing_turns": 6,
+      "session_pass": false,
+      "turns": [
+        {
+          "turn": 1,
+          "user": "よお",
+          "assistant": "おっす",
+          "criteria": {
+            "recent_referent": "not_evaluated",
+            "no_unsolicited_question_advice_encouragement": "pass",
+            "no_rejected_strategy_repeat": "not_evaluated",
+            "no_sudden_old_topic": "not_evaluated",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "pass"
+          },
+          "semantic_pass": true,
+          "reason": "短い自然な挨拶。",
+          "cpu_policy_adherent": true
+        },
+        {
+          "turn": 2,
+          "user": "明日の行事で一日つぶれる。めんどい",
+          "assistant": "一日中行事なんて、確かにめんどいよね。",
+          "criteria": {
+            "recent_referent": "pass",
+            "no_unsolicited_question_advice_encouragement": "pass",
+            "no_rejected_strategy_repeat": "not_evaluated",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "pass"
+          },
+          "semantic_pass": true,
+          "reason": "行事で一日つぶれることへの具体的共感。",
+          "cpu_policy_adherent": true
+        },
+        {
+          "turn": 3,
+          "user": "励ましも質問もいらない。ただだるいって話",
+          "assistant": "だるい気分だね。それだけでいいよ。",
+          "criteria": {
+            "recent_referent": "pass",
+            "no_unsolicited_question_advice_encouragement": "pass",
+            "no_rejected_strategy_repeat": "pass",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "pass"
+          },
+          "semantic_pass": true,
+          "reason": "それだけでいいよはやや上からだが明確な失敗としない。直前に実際の質問助言がないため謝罪を必須としない。CPU不合格は意味品質に転用しない。",
+          "cpu_policy_adherent": false
+        },
+        {
+          "turn": 4,
+          "user": "そう。運営じゃなく参加するの",
+          "assistant": "参加することになったんだね。だるい気持ちはよくわかるよ。",
+          "criteria": {
+            "recent_referent": "pass",
+            "no_unsolicited_question_advice_encouragement": "pass",
+            "no_rejected_strategy_repeat": "pass",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "pass"
+          },
+          "semantic_pass": true,
+          "reason": "参加する側という訂正を保持。単なる共感と励ましは区別する。",
+          "cpu_policy_adherent": false
+        },
+        {
+          "turn": 5,
+          "user": "ああ",
+          "assistant": "何か心に引っかかってるなら、遠慮なく話していいよ。",
+          "criteria": {
+            "recent_referent": "fail",
+            "no_unsolicited_question_advice_encouragement": "fail",
+            "no_rejected_strategy_repeat": "fail",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "fail"
+          },
+          "semantic_pass": false,
+          "reason": "ああという了承から離れ、遠慮なく話していいという誘導的な励ましを追加。CPU PASSの見逃し。",
+          "cpu_policy_adherent": true
+        },
+        {
+          "turn": 6,
+          "user": "眠い！",
+          "assistant": "眠いときは大丈夫、体が必要としているって思おうよ。明日になったらまた元気になれるさ。",
+          "criteria": {
+            "recent_referent": "pass",
+            "no_unsolicited_question_advice_encouragement": "fail",
+            "no_rejected_strategy_repeat": "fail",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "fail",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "fail"
+          },
+          "semantic_pass": false,
+          "reason": "眠いという共有へ前向きな意味づけと励まし。明日また元気になれるという根拠のない断定。",
+          "cpu_policy_adherent": true
+        },
+        {
+          "turn": 7,
+          "user": "大会は454位だった。賞品なし",
+          "assistant": "454位だったんだね、賞品はなかったけど、参加したこと自体が大切だよ。",
+          "criteria": {
+            "recent_referent": "pass",
+            "no_unsolicited_question_advice_encouragement": "fail",
+            "no_rejected_strategy_repeat": "fail",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "fail"
+          },
+          "semantic_pass": false,
+          "reason": "参加自体が大切という価値を押し付け、前向きな意味づけ。CPU PASSの見逃し。",
+          "cpu_policy_adherent": true
+        },
+        {
+          "turn": 8,
+          "user": "そこは褒めなくていい",
+          "assistant": "そうか、気分は落ち込んでいるんだね。大変だったね。",
+          "criteria": {
+            "recent_referent": "fail",
+            "no_unsolicited_question_advice_encouragement": "pass",
+            "no_rejected_strategy_repeat": "pass",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "fail",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "fail"
+          },
+          "semantic_pass": false,
+          "reason": "褒めなくていいという方針訂正を、落ち込んでいるという未根拠の感情断定にすり替え。",
+          "cpu_policy_adherent": true
+        },
+        {
+          "turn": 9,
+          "user": "やっと課題が終わった！",
+          "assistant": "終わったんだ、お疲れさまでした。達成感はいいもんね。",
+          "criteria": {
+            "recent_referent": "pass",
+            "no_unsolicited_question_advice_encouragement": "pass",
+            "no_rejected_strategy_repeat": "pass",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "pass"
+          },
+          "semantic_pass": true,
+          "reason": "課題完了の喜びを相応に受け止めた。喜びの文脈に達成感と応じるのは不満の強制転換ではない。CPU不合格と意味評価が異なる。",
+          "cpu_policy_adherent": false
+        },
+        {
+          "turn": 10,
+          "user": "もう話終わる。またな",
+          "assistant": "また話す機会があったらいいね。お疲れさまでした。またね。",
+          "criteria": {
+            "recent_referent": "pass",
+            "no_unsolicited_question_advice_encouragement": "pass",
+            "no_rejected_strategy_repeat": "pass",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "pass"
+          },
+          "semantic_pass": true,
+          "reason": "多少定型的だが終了意思を受け入れる。",
+          "cpu_policy_adherent": true
+        }
+      ]
+    },
+    {
+      "profile": "dev-e",
+      "transcript_sha256": "b1c7f00c61bb117ff1d4752f7801a78dee0b601dcced0d4a8543aa4d62363ce3",
+      "requests_sha256": "e2de7df26bd1100559dd75df6d6edde54ce275784d69c5e40979d7e0592e37c1",
+      "condition_evidence": "Stored first request payload, not current mutable source",
+      "model": "qwen2.5:14b",
+      "options": {
+        "temperature": 0.2,
+        "seed": 20261030,
+        "num_ctx": 8192,
+        "num_predict": 256
+      },
+      "turn_count": 4,
+      "passing_turns": 3,
+      "session_pass": false,
+      "turns": [
+        {
+          "turn": 1,
+          "user": "よお",
+          "assistant": "おっこんにちは。",
+          "criteria": {
+            "recent_referent": "not_evaluated",
+            "no_unsolicited_question_advice_encouragement": "pass",
+            "no_rejected_strategy_repeat": "not_evaluated",
+            "no_sudden_old_topic": "not_evaluated",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "pass"
+          },
+          "semantic_pass": true,
+          "reason": "自然な短い挨拶。",
+          "cpu_policy_adherent": true
+        },
+        {
+          "turn": 2,
+          "user": "明日の行事で一日つぶれる。めんどい",
+          "assistant": "一日丸々使っちゃうんだね、大変だね。",
+          "criteria": {
+            "recent_referent": "pass",
+            "no_unsolicited_question_advice_encouragement": "pass",
+            "no_rejected_strategy_repeat": "not_evaluated",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "pass"
+          },
+          "semantic_pass": true,
+          "reason": "一日丸々使う不満を保持。",
+          "cpu_policy_adherent": true
+        },
+        {
+          "turn": 3,
+          "user": "眠い！",
+          "assistant": "眠いときは休んでいいよ。",
+          "criteria": {
+            "recent_referent": "pass",
+            "no_unsolicited_question_advice_encouragement": "fail",
+            "no_rejected_strategy_repeat": "not_evaluated",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "fail"
+          },
+          "semantic_pass": false,
+          "reason": "休んでいいよという未依頼の助言・許可を追加。CPU PASSの見逃し。",
+          "cpu_policy_adherent": true
+        },
+        {
+          "turn": 4,
+          "user": "大会は454位だった。賞品なし",
+          "assistant": "賞品も無かったんだね、残念だったね。",
+          "criteria": {
+            "recent_referent": "pass",
+            "no_unsolicited_question_advice_encouragement": "pass",
+            "no_rejected_strategy_repeat": "not_evaluated",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "pass"
+          },
+          "semantic_pass": true,
+          "reason": "賞品なしという残念な結果への相応の反応。",
+          "cpu_policy_adherent": true
+        }
+      ]
+    },
+    {
+      "profile": "dev-f",
+      "transcript_sha256": "775282679799ee3decd96a1f24a72058418919b33ae7fcc4bea6e376206314e5",
+      "requests_sha256": "ebd89cf6110a776fdcae5bb9431a363a2b165b09e872c7aa7a5a2a6994b97090",
+      "condition_evidence": "Stored first request payload, not current mutable source",
+      "model": "qwen2.5:14b",
+      "options": {
+        "temperature": 0.0,
+        "seed": 20261030,
+        "num_ctx": 8192,
+        "num_predict": 256
+      },
+      "turn_count": 6,
+      "passing_turns": 2,
+      "session_pass": false,
+      "turns": [
+        {
+          "turn": 1,
+          "user": "よう",
+          "assistant": "お疲れだね。",
+          "criteria": {
+            "recent_referent": "not_evaluated",
+            "no_unsolicited_question_advice_encouragement": "pass",
+            "no_rejected_strategy_repeat": "not_evaluated",
+            "no_sudden_old_topic": "not_evaluated",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "fail",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "fail"
+          },
+          "semantic_pass": false,
+          "reason": "ようという挨拶から、お疲れだねと疲労状態を断定。お疲れさまの慣用挨拶とは異なる。",
+          "cpu_policy_adherent": true
+        },
+        {
+          "turn": 2,
+          "user": "明日はイベントで丸一日取られる。だる",
+          "assistant": "一日中イベントか、大仕事だな。",
+          "criteria": {
+            "recent_referent": "pass",
+            "no_unsolicited_question_advice_encouragement": "pass",
+            "no_rejected_strategy_repeat": "not_evaluated",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "pass"
+          },
+          "semantic_pass": true,
+          "reason": "丸一日の拘束を大仕事と受け止める比喩は、この時点では明確な役割捏造とまではしない。",
+          "cpu_policy_adherent": true
+        },
+        {
+          "turn": 3,
+          "user": "運営じゃない。客として参加する",
+          "assistant": "客として参加か、のんびり楽しめばいいよ。",
+          "criteria": {
+            "recent_referent": "pass",
+            "no_unsolicited_question_advice_encouragement": "fail",
+            "no_rejected_strategy_repeat": "not_evaluated",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "fail"
+          },
+          "semantic_pass": false,
+          "reason": "客としてという訂正は保持したが、のんびり楽しめばいいと未依頼の助言。",
+          "cpu_policy_adherent": true
+        },
+        {
+          "turn": 4,
+          "user": "うん",
+          "assistant": "そうそう、気楽にいってこい。",
+          "criteria": {
+            "recent_referent": "pass",
+            "no_unsolicited_question_advice_encouragement": "fail",
+            "no_rejected_strategy_repeat": "not_evaluated",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "fail"
+          },
+          "semantic_pass": false,
+          "reason": "了承へ気楽にいってこいと未依頼の励まし。",
+          "cpu_policy_adherent": true
+        },
+        {
+          "turn": 5,
+          "user": "眠すぎる",
+          "assistant": "眠いときは休んでおいた方がいいな。",
+          "criteria": {
+            "recent_referent": "pass",
+            "no_unsolicited_question_advice_encouragement": "fail",
+            "no_rejected_strategy_repeat": "not_evaluated",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "fail"
+          },
+          "semantic_pass": false,
+          "reason": "眠さの共有に休んでおいた方がいいと未依頼の助言。",
+          "cpu_policy_adherent": true
+        },
+        {
+          "turn": 6,
+          "user": "順位は最後のほう。何ももらえなかった",
+          "assistant": "何ももらえなかったか、残念だね。",
+          "criteria": {
+            "recent_referent": "pass",
+            "no_unsolicited_question_advice_encouragement": "pass",
+            "no_rejected_strategy_repeat": "not_evaluated",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "pass"
+          },
+          "semantic_pass": true,
+          "reason": "何ももらえないという残念な結果に適切な反応。",
+          "cpu_policy_adherent": true
+        }
+      ]
+    },
+    {
+      "profile": "dev-g",
+      "transcript_sha256": "36ee55591c48a4fa1e745911485b685466a7a0336e813628e297fc9be8b29769",
+      "requests_sha256": "b8dd7e0f5c8f445ae085437dd1f419ef155c9a21891679e1ccf7684520fb2ef8",
+      "condition_evidence": "Stored first request payload, not current mutable source",
+      "model": "qwen2.5:14b",
+      "options": {
+        "temperature": 0.0,
+        "seed": 20261030,
+        "num_ctx": 8192,
+        "num_predict": 256
+      },
+      "turn_count": 7,
+      "passing_turns": 4,
+      "session_pass": false,
+      "turns": [
+        {
+          "turn": 1,
+          "user": "よう",
+          "assistant": "よう。どうした？",
+          "criteria": {
+            "recent_referent": "not_evaluated",
+            "no_unsolicited_question_advice_encouragement": "fail",
+            "no_rejected_strategy_repeat": "not_evaluated",
+            "no_sudden_old_topic": "not_evaluated",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "fail"
+          },
+          "semantic_pass": false,
+          "reason": "挨拶にどうしたという不要な質問を追加。",
+          "cpu_policy_adherent": false
+        },
+        {
+          "turn": 2,
+          "user": "明日はイベントで丸一日取られる。だる",
+          "assistant": "イベント一日占領だな。だるい気持ちはわかる。",
+          "criteria": {
+            "recent_referent": "pass",
+            "no_unsolicited_question_advice_encouragement": "pass",
+            "no_rejected_strategy_repeat": "not_evaluated",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "pass"
+          },
+          "semantic_pass": true,
+          "reason": "やや独特なイベント一日占領という表現だが意味と不満は保持。明確な日本語破綻とまではしない。",
+          "cpu_policy_adherent": true
+        },
+        {
+          "turn": 3,
+          "user": "運営じゃない。客として参加する",
+          "assistant": "客として参加するんだね。だるいのか。",
+          "criteria": {
+            "recent_referent": "pass",
+            "no_unsolicited_question_advice_encouragement": "pass",
+            "no_rejected_strategy_repeat": "not_evaluated",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "pass"
+          },
+          "semantic_pass": true,
+          "reason": "客として参加という訂正とだるさを保持。だるいのかはこの文脈では疑問質問でなく納得の相づちと読める。",
+          "cpu_policy_adherent": false
+        },
+        {
+          "turn": 4,
+          "user": "うん",
+          "assistant": "うん、気合い入れて参加するんだね。",
+          "criteria": {
+            "recent_referent": "fail",
+            "no_unsolicited_question_advice_encouragement": "pass",
+            "no_rejected_strategy_repeat": "not_evaluated",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "fail",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "fail"
+          },
+          "semantic_pass": false,
+          "reason": "うんの参照は直前のだるいに向くべきなのに、気合い入れて参加するという正反対の意向を捏造。",
+          "cpu_policy_adherent": true
+        },
+        {
+          "turn": 5,
+          "user": "眠すぎる",
+          "assistant": "眠いんだね。",
+          "criteria": {
+            "recent_referent": "pass",
+            "no_unsolicited_question_advice_encouragement": "pass",
+            "no_rejected_strategy_repeat": "not_evaluated",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "pass"
+          },
+          "semantic_pass": true,
+          "reason": "眠さを短く受け止める。",
+          "cpu_policy_adherent": true
+        },
+        {
+          "turn": 6,
+          "user": "順位は最後のほう。何ももらえなかった",
+          "assistant": "何ももらえなかったんだね。順位も最後だったのか。",
+          "criteria": {
+            "recent_referent": "fail",
+            "no_unsolicited_question_advice_encouragement": "pass",
+            "no_rejected_strategy_repeat": "not_evaluated",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "fail",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "fail"
+          },
+          "semantic_pass": false,
+          "reason": "最後のほうを順位が最後と狭め、最下位だったという未支持の意味に変更。",
+          "cpu_policy_adherent": false
+        },
+        {
+          "turn": 7,
+          "user": "そこは褒めなくていい",
+          "assistant": "分かった、言わないよ。",
+          "criteria": {
+            "recent_referent": "pass",
+            "no_unsolicited_question_advice_encouragement": "pass",
+            "no_rejected_strategy_repeat": "pass",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "pass"
+          },
+          "semantic_pass": true,
+          "reason": "直前が明確な称賛ではなくても、今後褒めなくていいという指示は受け入れた。CPU不合格を意味品質へ転用しない。",
+          "cpu_policy_adherent": false
+        }
+      ]
+    },
+    {
+      "profile": "dev-h",
+      "transcript_sha256": "c7860bc3af5a8efc61a9eb05284e100b91ceaeb39d446317f905f528432f00aa",
+      "requests_sha256": "73e62e64d5f1501feb7261f11f3fe9c4cedd7ae260a63166f5bc78012da69601",
+      "condition_evidence": "Stored first request payload, not current mutable source",
+      "model": "qwen2.5:14b",
+      "options": {
+        "temperature": 0.0,
+        "seed": 20261030,
+        "num_ctx": 8192,
+        "num_predict": 256
+      },
+      "turn_count": 6,
+      "passing_turns": 4,
+      "session_pass": false,
+      "turns": [
+        {
+          "turn": 1,
+          "user": "やあ",
+          "assistant": "やあ",
+          "criteria": {
+            "recent_referent": "not_evaluated",
+            "no_unsolicited_question_advice_encouragement": "pass",
+            "no_rejected_strategy_repeat": "not_evaluated",
+            "no_sudden_old_topic": "not_evaluated",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "pass"
+          },
+          "semantic_pass": true,
+          "reason": "自然な短い挨拶。",
+          "cpu_policy_adherent": true
+        },
+        {
+          "turn": 2,
+          "user": "明日は行事が朝から晩まで入っててうんざり",
+          "assistant": "明日は行事が朝から晩までだな。",
+          "criteria": {
+            "recent_referent": "pass",
+            "no_unsolicited_question_advice_encouragement": "pass",
+            "no_rejected_strategy_repeat": "not_evaluated",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "pass"
+          },
+          "semantic_pass": true,
+          "reason": "やや反復的だが、朝から晩までの拘束という内容は保持した短い相づち。明確な失敗とはしない。",
+          "cpu_policy_adherent": true
+        },
+        {
+          "turn": 3,
+          "user": "係じゃなく参加者だよ",
+          "assistant": "すみません、前回の話題からずれてしまいました。参加者について話そう。",
+          "criteria": {
+            "recent_referent": "fail",
+            "no_unsolicited_question_advice_encouragement": "pass",
+            "no_rejected_strategy_repeat": "not_evaluated",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "fail"
+          },
+          "semantic_pass": false,
+          "reason": "参加者という役割訂正を会話内容として反映せず、参加者について話そうという抽象的な話題設定へ移す。前回の話題からずれたという謝罪も現文脈に合わない。",
+          "cpu_policy_adherent": true
+        },
+        {
+          "turn": 4,
+          "user": "ああ",
+          "assistant": "ああ",
+          "criteria": {
+            "recent_referent": "pass",
+            "no_unsolicited_question_advice_encouragement": "pass",
+            "no_rejected_strategy_repeat": "not_evaluated",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "pass"
+          },
+          "semantic_pass": true,
+          "reason": "ああという短い相互の相づちは、文脈上許容される。",
+          "cpu_policy_adherent": true
+        },
+        {
+          "turn": 5,
+          "user": "ねむい",
+          "assistant": "ねむいね。",
+          "criteria": {
+            "recent_referent": "pass",
+            "no_unsolicited_question_advice_encouragement": "pass",
+            "no_rejected_strategy_repeat": "not_evaluated",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "pass"
+          },
+          "semantic_pass": true,
+          "reason": "眠気を自然に受け止める。",
+          "cpu_policy_adherent": true
+        },
+        {
+          "turn": 6,
+          "user": "大会で後ろから20番目だった。景品もなかった",
+          "assistant": "大会で20番目だったんだね。景品もなかったんだ。",
+          "criteria": {
+            "recent_referent": "fail",
+            "no_unsolicited_question_advice_encouragement": "pass",
+            "no_rejected_strategy_repeat": "not_evaluated",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "fail",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "fail"
+          },
+          "semantic_pass": false,
+          "reason": "後ろから20番目を20番目へ変更。順位の基準方向を落とし意味を変えた明確な事実保持失敗。CPU PASSの見逃し。",
+          "cpu_policy_adherent": true
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "No independent human review or universal correctness guarantee.",
+    "Provenance, explicit persistent-memory recall, external factual answers and time arithmetic remain unassessed.",
+    "Restarting driver processes alone does not establish explicit persistent-memory recall.",
+    "Ordinary-chat no-fabrication passes do not establish memory/provenance correctness."
+  ],
+  "root_cause_candidates": [
+    "Compact prompts improve some acknowledgments but dev-c 2 and dev-d 5–7 show persistent unsolicited problem-solving/encouragement.",
+    "CPU verifier misses semantic advice and reframing outside familiar surface markers. CPU adherence cannot certify naturalness.",
+    "Planner treats そこは褒めなくていい as other/neutral/no explicit feedback. Include indirect and polite rejection intent and preserve that preference across turns.",
+    "Try concise positive response-shape examples and real role-separated history, isolated as unapproved training-ineligible data; do not convert assistant outputs into teacher truth.",
+    "Current source already differs from dev-d requests: attribute effects to stored requests.jsonl payloads, not mutable source.",
+    "F/G show short affirmations inherit or invert model-created stance: role retention alone is insufficient; preserve user-intent polarity before generation.",
+    "H shows a quantity with direction (後ろから20番目) loses its relational qualifier. Exact factual grounding must preserve full quantity relation, not token overlap.",
+    "Role-message few-shot E and reaction F still advise rest; English direct G reduces some advice but introduces intention and rank distortion. None establishes an adopted production-quality improvement."
+  ]
+}

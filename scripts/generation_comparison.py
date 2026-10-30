@@ -9,6 +9,9 @@ import subprocess
 import sys
 import tempfile
 import time
+import uuid
+from itertools import count
+from unittest.mock import patch
 from urllib.request import Request, urlopen
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -55,7 +58,12 @@ def prepare():
     source = json.loads((ROOT / 'reports/alignment-smoke.json').read_text(encoding='utf-8'))
     cases = []
     (ROOT / 'work').mkdir(exist_ok=True)
-    with tempfile.TemporaryDirectory(dir=ROOT / 'work') as directory:
+    # Synthetic fixture identifiers must be stable, not randomly resemble the
+    # personal rank removed from the source dialogue (e.g. UUID containing 454).
+    # This affects preparation only; real model inference is never mocked.
+    fixture_ids = count(1)
+    with tempfile.TemporaryDirectory(dir=ROOT / 'work') as directory, patch(
+            'uuid.uuid4', side_effect=lambda: uuid.UUID(int=next(fixture_ids))):
         session = FrozenHistorySession(FakeModelAdapter(), Path(directory) / 'events.jsonl', retrieval=RetrievalEngine())
         try:
             for i, row in enumerate(source['turns']):

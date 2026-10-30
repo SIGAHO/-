@@ -1,0 +1,3 @@
+# Preserve experiment evidence bytes, including transcript hashes and SQLite.
+reports/live-* -text whitespace=cr-at-eol
+reports/live-profiles/** -text whitespace=cr-at-eol

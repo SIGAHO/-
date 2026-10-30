@@ -1,0 +1,115 @@
+{
+  "quality_goal": "unmet",
+  "production_prompt_adopted": false,
+  "source_base": "a97d775991eaa5a36b913cd5a64c87fa32a39405",
+  "human_review": "not_evaluated",
+  "reviewer": "separate Codex assistant, not Qwen or human; nonblind",
+  "profiles": [
+    {
+      "profile": "dev-a",
+      "turns": 7,
+      "cpu_turns": 0,
+      "real_qwen_delivered_turns": 7,
+      "inferences_including_rewrites": 11,
+      "cpu_adherent_turns": 5,
+      "semantic_passing_turns": 0,
+      "session_pass": false
+    },
+    {
+      "profile": "dev-c",
+      "turns": 3,
+      "cpu_turns": 0,
+      "real_qwen_delivered_turns": 3,
+      "inferences_including_rewrites": 5,
+      "cpu_adherent_turns": 3,
+      "semantic_passing_turns": 2,
+      "session_pass": false
+    },
+    {
+      "profile": "dev-d",
+      "turns": 10,
+      "cpu_turns": 0,
+      "real_qwen_delivered_turns": 10,
+      "inferences_including_rewrites": 15,
+      "cpu_adherent_turns": 7,
+      "semantic_passing_turns": 6,
+      "session_pass": false
+    },
+    {
+      "profile": "dev-e",
+      "turns": 4,
+      "cpu_turns": 0,
+      "real_qwen_delivered_turns": 4,
+      "inferences_including_rewrites": 4,
+      "cpu_adherent_turns": 4,
+      "semantic_passing_turns": 3,
+      "session_pass": false
+    },
+    {
+      "profile": "dev-f",
+      "turns": 6,
+      "cpu_turns": 0,
+      "real_qwen_delivered_turns": 6,
+      "inferences_including_rewrites": 6,
+      "cpu_adherent_turns": 6,
+      "semantic_passing_turns": 2,
+      "session_pass": false
+    },
+    {
+      "profile": "dev-g",
+      "turns": 7,
+      "cpu_turns": 0,
+      "real_qwen_delivered_turns": 7,
+      "inferences_including_rewrites": 9,
+      "cpu_adherent_turns": 3,
+      "semantic_passing_turns": 4,
+      "session_pass": false
+    },
+    {
+      "profile": "dev-h",
+      "turns": 6,
+      "cpu_turns": 0,
+      "real_qwen_delivered_turns": 6,
+      "inferences_including_rewrites": 7,
+      "cpu_adherent_turns": 6,
+      "semantic_passing_turns": 4,
+      "session_pass": false
+    },
+    {
+      "profile": "holdout-chat",
+      "turns": 12,
+      "cpu_turns": 0,
+      "real_qwen_delivered_turns": 12,
+      "inferences_including_rewrites": 17,
+      "cpu_adherent_turns": 6,
+      "semantic_passing_turns": 6,
+      "session_pass": false
+    },
+    {
+      "profile": "holdout-memory",
+      "turns": 9,
+      "cpu_turns": 4,
+      "real_qwen_delivered_turns": 5,
+      "inferences_including_rewrites": 6,
+      "cpu_adherent_turns": 7,
+      "semantic_passing_turns": 6,
+      "session_pass": false
+    }
+  ],
+  "inference_attempts": 81,
+  "dialogue_turns": 64,
+  "cpu_turns": 4,
+  "prompt_tokens": 65140,
+  "output_tokens": 1221,
+  "stopped_or_truncated_requests": 0,
+  "diagnostic_requests": 1,
+  "approval_operations": 0,
+  "training_exports": 0,
+  "real_qwen_delivered_turns": 60,
+  "holdout_semantic_pass": {
+    "turns": 21,
+    "passing": 12,
+    "sessions_passing": 0,
+    "sessions": 2
+  }
+}

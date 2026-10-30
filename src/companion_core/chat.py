@@ -15,10 +15,10 @@ from dataclasses import replace
 
 
 class ChatSession:
-    def __init__(self, adapter, event_path=None, *, style_profile=None, retrieval=None, heat_config=None):
+    def __init__(self, adapter, event_path=None, *, style_profile=None, retrieval=None, heat_config=None, prompt_mode='legacy'):
         self.core = CompanionCore(event_path)
         self.adapter = adapter
-        self.prompts = PromptBuilder(style_profile)
+        self.prompts = PromptBuilder(style_profile, mode=prompt_mode)
         self.validator = StyleValidator()
         self.planner = PolicyPlanner()
         self.policy_verifier = PolicyVerifier()

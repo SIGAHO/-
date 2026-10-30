@@ -1,0 +1,608 @@
+{
+  "review_type": "independent_external_assistant_semantic_holdout_review",
+  "reviewer": "Separate Codex reviewer agent; not Qwen; not human",
+  "rubric": "reports/live-protocol.md fixed eight criteria",
+  "implementation_freeze": "reports/live-freeze.md",
+  "environment": "reports/live-environment.json",
+  "criteria": [
+    "recent_referent",
+    "no_unsolicited_question_advice_encouragement",
+    "no_rejected_strategy_repeat",
+    "no_sudden_old_topic",
+    "japanese_intact",
+    "no_invented_memory_evidence_or_unsupported_certainty",
+    "nonempty_uninterrupted",
+    "natural_relevant_conversation"
+  ],
+  "strict_final_pass": false,
+  "adoption_recommendation": "Do not adopt candidate into production; evaluation goal unmet.",
+  "sessions": [
+    {
+      "profile": "holdout-chat",
+      "transcript_sha256": "f28419968d45fa63564fe36318b7b341e58f6e090492a6204db79531a4725678",
+      "requests_sha256": "49f958bb84f6984118bc9110bbd9c0ed17903160dab865fc7e0da8826b0d829a",
+      "turn_count": 12,
+      "real_model_delivered_turns": 12,
+      "cpu_bypass_turns": 0,
+      "real_inference_attempts_including_rewrites": 17,
+      "passing_turns": 6,
+      "session_pass": false,
+      "turns": [
+        {
+          "turn": 1,
+          "user": "おーい",
+          "assistant": "いるよ、何ですか？",
+          "response_path": "real_qwen_generated",
+          "new_process_replay": true,
+          "criteria": {
+            "recent_referent": "not_evaluated",
+            "no_unsolicited_question_advice_encouragement": "fail",
+            "no_rejected_strategy_repeat": "not_evaluated",
+            "no_sudden_old_topic": "not_evaluated",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "fail"
+          },
+          "semantic_pass": false,
+          "reason": "呼びかけにいるよは適切だが、何ですかという未依頼の質問を足した。",
+          "cpu_policy_adherent": false
+        },
+        {
+          "turn": 2,
+          "user": "休日なのに講習で夕方まで取られるんだよな",
+          "assistant": "講習で時間取られて大変だね。",
+          "response_path": "real_qwen_generated",
+          "new_process_replay": true,
+          "criteria": {
+            "recent_referent": "pass",
+            "no_unsolicited_question_advice_encouragement": "pass",
+            "no_rejected_strategy_repeat": "not_evaluated",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "pass"
+          },
+          "semantic_pass": true,
+          "reason": "休日が講習に取られる不満を保持した短い反応。",
+          "cpu_policy_adherent": true
+        },
+        {
+          "turn": 3,
+          "user": "スタッフじゃなくて受ける側な",
+          "assistant": "受け取る側だったんですね。誤解してごめんください。",
+          "response_path": "real_qwen_generated",
+          "new_process_replay": true,
+          "criteria": {
+            "recent_referent": "fail",
+            "no_unsolicited_question_advice_encouragement": "pass",
+            "no_rejected_strategy_repeat": "not_evaluated",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "fail",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "fail"
+          },
+          "semantic_pass": false,
+          "reason": "講習を受ける側を受け取る側へ変えた意味誤り。ごめんくださいは謝罪表現として不自然。日本語全体は読めるため言語崩壊ではなく自然さ不合格とした。",
+          "cpu_policy_adherent": true
+        },
+        {
+          "turn": 4,
+          "user": "そう",
+          "assistant": "講習、頑張ってね。",
+          "response_path": "real_qwen_generated",
+          "new_process_replay": true,
+          "criteria": {
+            "recent_referent": "pass",
+            "no_unsolicited_question_advice_encouragement": "fail",
+            "no_rejected_strategy_repeat": "not_evaluated",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "fail"
+          },
+          "semantic_pass": false,
+          "reason": "そうという了承に頑張ってと未依頼の励ましを追加。",
+          "cpu_policy_adherent": false
+        },
+        {
+          "turn": 5,
+          "user": "もうまぶた落ちてきた",
+          "assistant": "眠くなってきたか。",
+          "response_path": "real_qwen_generated",
+          "new_process_replay": true,
+          "criteria": {
+            "recent_referent": "pass",
+            "no_unsolicited_question_advice_encouragement": "pass",
+            "no_rejected_strategy_repeat": "not_evaluated",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "pass"
+          },
+          "semantic_pass": true,
+          "reason": "まぶたが落ちるという眠気を自然に受け止めた。",
+          "cpu_policy_adherent": true
+        },
+        {
+          "turn": 6,
+          "user": "小テストは満点だった！",
+          "assistant": "おめでとう、満点だったんだね。",
+          "response_path": "real_qwen_generated",
+          "new_process_replay": true,
+          "criteria": {
+            "recent_referent": "pass",
+            "no_unsolicited_question_advice_encouragement": "pass",
+            "no_rejected_strategy_repeat": "not_evaluated",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "pass"
+          },
+          "semantic_pass": true,
+          "reason": "満点への喜びに相応の祝福。過剰称賛と区別する。",
+          "cpu_policy_adherent": true
+        },
+        {
+          "turn": 7,
+          "user": "でも大会は389位で参加賞すらなかった",
+          "assistant": "大会は参加賞なかったんだね。",
+          "response_path": "real_qwen_generated",
+          "new_process_replay": true,
+          "criteria": {
+            "recent_referent": "pass",
+            "no_unsolicited_question_advice_encouragement": "pass",
+            "no_rejected_strategy_repeat": "not_evaluated",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "pass"
+          },
+          "semantic_pass": true,
+          "reason": "参加賞もなかったという残念な点を保持。389位の省略だけでは意味誤りとしない。",
+          "cpu_policy_adherent": true
+        },
+        {
+          "turn": 8,
+          "user": "励まさなくていいし、次の作戦もいらん",
+          "assistant": "分かった、気にしないで。",
+          "response_path": "real_qwen_generated",
+          "new_process_replay": true,
+          "criteria": {
+            "recent_referent": "pass",
+            "no_unsolicited_question_advice_encouragement": "fail",
+            "no_rejected_strategy_repeat": "fail",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "fail"
+          },
+          "semantic_pass": false,
+          "reason": "励まし不要という指示へ気にしないでという慰め・感情への働きかけを反復。",
+          "cpu_policy_adherent": false
+        },
+        {
+          "turn": 9,
+          "user": "その励ましをやめてって言ってる",
+          "assistant": "止めておこう。",
+          "response_path": "real_qwen_generated",
+          "new_process_replay": true,
+          "criteria": {
+            "recent_referent": "pass",
+            "no_unsolicited_question_advice_encouragement": "pass",
+            "no_rejected_strategy_repeat": "pass",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "pass"
+          },
+          "semantic_pass": true,
+          "reason": "止めておこうはやや曖昧だが、直前の自分の励ましを止めるという了承として読める。謝罪定型がないだけで不合格にしない。CPU不合格とは区別。",
+          "cpu_policy_adherent": false
+        },
+        {
+          "turn": 10,
+          "user": "ところで今日はここまで。また今度",
+          "assistant": "今日もお疲れさまでした。またね。",
+          "response_path": "real_qwen_generated",
+          "new_process_replay": true,
+          "criteria": {
+            "recent_referent": "pass",
+            "no_unsolicited_question_advice_encouragement": "pass",
+            "no_rejected_strategy_repeat": "pass",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "pass"
+          },
+          "semantic_pass": true,
+          "reason": "終了意思を受け入れ、新しい話題を足さない。",
+          "cpu_policy_adherent": true
+        },
+        {
+          "turn": 11,
+          "user": "起きたよ",
+          "assistant": "おはよう、元気だったか？",
+          "response_path": "real_qwen_generated",
+          "new_process_replay": true,
+          "criteria": {
+            "recent_referent": "pass",
+            "no_unsolicited_question_advice_encouragement": "fail",
+            "no_rejected_strategy_repeat": "not_evaluated",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "fail"
+          },
+          "semantic_pass": false,
+          "reason": "起床への挨拶に元気だったかという不要な質問を追加。",
+          "cpu_policy_adherent": false
+        },
+        {
+          "turn": 12,
+          "user": "ああ",
+          "assistant": "元気だった？何かあったの？",
+          "response_path": "real_qwen_generated",
+          "new_process_replay": true,
+          "criteria": {
+            "recent_referent": "fail",
+            "no_unsolicited_question_advice_encouragement": "fail",
+            "no_rejected_strategy_repeat": "pass",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "fail"
+          },
+          "semantic_pass": false,
+          "reason": "ああが直前の元気だったかへの肯定として成立するのに同じ質問を繰り返し、何かあったのという追加質問も行う。",
+          "cpu_policy_adherent": false
+        }
+      ]
+    },
+    {
+      "profile": "holdout-memory",
+      "transcript_sha256": "8ab71386341e5578bb3b766bda14c7b6d0e4529c2dcd492f2dc55bba7a627590",
+      "requests_sha256": "d014ebf591cd18df35b8751bb8a04be5f344567278db6f79db1288c4ca7deca6",
+      "turn_count": 9,
+      "real_model_delivered_turns": 5,
+      "cpu_bypass_turns": 4,
+      "real_inference_attempts_including_rewrites": 6,
+      "passing_turns": 6,
+      "session_pass": false,
+      "turns": [
+        {
+          "turn": 1,
+          "user": "好きな色は藍色。今回の模型は帆船にした",
+          "assistant": "藍色の模型帆船か、 coolな作品になったかな。",
+          "response_path": "real_qwen_generated",
+          "new_process_replay": true,
+          "criteria": {
+            "recent_referent": "not_evaluated",
+            "no_unsolicited_question_advice_encouragement": "fail",
+            "no_rejected_strategy_repeat": "not_evaluated",
+            "no_sudden_old_topic": "not_evaluated",
+            "japanese_intact": "fail",
+            "no_invented_memory_evidence_or_unsupported_certainty": "fail",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "fail"
+          },
+          "semantic_pass": false,
+          "reason": "好みの色と模型の種類を誤結合して藍色の模型帆船と捏造。coolという未依頼の英語を通常日本語へ混在し、作品になったかなという質問も追加。",
+          "cpu_policy_adherent": false
+        },
+        {
+          "turn": 2,
+          "user": "帆船じゃなくて灯台だった。訂正",
+          "assistant": "あ、灯台だったね。間違えた。",
+          "response_path": "real_qwen_generated",
+          "new_process_replay": true,
+          "criteria": {
+            "recent_referent": "pass",
+            "no_unsolicited_question_advice_encouragement": "pass",
+            "no_rejected_strategy_repeat": "not_evaluated",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "pass"
+          },
+          "semantic_pass": true,
+          "reason": "灯台への訂正を保持。間違えたは自分が続けていた旧認識を直す発話として許容する。CPU不合格は意味品質へ転用しない。",
+          "cpu_policy_adherent": false
+        },
+        {
+          "turn": 3,
+          "user": "8時42分から9時17分までは何分",
+          "assistant": "35分。",
+          "response_path": "cpu_bypass",
+          "new_process_replay": true,
+          "criteria": {
+            "recent_referent": "pass",
+            "no_unsolicited_question_advice_encouragement": "pass",
+            "no_rejected_strategy_repeat": "not_evaluated",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "pass"
+          },
+          "semantic_pass": true,
+          "reason": "CPU経路による35分は計算上正しい。実Qwenの計算能力が合格したという意味ではない。",
+          "cpu_policy_adherent": true
+        },
+        {
+          "turn": 4,
+          "user": "その情報はどこから",
+          "assistant": "直前回答に渡した情報は、記憶（ユーザー申告を含む）・CPU管理の状態・実行環境の観測。",
+          "response_path": "cpu_bypass",
+          "new_process_replay": true,
+          "criteria": {
+            "recent_referent": "fail",
+            "no_unsolicited_question_advice_encouragement": "pass",
+            "no_rejected_strategy_repeat": "not_evaluated",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "fail"
+          },
+          "semantic_pass": false,
+          "reason": "35分の根拠照会に、二つのユーザー提示時刻から差を計算したという具体的説明がない。渡した情報カテゴリの列挙は実際の計算根拠への答えとして不足。カテゴリが渡されたこと自体を捏造とは判定しない。",
+          "cpu_policy_adherent": true
+        },
+        {
+          "turn": 5,
+          "user": "7キロを50分かけて走ったんだ",
+          "assistant": "7キロ50分走ったか。",
+          "response_path": "real_qwen_generated",
+          "new_process_replay": true,
+          "criteria": {
+            "recent_referent": "pass",
+            "no_unsolicited_question_advice_encouragement": "pass",
+            "no_rejected_strategy_repeat": "not_evaluated",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "pass"
+          },
+          "semantic_pass": true,
+          "reason": "走行距離と時間を改変せず短く受け止めた。速度評価や外部事実は述べない。",
+          "cpu_policy_adherent": true
+        },
+        {
+          "turn": 6,
+          "user": "さっき何の模型にしたって言ったか覚えてる",
+          "assistant": "灯台だったね。前の話で訂正したよ。",
+          "response_path": "real_qwen_generated",
+          "new_process_replay": true,
+          "criteria": {
+            "recent_referent": "pass",
+            "no_unsolicited_question_advice_encouragement": "pass",
+            "no_rejected_strategy_repeat": "not_evaluated",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "pass"
+          },
+          "semantic_pass": true,
+          "reason": "別processでReplay後、訂正済みの灯台を保持して明示照会へ回答。前の話で訂正したよは主語省略でやや曖昧だが、訂正があったという事実は正しい。",
+          "cpu_policy_adherent": true
+        },
+        {
+          "turn": 7,
+          "user": "その記憶は何が根拠",
+          "assistant": "直前回答に渡した情報は、過去の会話引用（未検証）・記憶（ユーザー申告を含む）・CPU管理の状態・実行環境の観測。文章はAI生成で、それ自体は事実の根拠にならない。渡した情報と文章の一致までは保証していない。",
+          "response_path": "cpu_bypass",
+          "new_process_replay": true,
+          "criteria": {
+            "recent_referent": "fail",
+            "no_unsolicited_question_advice_encouragement": "pass",
+            "no_rejected_strategy_repeat": "not_evaluated",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "fail"
+          },
+          "semantic_pass": false,
+          "reason": "記憶の具体的根拠を聞かれて、本人の訂正発言を指さず情報カテゴリと一般的留保を列挙。捏造抑止の留保は適切だが、この模型記憶の出所説明として不十分。CPU PASSと区別。",
+          "cpu_policy_adherent": true
+        },
+        {
+          "turn": 8,
+          "user": "覚えてる？",
+          "assistant": "保存されたユーザー申告は「帆船じゃなくて灯台だった。訂正」「7キロを50分かけて走ったんだ」。発言としての記憶で、外部事実の確認済み根拠ではない。",
+          "response_path": "cpu_bypass",
+          "new_process_replay": true,
+          "criteria": {
+            "recent_referent": "pass",
+            "no_unsolicited_question_advice_encouragement": "pass",
+            "no_rejected_strategy_repeat": "not_evaluated",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "pass"
+          },
+          "semantic_pass": true,
+          "reason": "CPU経路で保存された本人の発言を正確に引用し、外部事実と区別する。一般的な記憶照会なので走行発言の併記は明確な旧話題逸脱とはしない。",
+          "cpu_policy_adherent": true
+        },
+        {
+          "turn": 9,
+          "user": "じゃ、もう返事だけで終わろう。おやすみ",
+          "assistant": "おやすみ。",
+          "response_path": "real_qwen_generated",
+          "new_process_replay": true,
+          "criteria": {
+            "recent_referent": "pass",
+            "no_unsolicited_question_advice_encouragement": "pass",
+            "no_rejected_strategy_repeat": "not_evaluated",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "pass"
+          },
+          "semantic_pass": true,
+          "reason": "短い返事だけで終了するという意図に合う。",
+          "cpu_policy_adherent": true
+        }
+      ]
+    }
+  ],
+  "coverage": {
+    "casual_greeting": {
+      "status": "fail",
+      "cases": [
+        "holdout-chat:1",
+        "holdout-chat:11"
+      ]
+    },
+    "complaint": {
+      "status": "pass_in_sample",
+      "cases": [
+        "holdout-chat:2"
+      ]
+    },
+    "sleepiness": {
+      "status": "pass_in_sample",
+      "cases": [
+        "holdout-chat:5"
+      ]
+    },
+    "achievement": {
+      "status": "pass_in_sample",
+      "cases": [
+        "holdout-chat:6"
+      ]
+    },
+    "disappointing_result": {
+      "status": "pass_in_sample",
+      "cases": [
+        "holdout-chat:7"
+      ]
+    },
+    "negation_correction": {
+      "status": "mixed_fail",
+      "cases": [
+        "holdout-chat:3",
+        "holdout-memory:2"
+      ]
+    },
+    "question_excess": {
+      "status": "fail",
+      "cases": [
+        "holdout-chat:1",
+        "holdout-chat:11",
+        "holdout-chat:12"
+      ]
+    },
+    "unsolicited_encouragement_and_refusal": {
+      "status": "fail",
+      "cases": [
+        "holdout-chat:4",
+        "holdout-chat:8",
+        "holdout-chat:9"
+      ]
+    },
+    "unsolicited_actionable_advice": {
+      "status": "not_evaluated_in_holdout",
+      "note": "Refusal wording occurred, but no separate actionable-advice challenge was completed; known development failures remain."
+    },
+    "short_ellipsis_referent": {
+      "status": "fail",
+      "cases": [
+        "holdout-chat:12"
+      ]
+    },
+    "old_topic_revival": {
+      "status": "pass_in_limited_sample",
+      "cases": [
+        "holdout-chat:11"
+      ],
+      "note": "Return after closing did not revive old substantive topics; long-gap or unrelated-memory distractions not tested."
+    },
+    "provenance_explanation": {
+      "status": "fail",
+      "path": "cpu_bypass",
+      "cases": [
+        "holdout-memory:4",
+        "holdout-memory:7"
+      ],
+      "note": "Generic source categories fail to identify the specific arithmetic inputs or corrected user statement."
+    },
+    "explicit_memory_after_process_restart_replay": {
+      "status": "pass_in_sample",
+      "cases": [
+        "holdout-memory:6",
+        "holdout-memory:8"
+      ],
+      "paths": [
+        "real_qwen_generated",
+        "cpu_bypass"
+      ],
+      "note": "Correction retained after new process + Replay; no clean-context memory-only retrieval was established."
+    },
+    "japanese_maintenance": {
+      "status": "fail",
+      "cases": [
+        "holdout-memory:1"
+      ]
+    },
+    "conversation_ending": {
+      "status": "pass_in_sample",
+      "cases": [
+        "holdout-chat:10",
+        "holdout-memory:9"
+      ]
+    },
+    "uninterrupted_nonempty_response": {
+      "status": "pass_in_sample",
+      "cases": "all 21 delivered turns"
+    },
+    "clock_arithmetic": {
+      "status": "pass_in_sample",
+      "path": "cpu_bypass",
+      "cases": [
+        "holdout-memory:3"
+      ],
+      "note": "Not a real-model arithmetic success."
+    },
+    "external_web_search_accuracy": {
+      "status": "not_evaluated",
+      "note": "Web disabled. 7 km / 50 min turn was a shared experience, not a requested external speed comparison."
+    },
+    "long_term_memory_and_provenance_full_contract": {
+      "status": "not_evaluated",
+      "note": "Finite Replay dialogue is not a complete persistence, isolation, source-tracing or adversarial memory audit."
+    },
+    "explicit_language_request_and_interrupt_mid_generation": {
+      "status": "not_evaluated",
+      "note": "Ending a conversation was tested; live cancellation during generation and requested foreign language output were not."
+    }
+  },
+  "limitations": [
+    "Reviewer was not blind: parent message highlighted potential errors before reading transcripts. Judgments were made from exact inputs/outputs, and semantic/CPU disagreements are explicitly preserved.",
+    "Operator selected and adaptively continued dialogues and knew development results. No randomized blind or independent human evaluation.",
+    "Development failures were known before diagnostic holdout. Passing isolated holdout turns cannot erase development failures.",
+    "Model-generated delivery counts differ from inference attempts because repairs regenerate candidates; CPU-only output is separately labeled.",
+    "Process-restart claim is supported by driver metadata and supplied execution account. Each invocation can contain multiple turns; flag alone cannot prove every row was a unique process.",
+    "All records are synthetic unapproved, training-ineligible experiments. No universal correctness claim is possible.",
+    "Naturalness judgments have interpretation uncertainty; mild repetition and brief acknowledgments were allowed when context fit.",
+    "No model-quality changes made by reviewer and no source or original dialogue data modified."
+  ]
+}

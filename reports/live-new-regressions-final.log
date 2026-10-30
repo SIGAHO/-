@@ -1,0 +1,9 @@
+test_default_prompt_and_real_user_role_unchanged (test_live_dialogue_regressions.LiveDialogueRegressions.test_default_prompt_and_real_user_role_unchanged) ... ok
+test_experimental_examples_do_not_enter_memory_or_events (test_live_dialogue_regressions.LiveDialogueRegressions.test_experimental_examples_do_not_enter_memory_or_events) ... ok
+test_praise_refusal_is_feedback_and_blocks_praise (test_live_dialogue_regressions.LiveDialogueRegressions.test_praise_refusal_is_feedback_and_blocks_praise) ... ok
+test_role_correction_is_not_treated_as_neutral_sharing (test_live_dialogue_regressions.LiveDialogueRegressions.test_role_correction_is_not_treated_as_neutral_sharing) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.242s
+
+OK

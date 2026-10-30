@@ -1,0 +1,8 @@
+{
+  "mode": "legacy",
+  "temperature": 0.6,
+  "training_eligible": false,
+  "human_approved": false,
+  "web": "disabled",
+  "profile": "dev-a"
+}

@@ -1,0 +1,8 @@
+{
+  "mode": "reaction",
+  "temperature": 0.0,
+  "training_eligible": false,
+  "human_approved": false,
+  "web": "disabled",
+  "profile": "dev-f"
+}
