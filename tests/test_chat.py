@@ -24,6 +24,43 @@ class ChatE2ETests(unittest.TestCase):
     def turn(self, text, **kwargs):
         return self.chat.turn(text, **kwargs)
 
+    def test_interrupted_generation_preserves_input_and_records_cancellation(self):
+        with patch.object(self.chat.adapter, 'generate', side_effect=KeyboardInterrupt):
+            with self.assertRaises(KeyboardInterrupt):
+                self.turn('今日は眠い')
+        self.assertEqual([e.kind for e in self.chat.core.events.events], ['user_input'])
+        self.assertEqual(self.chat.fio.recorder.records, [])
+        self.assertIsNone(self.chat.fio.pending)
+        self.assertEqual([e['kind'] for e in self.chat.fio.experiences.all()], ['generation_cancelled'])
+        self.chat.close()
+        reopened = ChatSession(FakeModelAdapter(['おかえり。']), self.path)
+        self.addCleanup(reopened.close)
+        self.assertEqual([e.kind for e in reopened.core.events.events], ['user_input'])
+        self.assertEqual(reopened.turn('ただいま'), 'おかえり。')
+        self.assertEqual([e['kind'] for e in reopened.fio.experiences.all()].count('generation_cancelled'), 1)
+
+    def test_interrupted_retrieval_records_cancel_not_model_failure(self):
+        with patch.object(self.chat.retrieval, 'retrieve', side_effect=KeyboardInterrupt):
+            with self.assertRaises(KeyboardInterrupt):
+                self.turn('富士山の高さを教えて')
+        self.assertEqual([e.kind for e in self.chat.core.events.events], ['user_input'])
+        self.assertIsNone(self.chat.fio.pending)
+        self.assertIn('generation_cancelled', [e['kind'] for e in self.chat.fio.experiences.all()])
+        self.assertNotIn('model_failure', [e['kind'] for e in self.chat.fio.experiences.all()])
+
+    def test_interrupt_before_fio_begin_records_cancelled_input(self):
+        with patch.object(self.chat.planner, 'observe', side_effect=KeyboardInterrupt):
+            with self.assertRaises(KeyboardInterrupt):
+                self.turn('今日は眠い')
+        self.assertEqual([e.kind for e in self.chat.core.events.events], ['user_input'])
+        self.assertIsNone(self.chat.fio.pending)
+        self.assertEqual([e['kind'] for e in self.chat.fio.experiences.all()], ['generation_cancelled'])
+
+    def test_cancelled_helper_does_not_mark_a_completed_turn(self):
+        self.turn('ただいま')
+        self.chat.fio.cancelled(self.chat.core)
+        self.assertNotIn('generation_cancelled', [e['kind'] for e in self.chat.fio.experiences.all()])
+
     def test_smalltalk_roundtrip(self):
         self.assertEqual(self.turn('こんにちは'), 'こんにちは。')
         self.assertEqual([e.kind for e in self.chat.core.events.events], ['user_input', 'assistant_output'])

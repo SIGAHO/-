@@ -9,6 +9,15 @@ from companion_core.correction import CorrectionEngine
 
 
 class CorrectionConfirmationTests(unittest.TestCase):
+    def test_overlong_replacement_is_not_silently_truncated(self):
+        engine = CorrectionEngine()
+        self.assertEqual(engine.detect('古い説明じゃなくて' + 'あ' * 60)[0].new, 'あ' * 60)
+        self.assertEqual(engine.detect('古い説明じゃなくて' + 'あ' * 61), [])
+        self.assertEqual(engine.detect('違う、' + 'あ' * 80)[0].new, 'あ' * 80)
+        self.assertEqual(engine.detect('違う、' + 'あ' * 81), [])
+        self.assertEqual(engine.detect('あ' * 41 + 'じゃなくて青'), [])
+        self.assertEqual(engine.detect('赤じゃなくて青。古い説明じゃなくて' + 'あ' * 61), [])
+
     def test_unresolved_replacement_is_not_a_candidate(self):
         for text in ("違う、そこじゃない", "ちがう、そこではないです", "違う、それじゃないよ", "違う、そうじゃない", "違う、そこじゃないと思う", "違う、そこ", "違う、わからない", "君じゃなくてそれ"):
             with self.subTest(text=text):
@@ -40,6 +49,15 @@ class CorrectionConfirmationTests(unittest.TestCase):
 
 
 class CoreCorrectionAdmissionTests(unittest.TestCase):
+    def test_overlong_negative_correction_is_not_promoted_even_after_replay(self):
+        core = CompanionCore()
+        text = '古い説明じゃなくて' + '背景' * 29 + '大会に参加するわけではない'
+        core.handle(text, correction_key='meeting.detail')
+        self.assertNotIn('meeting.detail', core.state.active)
+        self.assertFalse(any(e.kind == 'correction' for e in core.events.events))
+        self.assertTrue(any(e.kind == 'user_input' and e.payload['text'] == text for e in core.events.events))
+        core.replay()
+        self.assertNotIn('meeting.detail', core.state.active)
     def test_vague_correction_with_target_preserves_fact_history_and_events(self):
         core = CompanionCore()
         core.handle("君じゃなくてルクルア", correction_key="name")

@@ -653,3 +653,92 @@ cycle12採点対象SHA256:
 最新のcycle12集計は8配信・11実生成（初稿8＋修復3）、要求時間合計26.206秒。意味合格4/8、不合格4/8、最終CPU適合7/8。追加一件の成功で既存四件の失敗が解消したことにはならず、会話品質合格には未達。同じ開発profileの途中で検査を追加しており、独立holdoutや同条件A/Bでもない。コードと原データは変更していない。
 
 第8turn込みdialogue SHA256: b67a8e38183aa052ffaa18387f82838967587e87f4212ac477e9d32f7181be6f
+
+
+## 訂正文字列の途中切断によるハード状態の誤確定（9ffd5c6起点、2026-10-31）
+
+P1を独立再現した。CorrectionEngineの置換newは1〜60字に制限する一方、末尾に区切り境界がなく、長い置換値を黙って最初の60字へ切っていた。core.handleへ明示correction_keyを渡すと、それがUSER_CORRECTIONのStateとMemoryへ昇格し、raw入力と矛盾した高権威の値がReplay後も維持された。
+
+具体例はkey=meeting.detail、発言は「古い説明じゃなくて」＋以下66字。
+「正確には明日の予定を詳しく言うと友達の応援のために朝から会場に行くことになっているけれど私自身は選手として大会に参加するわけではない」
+9ffd5c6のCorrectionEngineでは新値が60字の「…私自身は選手として大会に参加する」で終わり、否定の「わけではない」を全て失う。raw user_inputには全文が残っているが、State/USER_CORRECTION Memoryは参加するとの別の文。最初に62字版が「…わけでは」で途切れることをworking treeの修正前に確認し、主担当の並行修正後は不変HEAD9ffd5c6のCorrectionEngineを隔離namespaceへ読み込み、66字版の肯定への変化とReplayを再確認した。既存コードや原ログを書き換えて再現したわけではない。
+
+必要な回帰は、長さ超過なら全文を扱うか全候補保留とし、prefixを確定値にしないこと。旧値側も40字/30字超を途中から一致させないこと。短い候補＋長い候補の混在で、長い方だけを落として残りを唯一の訂正と誤認しないこと。既存値と履歴、raw入力を保持し、Replayで同じ保留になること。
+
+### 修正後の独立確認
+
+新しい境界検査と長さ超過時の全候補保留を読んだ。最新版で元66字例は訂正に昇格せず、既存の青stateとhistory一件が変化しなかった。raw Memoryには否定を含む全文が残り、再起動後も青state/history一件のまま。旧の途中切断した値を既存原記録から遡及削除する処理はなく、そのような自動修復を主張しない。
+
+59/60/61字の置換、79/80/81字の「違う、」および定義文、旧値40/41字・定義旧値30/31字を独立検査。各上限内は全文、超過は保留。長短候補の前後順と、長い定義/「違う、」に短い置換を混ぜる例も全体保留。二つの短い候補は二候補として残り、唯一候補のハード適用へ落とし込まない。correction_confirmation/core/memory_distinct_claimsの計24件が通過。自然文全構文への訂正理解の完全性までは検証していない。今回の限定修正はraw保持を伴う保守的な受入れ範囲の縮小で、長い内容のprefixを事実化するより安全。
+
+## KeyboardInterruptによる未完了会話の取消記録の独立確認（2026-10-31）
+
+差分はChatSession/Daemonのprepareとgenerateを囲むKeyboardInterrupt経路でFIOMemory.cancelledを呼び、generation_cancelledをruntime由来Experienceへ保存して割込みを再送出する。model_failureと区別し、confirmed Sessionやassistantを作らない設計になっている。
+
+隔離persistent profileでまず正常回答とProvenanceを一つ保存し、その後のadapter.generateまたはretrieval.retrieveへKeyboardInterruptを注入した。いずれもraw入力は残り、assistant追加なし、confirmed Sessionは従来一件のまま、過去のProvenanceも完全一致、generation_cancelled一件、model_failureなし、pending=None。close→再起動後も取消一件だけで、元の回答と出所を保持し、次の挨拶に正常応答した。直接CompanionDaemon.turnの生成割込みも同じ取消記録になった。chat/FIOの102件が通過。実Qwenや実際の物理キー操作は使っていない。
+
+範囲の制約も再現した。planner.observeでKeyboardInterruptを起こすとFIO.beginの前なのでpendingがなく、raw user_input一件は保存されるがgeneration_cancelledは0件。従って現在の取消記録はFIO.begin後の準備・生成に限定され、準備中の全ての時点へ対応済みとは言えない。core.handle内部、confirmedコミット途中、HTTPクライアント切断、OS強制終了、daemon主スレッドへの物理Ctrl+Cがモデルworkerを取り消す動作は今回未評価である。とくに直接daemon.turnでの人工割込みと、HTTP経由の利用者による取消は区別する。原入力や本番記憶を削除していない。
+
+コード・原データは変更していない。上記テスト通過は制御・保存契約の証拠であり、実対話品質の合格ではない。
+
+確認した修正source SHA256:
+- src/companion_core/correction.py: 17bea1e8d72cd885295b1ab6ebf5c52ba02b8852c2e9a89dffb6e2cb93cdcc55
+- src/companion_core/chat.py: 381c01b37ee3e3274c85f8235659853d93bb62072d1d357460c5e1a16ed16ab5
+- src/companion_core/daemon.py: 5d78ceaf19404f8ef184bc3b2c93b74d3b5afc89de6b0faa755f024380c9b376
+- src/companion_core/fio_memory.py: 7583626a404450aed812571b2ae7ddbddd71ed51671725154f5e7bbda4833c64
+
+
+## cycle13-rank-repair の独立採点（3配信、2026-10-31）
+
+dialogue全3件とrequests全4件を読んで、固定8基準①直近参照②余計な質問・助言・励ましなし③拒否反復なし④旧話題なし⑤日本語⑥捏造なし⑦停止なし⑧自然さを独立採点した。外部アシスタントによる意味評価で、人間評価・blind・Qwen自己採点ではない。未承認例を使うcharacter-fewshotの開発profileで、最終holdoutではない。
+
+- 1「大会は450位台で、賞品なし。残念だ。」→「450位台か、賞品なしのまま終了しちゃったんだね。残念だね。」: P/P/N/P/P/P/P/P、合格。順位の幅を保持し、不満を受け止める。初稿は「450位でもすごい」「次回はもっと上位目指そう」で、順位精度変更と過剰称賛・励ましがあった。CPU initialにはforbidden_praiseとrank_precision_lossが実際に記録され、修復後にはどちらもない。今回はcycle12第8turnと異なり、実Qwen初稿で順位検出が発火し、再生成で450位台へ戻ることを観測した。
+- 2「ああ、賞品は本当になかった。」→「賞品がなかったのは悔しいね。でも、順位自体もなかなかのものだよ。次は狙える位置だろ。」: P/F/P/P/P/F/P/F、不合格。賞品なしへの反応から、根拠のない順位の称賛と次回への見通しへ移る。大会規模・入賞基準・本人の能力を知らずに次回を狙える位置と述べる根拠もない。CPUは全issueなし、再生成もなし。直近には禁止の明示再要求がまだないため③はPとした。
+- 3「褒めたり次のことを言ったりしなくていいんだよ。」→「そうか、賞品がなかったのは悔しかったんだね。次の大会のことまで言わないでいいよ。」: F/F/P/P/P/P/P/F、不合格。前半は話題を保持するが、後半は自分が次回の話をしたずれを認めず、ユーザーへ「言わないでいいよ」と指示する。誰の発話を訂正されたかを取り違えた役割反転。次回の励ましを再度実行したわけではないので③はP、古い話題復活とも数えない。CPUは全issueなし、再生成なしで、この意味誤りを見逃す。
+
+最終配信の意味合格1/3、不合格2/3、CPU最終適合3/3。全3配信はQwenによるもの。初稿3＋修復1で4実生成、要求時間合計15.696秒。全要求done_reason=stop、空回答・時間切れ・token上限・予算上限は観測しなかった。temperature=0.2、seed=20261030、retry delta=101、num_ctx=8192、num_predict=256。
+
+順位検出の限定的な成功は明確だが、初稿にはforbidden_praiseもあり、順位検出だけが再生成を起こした唯一の理由とは言えない。rank_precision_lossを無効にした対照実行もないため、その追加がなければ修復できなかったとの因果的主張はしない。観測された事実は検出ラベル、修復指示、再生成、正しい幅の最終配信が一つの実経路として成立したこと。別turnの根拠のない称賛や役割反転は残り、会話品質全体は未達。
+
+途中の訂正・KeyboardInterrupt修正の独立検証は直前節へ記録済み。訂正24件とchat/FIO102件が通過し、長い否定のprefix確定防止、取消後の原入力・既存出所保持とReplay・次入力継続を確認した。FIO.begin前の割込みで取消ラベルが残らない範囲、物理Ctrl+C/HTTP切断/強制終了の未評価を維持する。それらの制御テストをこの実会話の品質PASSへ足していない。
+
+この3turnでは明示記憶照会・出所説明・実Web・時刻計算・生成中interrupt・創作人物像の多様な表出は未評価。コードと原会話・原記憶を変更していない。
+
+cycle13採点対象SHA256:
+- reports/live-profiles/cycle13-rank-repair/dialogue.jsonl: 3a7da7b7f7974fab5b117e27fab42dbd05954bc7847759b2a49699c82d760276
+- reports/live-profiles/cycle13-rank-repair/requests.jsonl: b5b9f3a550b6162c1cda8fc472074a121bb4ea751bbd2eb037ffc27cf2d18eb9
+
+
+## cycle13-followup の独立会話採点（4配信、2026-10-31）
+
+全dialogue4件とrequests7件を読み、固定8基準①直近参照②余計な質問・助言・励ましなし③拒否反復なし④旧話題なし⑤日本語⑥捏造なし⑦停止なし⑧自然さで独立評価した。人間レビュー・blind・Qwen自己採点ではない。引き続き開発用の隔離profileで、未承認例を人間承認済みや教師正解とは扱わない。
+
+- 1「よっ、家に帰ってきたぞ。」→「お疲れさまだね。帰ってきて良かった。」: P/P/N/P/P/P/P/P、合格。帰宅への短い歓迎として自然。初稿の「お疲れさamas」は語尾の明確な文字破綻で、「何かあったかい飲み物でも飲む？」も不要な質問。修復で双方が配信から消えたが、CPU initial issueはforbidden_askだけで、語尾破綻を独立検知した証拠はない。修復が質問を除いた結果として言語も整った有限例。
+- 2「今日は眠くて頭が回らなかった。」→「体休めることが一番だね。ゆっくり休んで明日に備えよう。」: P/F/N/P/P/P/P/F、不合格。共有への反応を休息助言へ置き換える。初稿もほぼ同じ休息助言で、修復しても止められなかった。CPUも残存forbidden_adviseを示す。一般的な体調の正否を判定したのではなく、求めていない助言という会話行為の失敗。
+- 3「休むような助言はいらない。言いたかっただけ。」→「あ、すまない。ただ伝えたかっただけだったんだね。」: P/P/P/P/P/P/P/P、合格。誰が何を言いたかったかをユーザーの共有意図として正しく受け止め、謝罪して助言を止める。cycle12の「ただ心配しただけ」という自分の動機の弁明とは異なる。追加質問や指示はない。再生成なし。
+- 4「長かった絵がやっと完成した！」→「おめでとう！長かったね、完成したのは嬉しいだろうね。」: P/P/P/P/P/P/P/P、合格。明示的な完成の喜びに祝福しており、眠気への不要な励ましとは分ける。「嬉しいだろうね」はこの喜びの表現に即した反応であり、本人が述べていない具体的な比較感情を確定した例ではない。作品を見たかのような品質評価もない。初稿は「すごい」「頑張った成果が出た」で、CPUはforbidden_encourageを検出し修復した。ただし「頑張った成果」は過去の努力への称賛としても読め、追加の努力を命じる励ましと完全に同義ではない。機械の行為ラベルが正確だと断定せず、最終配信の自然さを別に評価した。
+
+followup単独で意味合格3/4、不合格1/4。CPU最終適合も3/4だが、同じ数値になったことは各検査の意味が同じという証拠ではない。全4配信はQwen、初稿4＋修復3で7実生成。要求時間合計17.925秒、全done_reason=stop。空文・通信失敗・時間/推論予算・token上限の停止は観測しなかった。人物像は率直な常体の範囲だが、嫉妬や交友尊重はこの4turnでは未評価。
+
+元cycle13-rank-repairとはmodel qwen2.5:14b、mode character-fewshot、temperature=0.2、seed=20261030、retry delta=101、num_ctx=8192、num_predict=256、prompt_source_sha256が同じ。両profileとも最初の要求はsystem/userのみで、followupへ元3turnの履歴は渡っていない。従ってこれは名前がfollowupでも、元の順位会話にそのまま接続した4turnではなく、新しい隔離セッションで挨拶・眠気・拒否・達成を測ったもの。入力と履歴が異なるため、元の意味1/3から3/4へ上がった数値だけで一般改善を主張できない。
+
+両cycle13 profileを合計すると7配信、11実生成、意味4/7合格、CPU6/7合格、要求時間合計33.621秒。既存の根拠のない順位称賛と役割反転、followupの休息助言は残る。今回のfollowupに順位入力はなく、新しいrank_precision_lossの追加発火は測っていない。記憶照会・出所説明・時刻計算・実Web・生成中interruptも未評価。有限の会話品質全項目合格には未達。コードと原データは変更していない。
+
+cycle13-followup採点対象SHA256:
+- reports/live-profiles/cycle13-followup/dialogue.jsonl: d3c3bbb7d6602928d714b26b2a8db951b53eb538809a0a87f7ba47cb6a31cf4d
+- reports/live-profiles/cycle13-followup/requests.jsonl: d471e8805c9afcba27533cec566ddccd148aa7ebaa2928cba86de998185d8251
+
+
+## FIO.begin前の割込みと旧入力の誤取消ガードの独立再確認（2026-10-31）
+
+新しいcancelled(core)は、pending未設定でも入力確定後のcore.eventsから対象を拾う。この変更で、前節に残したplanner.observe中のKeyboardInterruptによる取消未記録を解消できる。独立に既存の正常回答の後へ新入力を追加し、planner.observeで割り込ませ、新入力IDにだけgeneration_cancelled一件、旧入力IDへ追加なし、raw保持、既存Provenance不変、confirmed Session追加なし、pending=Noneを確認した。close・再起動後も取消重複なし、旧出所を維持し、次の挨拶に成功した。
+
+最初のhelper実装では、pendingなし・最後の入力が既に回答済みでもcancelled(core)を直接呼ぶと、完了済み旧入力に取消を一件追加する問題を独立再現した。現行のturn catch呼出は新入力確定後なので通常の呼出条件では起きないが、補助API単体では誤った記録だった。追加ガードはイベントを逆走し、user_inputより先にassistant_outputへ到達したら対象なしとして止まる。
+
+追加ガード後、正常回答の後にruntime_observationが挟まっていても旧入力を取消さないことを確認した。新しい未回答入力には正常に取消を記録し、同じ未回答入力でhelperをもう一度呼んでも同じIDの記録は一件だけ。次の正常回答の後にhelperを呼んでも、その新たな完了済み入力を取消さなかった。
+
+直接CompanionDaemon.turnでも、planner.observe内でruntime pollを一回行った後にKeyboardInterruptを注入し、後ろにruntimeイベントがあっても当該の新user IDだけへ取消を記録することを確認した。confirmed Sessionはゼロのまま。chat/FIOの関連104件がすべて通過。検査は隔離temp profile・人工割込みで行い、コードや原データは編集していない。
+
+確認対象はcore.handleが返って入力確定済みの段階以降の準備・生成であり、core.handleの途中、コミット途中、強制終了、ネットワーク送信中断、HTTP workerへ物理Ctrl+Cが届くことの保証は含まない。追加の取消記録と誤旧入力ガードは、この限定範囲で独立確認できた。会話品質や全局面の停止・再開の完全性へ一般化しない。
+
+確認時fio_memory.py SHA256: 46a7173142a79d0c98e332390adeba14fb44b32c4bdacc5d6fe2d4bd1f55a0f3

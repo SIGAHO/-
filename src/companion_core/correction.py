@@ -15,9 +15,9 @@ class CorrectionEngine:
     """Explicit correction detector only. Ambiguous cases are intentionally ignored."""
 
     PATTERNS = [
-        ("not_a_but_b", re.compile(r"(?P<old>[^、。！？\n]{1,40}?)(?:じゃなくて|ではなくて|ではなく|じゃなく)(?!て)(?P<new>[^、。！？\n]{1,60})")),
-        ("means", re.compile(r"(?P<old>[^、。！？]{1,30}?)(?:っていうのは|ってのは|というのは)(?P<new>[^、。！？]{1,80}?)(?:って意味|という意味|って話)")),
-        ("no_it_is", re.compile(r"(?:^|[。！？\n])\s*(?:違う|ちがう)[、,\s]+(?P<new>[^、。！？\n]{1,80})")),
+        ("not_a_but_b", re.compile(r"(?<![^、。！？\n])(?P<old>[^、。！？\n]{1,40}?)(?:じゃなくて|ではなくて|ではなく|じゃなく)(?!て)(?P<new>[^、。！？\n]{1,60})(?![^、。！？\n])")),
+        ("means", re.compile(r"(?<![^、。！？\n])(?P<old>[^、。！？\n]{1,30}?)(?:っていうのは|ってのは|というのは)(?P<new>[^、。！？\n]{1,80}?)(?:って意味|という意味|って話)")),
+        ("no_it_is", re.compile(r"(?:^|[。！？\n])\s*(?:違う|ちがう)[、,\s]+(?P<new>[^、。！？\n]{1,80})(?![^、。！？\n])")),
     ]
 
     # These phrases reject a previous answer without supplying a new value.
@@ -30,6 +30,19 @@ class CorrectionEngine:
     )
 
     def detect(self, text: str) -> list[Correction]:
+        # If one replacement exceeds the bounded parser, do not silently choose
+        # a different candidate in the same utterance as the sole correction.
+        for clause in re.split(r'[、。！？\n]', text):
+            replacement = re.search(r'じゃなくて|ではなくて|ではなく|じゃなく', clause)
+            if replacement and (len(clause[:replacement.start()]) > 40 or len(clause[replacement.end():]) > 60):
+                return []
+            definition = re.search(r'っていうのは|ってのは|というのは', clause)
+            if definition:
+                value = re.split(r'って意味|という意味|って話', clause[definition.end():], maxsplit=1)[0]
+                if len(clause[:definition.start()]) > 30 or len(value) > 80:
+                    return []
+        if re.search(r'(?:^|[。！？\n])\s*(?:違う|ちがう)[、,\s]+[^、。！？\n]{81,}', text):
+            return []
         found: list[tuple[int, Correction]] = []
         for name, pattern in self.PATTERNS:
             for m in pattern.finditer(text):

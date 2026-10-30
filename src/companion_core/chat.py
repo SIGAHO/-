@@ -144,11 +144,14 @@ class ChatSession:
             context = self.core.handle(text, correction_key=correction_key, event_id=event_id)
             if self.core.last_runtime is not None:
                 context['runtime']['pc_observation'] = self.core.last_runtime
-            messages = self.prepare_reply(context, self.core.events.events)
             try:
+                messages = self.prepare_reply(context, self.core.events.events)
                 reply = self.generate_reply(context, messages)
             except ModelError as exc:
                 self.fio.failed(exc)
+                raise
+            except KeyboardInterrupt:
+                self.fio.cancelled(self.core)
                 raise
             self.fio.confirmed(self.core, reply, self.pending_provenance)
             return reply

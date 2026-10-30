@@ -186,6 +186,25 @@ class FIOMemory:
                 {'user': self.pending['user'].payload['text'], 'error_type': type(error).__name__}, 'runtime'))
             self.pending = None
 
+    def cancelled(self, core=None):
+        if self.pending is None and core is not None:
+            # prepare_reply may be interrupted before begin() establishes the
+            # pending envelope; the caller has already committed this input.
+            user = None
+            for event in reversed(core.events.events):
+                if event.kind == 'assistant_output':
+                    break
+                if event.kind == 'user_input':
+                    user = event
+                    break
+            if user is not None:
+                self.pending = {'user': user}
+        if self.pending:
+            # The user stopped the turn; this is not evidence of model failure.
+            self.experiences.append(**self.event('generation_cancelled',
+                {'user': self.pending['user'].payload['text'], 'reason': 'keyboard_interrupt'}, 'runtime'))
+            self.pending = None
+
     def close(self):
         self.index.close()
         self.experiences.close()

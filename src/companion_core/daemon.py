@@ -73,11 +73,14 @@ class CompanionDaemon:
                 ctx["runtime"]["pc_observation"] = self.session.core.last_runtime
                 events = list(self.session.core.events.events)
             # Network I/O must not block runtime observations or status.
-            messages = self.session.prepare_reply(ctx, events)
             try:
+                messages = self.session.prepare_reply(ctx, events)
                 reply = self.session.generate_reply(ctx, messages)
             except ModelError as exc:
                 self.session.fio.failed(exc)
+                raise
+            except KeyboardInterrupt:
+                self.session.fio.cancelled(self.session.core)
                 raise
             with self.lock:
                 self.session.fio.confirmed(self.session.core, reply, self.session.pending_provenance)
