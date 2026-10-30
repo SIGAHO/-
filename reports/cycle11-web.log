@@ -1,0 +1,57 @@
+test_cache_hit_within_ttl (test_retrieval.RetrievalTests.test_cache_hit_within_ttl) ... ok
+test_clock_rollback_invalidates (test_retrieval.RetrievalTests.test_clock_rollback_invalidates) ... ok
+test_conflicting_sources_preserved_and_prompt_instructed (test_retrieval.RetrievalTests.test_conflicting_sources_preserved_and_prompt_instructed) ... ok
+test_daemon_status_lock_free_during_search (test_retrieval.RetrievalTests.test_daemon_status_lock_free_during_search) ... ok
+test_daemon_uses_same_retrieval_path (test_retrieval.RetrievalTests.test_daemon_uses_same_retrieval_path) ... ok
+test_disabled_mode_even_if_cached (test_retrieval.RetrievalTests.test_disabled_mode_even_if_cached) ... ok
+test_duplicate_content_hash_dedupe (test_retrieval.RetrievalTests.test_duplicate_content_hash_dedupe) ... ok
+test_duplicate_url_dedupe (test_retrieval.RetrievalTests.test_duplicate_url_dedupe) ... ok
+test_environment_opt_in (test_retrieval.RetrievalTests.test_environment_opt_in) ... ok
+test_external_intent_e2e_and_citations (test_retrieval.RetrievalTests.test_external_intent_e2e_and_citations) ... ok
+test_five_other_routes_never_search (test_retrieval.RetrievalTests.test_five_other_routes_never_search) ... ok
+test_http_protocol_errors_become_unavailable_and_turn_completes (test_retrieval.RetrievalTests.test_http_protocol_errors_become_unavailable_and_turn_completes) ... ok
+test_invalid_backend_url_is_revalidated (test_retrieval.RetrievalTests.test_invalid_backend_url_is_revalidated) ... ok
+test_japanese_query_unicode (test_retrieval.RetrievalTests.test_japanese_query_unicode) ... ok
+test_limits_and_hash (test_retrieval.RetrievalTests.test_limits_and_hash) ... ok
+test_malicious_odd_snippets_rejected (test_retrieval.RetrievalTests.test_malicious_odd_snippets_rejected) ... ok
+test_memory_hit_bypass (test_retrieval.RetrievalTests.test_memory_hit_bypass) ... ok
+test_multiple_entities_complete_coverage (test_retrieval.RetrievalTests.test_multiple_entities_complete_coverage) ... ok
+test_multiple_entities_partial_coverage_fails (test_retrieval.RetrievalTests.test_multiple_entities_partial_coverage_fails) ... ok
+test_no_state_or_verified_memory_promotion (test_retrieval.RetrievalTests.test_no_state_or_verified_memory_promotion) ... ok
+test_offline_even_if_cached (test_retrieval.RetrievalTests.test_offline_even_if_cached) ... ok
+test_provenance_followup_no_extra_search (test_retrieval.RetrievalTests.test_provenance_followup_no_extra_search) ... ok
+test_redirects_refused (test_retrieval.RetrievalTests.test_redirects_refused) ... ok
+test_replay_never_searches_or_mutates_log (test_retrieval.RetrievalTests.test_replay_never_searches_or_mutates_log) ... ok
+test_restart_provenance_but_no_cache_or_downloaded_body (test_retrieval.RetrievalTests.test_restart_provenance_but_no_cache_or_downloaded_body) ... ok
+test_song_work_person_product_unknown_entity_e2e (test_retrieval.RetrievalTests.test_song_work_person_product_unknown_entity_e2e) ... ok
+test_source_selection_rejects_irrelevant (test_retrieval.RetrievalTests.test_source_selection_rejects_irrelevant) ... ok
+test_stale_publication_date_and_unknown_are_explicit (test_retrieval.RetrievalTests.test_stale_publication_date_and_unknown_are_explicit) ... ok
+test_state_hit_bypass (test_retrieval.RetrievalTests.test_state_hit_bypass) ... ok
+test_tampered_hash_fails_closed (test_retrieval.RetrievalTests.test_tampered_hash_fails_closed) ... ok
+test_timeout_fail_closed (test_retrieval.RetrievalTests.test_timeout_fail_closed) ... ok
+test_transport_bad_content_type_and_http_code (test_retrieval.RetrievalTests.test_transport_bad_content_type_and_http_code) ... ok
+test_transport_html_invalid_and_mojibake (test_retrieval.RetrievalTests.test_transport_html_invalid_and_mojibake) ... ok
+test_transport_http_failure (test_retrieval.RetrievalTests.test_transport_http_failure) ... ok
+test_transport_oversize (test_retrieval.RetrievalTests.test_transport_oversize) ... ok
+test_transport_real_shape_fixed_hosts_and_encoded_query (test_retrieval.RetrievalTests.test_transport_real_shape_fixed_hosts_and_encoded_query) ... ok
+test_transport_timeout_status (test_retrieval.RetrievalTests.test_transport_timeout_status) ... ok
+test_transport_zero_pages (test_retrieval.RetrievalTests.test_transport_zero_pages) ... ok
+test_ttl_boundary_invalidates_and_stale_backend_fails (test_retrieval.RetrievalTests.test_ttl_boundary_invalidates_and_stale_backend_fails) ... ok
+test_unexpected_backend_exception_data_fails_closed (test_retrieval.RetrievalTests.test_unexpected_backend_exception_data_fails_closed) ... ok
+test_url_rejected_0 (test_retrieval.RetrievalTests.test_url_rejected_0) ... ok
+test_url_rejected_1 (test_retrieval.RetrievalTests.test_url_rejected_1) ... ok
+test_url_rejected_10 (test_retrieval.RetrievalTests.test_url_rejected_10) ... ok
+test_url_rejected_2 (test_retrieval.RetrievalTests.test_url_rejected_2) ... ok
+test_url_rejected_3 (test_retrieval.RetrievalTests.test_url_rejected_3) ... ok
+test_url_rejected_4 (test_retrieval.RetrievalTests.test_url_rejected_4) ... ok
+test_url_rejected_5 (test_retrieval.RetrievalTests.test_url_rejected_5) ... ok
+test_url_rejected_6 (test_retrieval.RetrievalTests.test_url_rejected_6) ... ok
+test_url_rejected_7 (test_retrieval.RetrievalTests.test_url_rejected_7) ... ok
+test_url_rejected_8 (test_retrieval.RetrievalTests.test_url_rejected_8) ... ok
+test_url_rejected_9 (test_retrieval.RetrievalTests.test_url_rejected_9) ... ok
+test_zero_results_fail_closed (test_retrieval.RetrievalTests.test_zero_results_fail_closed) ... ok
+
+----------------------------------------------------------------------
+Ran 52 tests in 0.682s
+
+OK

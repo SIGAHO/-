@@ -62,6 +62,21 @@ class Opener:
 
 
 class RetrievalTests(unittest.TestCase):
+    def test_http_protocol_errors_become_unavailable_and_turn_completes(self):
+        from http.client import BadStatusLine, IncompleteRead
+        for error in (BadStatusLine('broken'), IncompleteRead(b'partial', 10)):
+            with self.subTest(error=type(error).__name__):
+                self.assertEqual(WikipediaRetriever(opener=Opener(error=error)).search('x').status, 'unavailable')
+                chat, _ = self.session(Backend(error=error))
+                try:
+                    self.assertIn('未確認', chat.turn('「ORBIT GLASS」について教えて'))
+                    self.assertTrue(chat.last_response_meta['cpu'])
+                    self.assertIsNone(chat.fio.pending)
+                    self.assertEqual(len(chat.fio.recorder.records), 1)
+                    self.assertIn('unavailable', chat.turn('その情報はどこから？'))
+                finally:
+                    chat.close()
+
     def session(self, backend=None, **kw):
         backend = backend if backend is not None else Backend()
         engine = RetrievalEngine(backend, enabled=True, clock=lambda: NOW, **kw)

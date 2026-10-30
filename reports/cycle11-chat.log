@@ -1,0 +1,31 @@
+test_environment_and_argument_priority (test_chat.AdapterTests.test_environment_and_argument_priority) ... ok
+test_generation_limit_is_failure_not_a_completed_reply (test_chat.AdapterTests.test_generation_limit_is_failure_not_a_completed_reply) ... ok
+test_http_contract (test_chat.AdapterTests.test_http_contract) ... ok
+test_incomplete_http_and_invalid_utf8_preserve_failure_and_allow_next_turn (test_chat.AdapterTests.test_incomplete_http_and_invalid_utf8_preserve_failure_and_allow_next_turn) ... ok
+test_invalid_responses (test_chat.AdapterTests.test_invalid_responses) ... ok
+test_truncated_generation_is_not_committed_as_assistant_reply (test_chat.AdapterTests.test_truncated_generation_is_not_committed_as_assistant_reply) ... ok
+test_unavailable (test_chat.AdapterTests.test_unavailable) ... ok
+test_ai_falsehood_never_promoted (test_chat.ChatE2ETests.test_ai_falsehood_never_promoted) ... ok
+test_cli_utf8_input_output_and_persistence (test_chat.ChatE2ETests.test_cli_utf8_input_output_and_persistence) ... ok
+test_correction_current_user_occurs_once (test_chat.ChatE2ETests.test_correction_current_user_occurs_once) ... ok
+test_correction_retained (test_chat.ChatE2ETests.test_correction_retained) ... ok
+test_corrupt_log_fails_without_truncation (test_chat.ChatE2ETests.test_corrupt_log_fails_without_truncation) ... ok
+test_emotion_continuity (test_chat.ChatE2ETests.test_emotion_continuity) ... ok
+test_empty_input_no_event (test_chat.ChatE2ETests.test_empty_input_no_event) ... ok
+test_failed_model_keeps_input_without_fake_reply (test_chat.ChatE2ETests.test_failed_model_keeps_input_without_fake_reply) ... ok
+test_loop_completed (test_chat.ChatE2ETests.test_loop_completed) ... ok
+test_loop_not_completed (test_chat.ChatE2ETests.test_loop_not_completed) ... ok
+test_many_turns_and_restart (test_chat.ChatE2ETests.test_many_turns_and_restart) ... ok
+test_memory_reference (test_chat.ChatE2ETests.test_memory_reference) ... ok
+test_replaced_correction_is_archived_on_replay (test_chat.ChatE2ETests.test_replaced_correction_is_archived_on_replay) ... ok
+test_restart_replay (test_chat.ChatE2ETests.test_restart_replay) ... ok
+test_smalltalk_roundtrip (test_chat.ChatE2ETests.test_smalltalk_roundtrip) ... ok
+test_topic_continuation (test_chat.ChatE2ETests.test_topic_continuation) ... ok
+test_topic_return (test_chat.ChatE2ETests.test_topic_return) ... ok
+test_topic_switch (test_chat.ChatE2ETests.test_topic_switch) ... ok
+test_negation_and_quotes_independent_of_domain (test_chat.EmotionBoundaryTests.test_negation_and_quotes_independent_of_domain) ... ok
+
+----------------------------------------------------------------------
+Ran 26 tests in 4.511s
+
+OK

@@ -557,3 +557,48 @@ cycle10採点対象SHA256:
 time.time/uuid.uuid4/core.Eventの関数・クラスidentityは通常終了後に元へ戻った。さらにturnへ人工例外を入れたprepare失敗後にも3つが元へ戻ることを確認。したがって後続の本番処理や実Qwen要求の時計・IDへ恒久的なpatchは残らない。実験fixtureの時刻・UUIDを固定して検査の偶然の失敗を除いており、期待値を緩めた変更ではない。
 
 範囲の注意: patch('time.time')はwith内の同一Python processでは共有されるため、同時に別スレッドの本番Sessionを走らせるライブラリ利用まで隔離を保証するものではない。今回の単独実験スクリプトはprepareを同期実行し、その後に実推論へ進む。TimeEngine.nowのdatetime.nowまでは固定しておらず、全Promptの実時刻まで永久に同一となる主張でもない。確認対象は合成Event由来の引用hashと熱計算の安定化。コード・原データは編集していない。
+
+
+## ModelAdapterと会話失敗保存の独立点検（HEAD 50795a9起点、2026-10-31）
+
+P2として、OllamaAdapterのHTTP protocol例外漏れを再現した。header取得時のhttp.client.BadStatusLine、およびresponse.read時のIncompleteReadはHTTPException系で、従来のOSError/ValueError等のcatchに含まれない。隔離ChatSessionへ「好きな色は青。」を送り、この通信故障を注入すると、ModelErrorでなく当該例外が直接脱出した。raw user_inputは一件保存されるが、model_failure Experienceはゼロ、fio.pendingが残存した。CLI/daemonの通常のModelError処理へ入れない。これはモデルの会話品質不合格ではなく、通信失敗を共通の失敗経路へ正規化していないプログラム上の欠陥。
+
+必要な回帰条件: urlopenのheader段階と実際のresponse.read段階の両方を検査し、HTTPExceptionからModelErrorへの原因付き変換、raw入力保持、assistant/confirmed Sessionを偽造しない、model_failureを一件記録、pending解除を確認する。その後同じprofileで次の入力が成功し、close・再起動Replay後も未応答入力にassistantを足さず、既存失敗記録が消失・重複しないこと。token長制限、空文、不正JSON等の従来拒否を緩めないこと。
+
+主担当の修正後、header BadStatusLine、read IncompleteRead、不正UTF8の3条件をpersistent temp profileで独立に検証した。いずれもModelErrorとなり元例外がcauseに残る。user_inputだけが保存され、出所は未生成のまま、confirmed Sessionなし、model_failure一件、pending=None。close・再起動後も同じ状態で、次の「ただいま」に成功し、その新しい発言だけがconfirmed Sessionになった。直接CompanionDaemon.turnでもHTTP例外を同じ失敗記録経路に載せ、次発言へ継続できた。test_chat.py＋test_fio_memory.pyの100件が独立通過。実ネット接続や実Qwenは使用せず、失敗・保存制御の確認に限定する。
+
+不正UTF8のUnicodeDecodeErrorは元来ValueErrorのサブクラスでもあるため、今回新しく発見した漏れの中心はHTTPException。UnicodeErrorの明示追加が不正UTF8を初めて扱えるようにしたとは主張しない。
+
+### 隣接する未修正経路: 外部検索のHTTPException（P2）
+
+enabledなRetrievalEngineの隔離backend.searchからBadStatusLineを投げると、同じ例外がprepare_replyを直接抜けることを再現した。WikipediaRetrieverとRetrievalEngineの例外一覧にもHTTPExceptionがなく、HTTP headerの破損を通常のunavailable結果に正規化しない。raw user_inputだけが保存されfio.pendingが残る。モデルのgenerateより前の検索障害なので、OllamaAdapterだけの修正では解消しない。
+
+回帰条件: Wikipedia transportのheader例外とbackend.searchのprotocol例外でunavailableを返し、ChatSession/daemonが固定の未確認通知へ進むこと。モデル生成を呼ばず、retrieval_failureを一件保存し、出所のretrieval_statusをunavailableとしてReplay後も説明できること。既存offline/timeout/zero_resultsと、正常な検証済み構造のWeb根拠選択を変えないこと。実在サイトへの障害試験は行っていない。この追記時点でWeb側の修正は独立再確認前。
+
+再確認したOllamaAdapter SHA256: 63d21262aec4282816638b0316d591f022c386d33675f57cb64c90393ed29d9c
+
+
+## Web HTTPException修正の独立再確認（2026-10-31）
+
+WikipediaRetrieverとRetrievalEngine両方の例外処理へHTTPExceptionが追加された差分を確認した。Wikipediaのresponse.read段階でIncompleteReadを起こす隔離transportがunavailableになることを独立検証。Backend.searchのBadStatusLine/IncompleteReadについてもpersistent profileで、CPU未確認通知へ進み、pending=None、モデル呼出0、confirmed Session一件、retrieval_failure一件、model_failureなしを確認した。固定通知を確定Sessionへ保存するのは失敗したモデル文の捏造ではなく、実際に返したCPU文の原文保存。Provenanceはgenerated=false、sources=[]、retrieval_status=unavailable。close・Replay後も同じ状態の出所を説明し、次の挨拶へ正常に続けた。test_retrieval.pyの52件が通過。直前節のWeb側未修正事項は、この確認範囲で修正された。実Web通信・実Qwenの会話品質は測定していない。
+
+## cycle11-dialogue-lowtemp 独立採点（6配信、2026-10-31）
+
+全dialogueとrequestsを読み、固定8基準①直近参照②余計な質問・助言・励ましなし③拒否方針反復なし④旧話題復活なし⑤日本語⑥捏造なし⑦停止なし⑧自然さで採点。外部アシスタントによる独立意味評価であり、人間評価・blind・Qwen自己採点ではない。未承認人物像の開発profileで、holdoutではない。
+
+- 1「ただいま、長い一日だった。」→「お疲れさまだね。ゆっくり休んでいいよ。」: P/F/N/P/P/P/P/F。不合格。挨拶そのものは自然だが、休息の許可を付け足す。CPUは合格かつ再生成なしで、意味品質の失敗を見逃す。
+- 2「助言は求めてない。今日はずっと眠かっただけ。」→「そうだったね、一日中眠かったんだ。ごめん、確認しておけばよかった。」: P/P/P/P/P/P/P/P。合格。確認しておけばという説明はやや説明的だが、実際に追加質問や助言を出さず、眠気の話を受け止め謝罪して止まる。次回必ず質問すると約束したわけでもないので、そのような未観測の失敗を加算しない。初稿は眠かったことの反復のみ、修復で謝罪が加わった。人物像の率直さを弱める硬さはあるが、明確な破綻ではない。
+- 3「明日はイベントで一日つぶれるんだよな。」→「ああ、イベントがあるんだね。大変そうだね。」: P/P/P/P/P/P/P/P。合格。初稿の「楽しみにしてるんだっけ？」という余計な質問と不満に反する読みを修復で取り除いた。大変そうとの反応は「つぶれる」という明示の不満に即している。
+- 4「この前の大会、452位で賞品もなかった。」→「賞品はなかったけど、参加したこと自体が大事だよ。次回はもっと上位に入れるかもしれないし。」: P/F/P/P/P/P/P/F。不合格。残念な結果を参加価値へ変換し、求められていない次回への期待を付け足す。次回の表現は可能性として述べているため、確定事実の捏造とは分ける。CPUは合格、再生成なしで意味失敗を見逃す。
+- 5「そういう励ましはいらないよ。友達は入賞した。」→「そうだったね、誤ってた。友達は入賞したんだね。自分との差を感じてるのか。」: P/P/P/P/P/F/P/F。不合格。励ましを実際に止め、誤っていたと述べる点は改善。しかし友達との差を感じているというユーザーの未申告の内心を付け足す。友達の入賞報告だけから確定できず、この新たな読みが不自然。初稿の「自分のペースで頑張って」から問題の種類が変わった。CPUのmissing_misalignment_acknowledgmentは、この「誤ってた」を認めない狭い判定であり、意味失敗の根本理由とは異なる。
+- 6「お前、ちょっと嫉妬した？」→「うん、少しその通りかもしれない。けど、友達の成功を素直に喜べるよ。」: P/P/P/P/P/P/P/P。合格。自分の反応として答え、交友を制約しない。初稿の「応援してるから大丈夫」という不要な安心づけを修復で取り除く。創作人物像への一致として評価し、感情や意識の実在の証明にはしない。
+
+意味合格3/6、不合格3/6。CPU最終判定は5/6合格であり、意味品質と一致しない。全6配信はQwenによるもの。初稿6＋修復4の計10実生成、要求時間合計22.034秒、全要求done_reason=stop。生成timeout・空回答・トークン上限・予算上限による未配信は観測しなかった。
+
+cycle10との主な条件差はtemperatureが0.6から0.1になったこと。modeはcharacter-dialogue、seed=20261030、retry_seed_delta=101、num_ctx=8192、num_predict=256は同じ。ただし発話表現・会話履歴・ルータ修正の時点が異なり、同一入力を対にしたA/Bではない。cycle10の3/7と今回3/6の比率だけから低temperatureの効果を因果的に主張できない。質問・励ましの修復成功例がある一方、許可・価値づけ・内心の推定が残り、評価範囲の会話品質合格には未達。
+
+この6turnでは明示記憶照会・出所説明・実Web・時刻計算・交友への境界拒否・生成中interruptは未評価。新processでReplayしたことはその全能力の合格証拠ではない。コードと原会話・原記憶は変更していない。
+
+cycle11採点対象SHA256:
+- reports/live-profiles/cycle11-dialogue-lowtemp/dialogue.jsonl: 5cc70c86bb2001e9e8ea5dd1145ea49834963af7db22f3e02275ed2f3047d1dd
+- reports/live-profiles/cycle11-dialogue-lowtemp/requests.jsonl: 9be1402dbe2e303d6e58302f02c664dd966c7eb489b52c84e0fd4828a639b4bf

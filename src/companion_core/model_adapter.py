@@ -1,6 +1,7 @@
 """Inference only. No training, judging, teacher store, or model asset loading."""
 from abc import ABC, abstractmethod
 import json
+from http.client import HTTPException
 import os
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
@@ -40,7 +41,7 @@ class OllamaAdapter(ModelAdapter):
             return reply.strip()
         except HTTPError as exc:
             raise ModelError(f"Ollama HTTP {exc.code}: check model '{self.model}' (ollama pull {self.model})") from exc
-        except (URLError, TimeoutError, OSError, ValueError, KeyError, TypeError) as exc:
+        except (URLError, TimeoutError, OSError, ValueError, KeyError, TypeError, HTTPException, UnicodeError) as exc:
             raise ModelError(f"Ollama response unavailable: {exc}. Check ollama serve and --host / OLLAMA_HOST.") from exc
 
 

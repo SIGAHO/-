@@ -204,6 +204,26 @@ class AdapterTests(unittest.TestCase):
         finally:
             chat.close()
 
+    def test_incomplete_http_and_invalid_utf8_preserve_failure_and_allow_next_turn(self):
+        import io
+        from http.client import IncompleteRead, BadStatusLine
+        failures = [IncompleteRead(b'partial', 4), BadStatusLine('invalid'), b'\xff']
+        for failure in failures:
+            with self.subTest(failure=type(failure).__name__):
+                chat = ChatSession(OllamaAdapter())
+                try:
+                    mock = {'side_effect': failure} if isinstance(failure, Exception) else {'return_value': io.BytesIO(failure)}
+                    with patch('companion_core.model_adapter.urlopen', **mock):
+                        with self.assertRaises(ModelError):
+                            chat.turn('こんにちは')
+                    self.assertEqual([e.kind for e in chat.core.events.events], ['user_input'])
+                    self.assertIsNone(chat.fio.pending)
+                    self.assertTrue(any(e['kind'] == 'model_failure' for e in chat.fio.experiences.all()))
+                    chat.adapter = FakeModelAdapter(['おかえり。'])
+                    self.assertEqual(chat.turn('ただいま'), 'おかえり。')
+                finally:
+                    chat.close()
+
     def test_environment_and_argument_priority(self):
         with patch.dict('os.environ', {'BREAKTAIL_MODEL': 'env-model', 'OLLAMA_HOST': 'localhost:1234'}):
             self.assertEqual(OllamaAdapter().model, 'env-model')

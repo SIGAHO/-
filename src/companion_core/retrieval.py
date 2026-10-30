@@ -8,6 +8,7 @@ from collections import OrderedDict
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 import hashlib
+from http.client import HTTPException
 import ipaddress
 import json
 import math
@@ -168,7 +169,7 @@ class WikipediaRetriever(ExternalRetriever):
             return RetrievalResult('ok', tuple(found)) if found else RetrievalResult('zero_results')
         except TimeoutError:
             return RetrievalResult('timeout')
-        except (OSError, ValueError, TypeError, KeyError, AttributeError, OverflowError):
+        except (OSError, ValueError, TypeError, KeyError, AttributeError, OverflowError, HTTPException):
             return RetrievalResult('unavailable')
 
 
@@ -237,7 +238,7 @@ class RetrievalEngine:
             while len(self.cache) > 32:
                 self.cache.popitem(last=False)
             return RetrievalResult('ok', tuple(selected))
-        except (OSError, ValueError, TypeError, AttributeError, OverflowError):
+        except (OSError, ValueError, TypeError, AttributeError, OverflowError, HTTPException):
             return RetrievalResult('unavailable')
 
     @staticmethod
