@@ -19,14 +19,14 @@ class Acts:
     question = re.compile(r'[?？]|(?:何|どう|どこ|いつ|誰|どれ|なぜ).{0,25}(?:か|の|たい)[。!！]*$|(?:かな|ますか|だろうか)[。!！]*$')
     advice = re.compile(r'(?:た|だ|し|寝|休|進め|やっ|備え|食べ|飲ん|行っ)(?:て|で)(?:ね|みて|みよう|ください|おこう)|(?:し|寝|備え|進め)よう|(?:休も|頑張ろ|やろ|取ろ)う|(?:した|する|寝た|休んだ)方が|べき|おすすめ|したらどう|するといい|しなよ')
     encourage = re.compile(r'頑張|がんば|応援|きっと.{0,12}(?:できる|大丈夫)|ファイト|負けるな|諦めないで')
-    praise = re.compile(r'すご[いく]|凄[いく]|素晴らし|立派|偉い|えらい|誇[りれ]|よくやった')
+    praise = re.compile(r'すごい|凄い|(?:すごく|凄く)(?:上手|優秀|立派)|素晴らし|立派|偉い|えらい|誇[りれ]|よくやった')
     reframe = re.compile(r'(?:でも|けど|むしろ|逆に).{0,35}(?:良い|いい|成長|経験|機会|価値|達成)|成長につなが|いい経験|達成感|順位より|結果より')
     rejection = re.compile(r'そういうことじゃない|そうじゃない|それは違う|違うって|やめて|いらない|望んでない|求めてない|押し付け|励まさないで|質問しないで|褒めないで|助言しないで|(?:褒め|励まさ|質問し|助言し)なくていい')
     correction = re.compile(r'じゃなく|ではなく|訂正|違う[、,]|じゃない[。．、,]')
     approval = re.compile(r'^(?:その返し(?:が|で)いい|そういう返しがいい|今の返答(?:が|で)いい|今の返事(?:が|で)いい|その回答(?:が|で)いい)[。!！\s]*$')
     greeting = re.compile(r'^(?:よお|よう|やあ|おはよう|こんにちは|こんばんは|起きた|起きたよ|おーい|ただいま)[。!！\s]*$')
     negative = re.compile(r'嫌|いやだ|だる|面倒|めんど|潰れ|つぶれ|しんど|最悪|困った|つら|疲れ|商品なし|賞品なし')
-    positive = re.compile(r'嬉し|うれし|やった|楽し|最高|成功|合格|優勝')
+    positive = re.compile(r'嬉し|うれし|やった|楽し|最高|成功|合格|優勝|(?:やっと|ついに).{0,30}(?:完成|できた|動いた)[^。\n]{0,5}[!！]')
     continuation = re.compile(r'^(?:ああ|うん|はい|そう|そうだよ|いや|いいえ|それ|は\?|\?+|参加する(?:の)?|.{1,16}として)[。!\s]*$')
 
     @classmethod
@@ -165,7 +165,11 @@ class PolicyVerifier:
             issues.append('too_many_questions')
         if state.reaction_to_previous in {'rejected', 'corrected'} and detected.get(state.previous_assistant_strategy, False):
             issues.append('rejected_strategy_repeat')
-        if spec.acknowledge_misalignment and not re.search(r'ごめん|すまん|ずれ|ズレ|違った|取り違|受け取|そうじゃなかった|見当違い', prose):
+        acknowledged = bool(re.search(r'ごめん|すまん|すみません|ずれ|ズレ|違った|取り違|受け取|そうじゃなかった|見当違い', prose))
+        if (re.search(r'誤解した', prose) and not re.search(
+                r'(?:あなた|君|お前|そっち)(?:が|は)誤解した|誤解したのは(?:あなた|君|お前|そっち)', prose)):
+            acknowledged = True
+        if spec.acknowledge_misalignment and not acknowledged:
             issues.append('missing_misalignment_acknowledgment')
         if state.user_stance == 'negative' and detected['reframe'] and spec.stance_match:
             issues.append('stance_mismatch')

@@ -1,0 +1,8 @@
+{
+  "mode": "character",
+  "temperature": 0.2,
+  "training_eligible": false,
+  "human_approved": false,
+  "web": "disabled",
+  "profile": "character-dev1"
+}

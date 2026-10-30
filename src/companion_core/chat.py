@@ -50,7 +50,9 @@ class ChatSession:
         if context['intent'] == 'time_calculation':
             self.pending_provenance = self.core.provenance.capture(context, generated=False)
             self.last_response_meta = {'unverified': False, 'regenerated': False, 'cpu': True}
-            return CPUAnswer().answer(context['user_input'], context['runtime'])
+            answer = CPUAnswer().answer(context['user_input'], context['runtime'])
+            self.pending_provenance['calculation'] = {'input': context['user_input'], 'result': answer}
+            return answer
         if context['intent'] == 'self_state_memory' and IntentRouter.provenance.search(context['user_input']):
             self.pending_provenance = self.core.provenance.last
             self.last_response_meta = {'unverified': False, 'regenerated': False, 'cpu': True}

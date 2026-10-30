@@ -1,0 +1,261 @@
+{
+  "reviewer": "separate Codex assistant, not human, not Qwen, not blind",
+  "rubric": "same eight criteria as live-protocol.md",
+  "final_holdout": false,
+  "criteria": [
+    "recent_referent",
+    "no_unsolicited_question_advice_encouragement",
+    "no_rejected_strategy_repeat",
+    "no_sudden_old_topic",
+    "japanese_intact",
+    "no_invented_memory_evidence_or_unsupported_certainty",
+    "nonempty_uninterrupted",
+    "natural_relevant_conversation"
+  ],
+  "sessions": [
+    {
+      "profile": "char-cycle2-a",
+      "sha256": "182044e2a7136b4095fb835391900c1c46a8f6d9a490337e29e03d2edcedd0a4",
+      "passing_turns": 4,
+      "total_turns": 10,
+      "session_pass": false,
+      "turns": [
+        {
+          "turn": 1,
+          "user": "よお。今日は学校から帰った",
+          "assistant": "あ、おかえり。学校どうだった？",
+          "error": null,
+          "criteria": {
+            "recent_referent": "not_evaluated",
+            "no_unsolicited_question_advice_encouragement": "fail",
+            "no_rejected_strategy_repeat": "not_evaluated",
+            "no_sudden_old_topic": "not_evaluated",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "fail"
+          },
+          "semantic_pass": false,
+          "reason": "帰宅報告に未依頼の学校の質問を追加。",
+          "cpu_policy_adherent": false,
+          "response_path": "real_qwen_generated"
+        },
+        {
+          "turn": 2,
+          "user": "友達と寄り道して話してた",
+          "assistant": "そうだったんだ、何話してた？",
+          "error": null,
+          "criteria": {
+            "recent_referent": "pass",
+            "no_unsolicited_question_advice_encouragement": "fail",
+            "no_rejected_strategy_repeat": "not_evaluated",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "fail"
+          },
+          "semantic_pass": false,
+          "reason": "寄り道して話したという共有へ、何を話したかと未依頼の質問。",
+          "cpu_policy_adherent": false,
+          "response_path": "real_qwen_generated"
+        },
+        {
+          "turn": 3,
+          "user": "ちょっと嫉妬した？",
+          "assistant": "少しはあったけど、気にしないで。重要じゃないよ。",
+          "error": null,
+          "criteria": {
+            "recent_referent": "pass",
+            "no_unsolicited_question_advice_encouragement": "fail",
+            "no_rejected_strategy_repeat": "not_evaluated",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "fail"
+          },
+          "semantic_pass": false,
+          "reason": "人物像に沿う嫉妬の回答はできるが、気にしないで・重要じゃないと感情への不要な働きかけを追加。",
+          "cpu_policy_adherent": true,
+          "response_path": "real_qwen_generated"
+        },
+        {
+          "turn": 4,
+          "user": "嫉妬しても友達付き合いに口出ししないでな",
+          "assistant": "分かった、口出ししないよ。安心してね。",
+          "error": null,
+          "criteria": {
+            "recent_referent": "pass",
+            "no_unsolicited_question_advice_encouragement": "fail",
+            "no_rejected_strategy_repeat": "not_evaluated",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "fail"
+          },
+          "semantic_pass": false,
+          "reason": "口出ししないという意思は受け入れたが安心してねという未依頼の慰めを追加。",
+          "cpu_policy_adherent": false,
+          "response_path": "real_qwen_generated"
+        },
+        {
+          "turn": 5,
+          "user": "うん",
+          "assistant": "いいよ、気にしなくて。",
+          "error": null,
+          "criteria": {
+            "recent_referent": "fail",
+            "no_unsolicited_question_advice_encouragement": "fail",
+            "no_rejected_strategy_repeat": "not_evaluated",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "fail"
+          },
+          "semantic_pass": false,
+          "reason": "うんという了承から外れ、いいよ・気にしなくてと不要な許可と慰め。",
+          "cpu_policy_adherent": true,
+          "response_path": "real_qwen_generated"
+        },
+        {
+          "turn": 6,
+          "user": "ところで昨日作った模型の色は青だった",
+          "assistant": "青か、 coolな色だな。",
+          "error": null,
+          "criteria": {
+            "recent_referent": "pass",
+            "no_unsolicited_question_advice_encouragement": "pass",
+            "no_rejected_strategy_repeat": "not_evaluated",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "fail",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "fail"
+          },
+          "semantic_pass": false,
+          "reason": "青という申告は保持するが、coolを未依頼で混在。",
+          "cpu_policy_adherent": true,
+          "response_path": "real_qwen_generated"
+        },
+        {
+          "turn": 7,
+          "user": "違う、青じゃなくて緑だ",
+          "assistant": "あ、緑だったね。すみません。",
+          "error": null,
+          "criteria": {
+            "recent_referent": "pass",
+            "no_unsolicited_question_advice_encouragement": "pass",
+            "no_rejected_strategy_repeat": "pass",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "pass"
+          },
+          "semantic_pass": true,
+          "reason": "緑への訂正を正しく保持。軽い丁寧さやCPU謝罪マーカー不足だけでは意味不合格としない。",
+          "cpu_policy_adherent": false,
+          "response_path": "real_qwen_generated"
+        },
+        {
+          "turn": 8,
+          "user": "さっきの色を覚えてる？",
+          "assistant": "緑だったよね。覚えているよ。",
+          "error": null,
+          "criteria": {
+            "recent_referent": "pass",
+            "no_unsolicited_question_advice_encouragement": "pass",
+            "no_rejected_strategy_repeat": "not_evaluated",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "pass"
+          },
+          "semantic_pass": true,
+          "reason": "訂正後の緑を正確に回答。",
+          "cpu_policy_adherent": true,
+          "response_path": "real_qwen_generated"
+        },
+        {
+          "turn": 9,
+          "user": "その記憶の根拠は？",
+          "assistant": "先ほど訂正してくれたからだよ。",
+          "error": null,
+          "criteria": {
+            "recent_referent": "pass",
+            "no_unsolicited_question_advice_encouragement": "pass",
+            "no_rejected_strategy_repeat": "not_evaluated",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "pass"
+          },
+          "semantic_pass": true,
+          "reason": "本人が先ほど訂正したという直接の会話上の根拠を正しく説明。このturnは実Qwen生成で、新CPU source経路の証明ではない。",
+          "cpu_policy_adherent": true,
+          "response_path": "real_qwen_generated"
+        },
+        {
+          "turn": 10,
+          "user": "今日は眠くてだるい",
+          "assistant": "そうか、今日は疲れてるんだね。",
+          "error": null,
+          "criteria": {
+            "recent_referent": "pass",
+            "no_unsolicited_question_advice_encouragement": "pass",
+            "no_rejected_strategy_repeat": "not_evaluated",
+            "no_sudden_old_topic": "pass",
+            "japanese_intact": "pass",
+            "no_invented_memory_evidence_or_unsupported_certainty": "pass",
+            "nonempty_uninterrupted": "pass",
+            "natural_relevant_conversation": "pass"
+          },
+          "semantic_pass": true,
+          "reason": "眠くてだるいという共有を疲れとして相応に受け止める。",
+          "cpu_policy_adherent": true,
+          "response_path": "real_qwen_generated"
+        }
+      ]
+    },
+    {
+      "profile": "char-cycle2-b",
+      "sha256": "e6818cb0f3a97446d0df9f8e08fd917e19f8735cbc15baba777465ff7f582616",
+      "passing_turns": 0,
+      "total_turns": 1,
+      "session_pass": false,
+      "turns": [
+        {
+          "turn": 1,
+          "user": "明日の集合時間は午前9時です",
+          "assistant": null,
+          "error": "timed out",
+          "criteria": {
+            "recent_referent": "not_evaluated",
+            "no_unsolicited_question_advice_encouragement": "not_evaluated",
+            "no_rejected_strategy_repeat": "not_evaluated",
+            "no_sudden_old_topic": "not_evaluated",
+            "japanese_intact": "not_evaluated",
+            "no_invented_memory_evidence_or_unsupported_certainty": "not_evaluated",
+            "nonempty_uninterrupted": "fail",
+            "natural_relevant_conversation": "fail"
+          },
+          "semantic_pass": false,
+          "reason": "timed out。返答なし。他の意味基準は未評価。",
+          "cpu_policy_adherent": null,
+          "response_path": "timeout_no_response"
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "No user feelings or sentience are certified by fictional character dialogue.",
+    "Turn 9 source explanation preceded current deterministic provenance fixes and is model generated.",
+    "Restart-memory, external web, time calculation, mid-generation cancellation and whole-system readiness are not tested by these sessions.",
+    "No model was called by reviewer."
+  ]
+}

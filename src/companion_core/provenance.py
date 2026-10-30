@@ -35,11 +35,24 @@ class ProvenanceResponder:
     def answer(self):
         if self.last is None:
             return '直前回答の出所記録はない。AIの発言だけでは事実を確認できない。'
+        calculation = self.last.get('calculation')
+        if calculation:
+            return ('直前の回答は、あなたの入力「' + calculation['input'] +
+                    '」をもとに、必要に応じて実行環境の時刻情報も使ってCPUで処理した結果「' +
+                    calculation['result'] + '」。')
         labels = {'memory': '記憶（ユーザー申告を含む）', 'state': 'CPU管理の状態',
                   'runtime': '実行環境の観測', 'external': '信頼済み資料',
                   'session_recall': '過去の会話引用（未検証）', 'salient_experiences': '過去の経験記録（未検証）'}
         names = [labels[s['kind']] for s in self.last.get('sources', []) if s['kind'] in labels]
         message = '直前回答に渡した情報は、' + '・'.join(names) + '。' if names else '直前回答には確認済みの事実根拠はない。'
+        exchanges = [item for source in self.last.get('sources', []) if source['kind'] == 'session_recall'
+                     for hit in source.get('items', []) for item in hit.get('exchanges', [])
+                     if item.get('user_source') == 'user_statement' and item.get('user')]
+        if exchanges:
+            excerpts = ['「' + x['user'][:120] + '」（発言ID ' + str(x['turn_id']) + '）'
+                        for x in exchanges[-2:] if x.get('turn_id')]
+            if excerpts:
+                message += '渡された過去のユーザー発言には' + '、'.join(excerpts) + 'がある。発言は未検証。'
         web = [item for source in self.last.get('sources', []) if source['kind'] == 'web' for item in source['items']]
         if web:
             message = '直前回答に渡したWeb資料（未検証）は以下。\n' + '\n'.join(

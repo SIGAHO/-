@@ -50,7 +50,7 @@ class PersonalityStyleEngine:
 class StyleValidator:
     protected = re.compile(r'```[\s\S]*?```|`[^`\n]+`|https?://\S+|「[^」]*」|『[^』]*』|"[^"\n]*"')
     language_request = re.compile(r'(?:英語|中国語|韓国語|フランス語|ドイツ語|スペイン語)(?:で|に|への|訳)|原文のまま')
-    chinese_grammar = re.compile(r'你|您|什么|怎么|吗|呢|吧|这个|那个|我们|谢谢')
+    chinese_grammar = re.compile(r'你|您|什么|怎么|吗|呢|吧|这个|那个|我们|谢谢|[见续]')
 
     def other_language_requested(self, user_text):
         if re.search(r'日本語(?:で|に|へ)|和訳', user_text):
@@ -71,6 +71,17 @@ class StyleValidator:
         # Catch the observed malformed inflection without treating ordinary
         # unquoted identifiers such as "これはpythonです" as corruption.
         if re.search(r'[ぁ-ゖ][a-z]{2,}(?:ますん|ですん)', prose):
+            return ['language_mixing']
+        # A long English clause embedded in Japanese prose can be leaked
+        # generation instructions. Keep short identifiers and technical names.
+        english_clause = re.compile(r"(?<![A-Za-z])[A-Za-z]+(?:'[A-Za-z]+)?(?:\s+[A-Za-z]+(?:'[A-Za-z]+)?){3,}(?![A-Za-z])")
+        for match in english_clause.finditer(prose):
+            # English names or technical terms followed by a Japanese particle
+            # can be data. Still flag an apparent instruction or sentence.
+            attached = match.end() < len(prose) and re.match(r'[ぁ-ゖ]', prose[match.end()])
+            imperative = re.match(r"(?i)(?:let's|please|you|we|i|do|ignore|the response|this response)\b", match.group())
+            if attached and not imperative:
+                continue
             return ['language_mixing']
         for sentence in re.split(r'[。！？!?\n]', prose):
             if (not re.search(r'[\u3040-\u30ff\u4e00-\u9fff]', sentence)

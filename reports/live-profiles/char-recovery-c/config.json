@@ -1,0 +1,8 @@
+{
+  "mode": "character",
+  "temperature": 0.0,
+  "training_eligible": false,
+  "human_approved": false,
+  "web": "disabled",
+  "profile": "char-recovery-c"
+}

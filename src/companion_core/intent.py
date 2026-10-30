@@ -10,7 +10,7 @@ def normalized(text):
 
 
 class IntentRouter:
-    provenance = re.compile(r'(?:どこ|何|なに).*(?:情報|根拠|出典)|(?:情報|根拠|出典).*(?:どこ|何|なに)|何を根拠|^(?:それ|その話).*どこから|^どこから[?？。\s]*$')
+    provenance = re.compile(r'(?:どこ|何|なに).*(?:情報|根拠|出典)|(?:情報|根拠|出典).*(?:どこ|何|なに)|何を根拠|^(?:それ|その話).*どこから|^どこから[?？。\s]*$|^その(?:記憶|回答|返答|話)の(?:根拠|出典)(?:は|を教えて)?[?？。\s]*$')
     memory = re.compile(r'記憶|覚えて|覚えた|メモリ|内部状態|自分の状態')
     casual = re.compile(r'(?:調子どう|元気|こんにちは|こんばんは|おはよう|おーい|やあ|ありがとう|おやすみ|眠い|疲れた|今日は眠い)[。!?\s]*')
     ambiguous = re.compile(r'(?:は|え|ん|なに|何|どういうこと|どういう意味)?[!?\s]+|(?:は|え|ん|なに|何|どういうこと|どういう意味)[。!！?？\s]*')
@@ -28,6 +28,10 @@ class IntentRouter:
             return 'task_correction'
         if self.provenance.search(t) or self.memory.search(t) or EXPLICIT_RECALL.search(t):
             return 'self_state_memory'
+        # A question addressed to the companion about its conversational
+        # reaction is not a request for an externally verifiable fact.
+        if re.fullmatch(r'(?:ちょっと|少し|少しは|ちょっとは)?(?:嫉妬した|やきもち焼いた|妬いた)[?。!\s]*', t):
+            return 'casual_chat'
         if self.casual.fullmatch(t):
             return 'casual_chat'
         if self.ambiguous.fullmatch(t):

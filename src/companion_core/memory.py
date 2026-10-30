@@ -25,11 +25,10 @@ class MemoryEngine:
         if not text.strip():
             return False
         for x in self.items:
-            # A one-character change in a correction can change its fact value
-            # (time.user_year = 2023 vs 2026). Never merge these approximately
-            # or collapse their source into an ordinary user statement.
-            protected = source == SourceType.USER_CORRECTION or x.source == SourceType.USER_CORRECTION
-            duplicate = source == x.source and ((text.strip() == x.text) if protected else cosine_text(text, x.text) > 0.92)
+            # A single character can change a value, negation, or entity in
+            # any source, not only explicit corrections. Similarity is useful
+            # for retrieval, but cannot prove two claims are equivalent.
+            duplicate = source == x.source and text.strip() == x.text
             if x.status == Status.ACTIVE and duplicate:
                 x.mentions += 1
                 x.importance = min(1.0, max(x.importance, importance))

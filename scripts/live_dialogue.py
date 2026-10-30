@@ -16,15 +16,17 @@ from companion_core.retrieval import RetrievalEngine
 
 
 class RecordedAdapter(ModelAdapter):
-    def __init__(self, directory, temperature):
+    def __init__(self, directory, temperature, budget_name='live-budget.jsonl', max_attempts=100):
         self.path = directory / 'requests.jsonl'
         self.temperature = temperature
+        self.budget_name = budget_name
+        self.max_attempts = max_attempts
 
     def generate(self, messages):
-        ledger = ROOT / 'reports/live-budget.jsonl'
+        ledger = ROOT / 'reports' / self.budget_name
         rows = [json.loads(x) for x in ledger.read_text(encoding='utf-8').splitlines()] if ledger.exists() else []
-        if len(rows) >= 100 or rows and time.time() - rows[0]['time'] > 7200:
-            raise ModelError('100 inference / 2 hour experiment budget exhausted')
+        if len(rows) >= self.max_attempts or rows and time.time() - rows[0]['time'] > 7200:
+            raise ModelError('inference / 2 hour experiment budget exhausted')
         with ledger.open('a', encoding='utf-8') as f:
             f.write(json.dumps({'time': time.time(), 'profile': str(self.path.parent.name)}) + '\n')
         payload = {'model': 'qwen2.5:14b', 'messages': messages, 'stream': False,
@@ -53,12 +55,15 @@ class RecordedAdapter(ModelAdapter):
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('--profile', required=True)
-    p.add_argument('--mode', choices=['legacy', 'compact', 'reaction', 'direct', 'anchored'], default='legacy')
+    p.add_argument('--mode', choices=['legacy', 'compact', 'reaction', 'direct', 'anchored', 'character'], default='legacy')
     p.add_argument('--temperature', type=float, default=.6)
+    p.add_argument('--experiment', help='New isolated inference budget name (letters, digits, hyphen)')
     p.add_argument('text', nargs='+')
     args = p.parse_args()
     if not args.profile.replace('-', '').isalnum():
         p.error('profile must be an isolated simple name')
+    if args.experiment and not args.experiment.replace('-', '').isalnum():
+        p.error('experiment must be a simple name')
     directory = ROOT / 'reports/live-profiles' / args.profile
     directory.mkdir(parents=True, exist_ok=True)
     config = {'mode': args.mode, 'temperature': args.temperature, 'training_eligible': False,
@@ -67,7 +72,10 @@ def main():
     if config_path.exists() and json.loads(config_path.read_text(encoding='utf-8')) != config:
         raise ValueError('Use a new profile for a new condition')
     config_path.write_text(json.dumps(config, ensure_ascii=False, indent=2), encoding='utf-8')
-    adapter = RecordedAdapter(directory, args.temperature)
+    budget_name = ('live-experiment-' + args.experiment + '.jsonl' if args.experiment else
+                   'live-character-followup-budget.jsonl' if args.mode == 'character' else 'live-budget.jsonl')
+    adapter = RecordedAdapter(directory, args.temperature, budget_name, 60 if args.experiment else
+                              20 if args.mode == 'character' else 100)
     session = ChatSession(adapter, directory / 'events.jsonl', retrieval=RetrievalEngine(), prompt_mode=args.mode)
     try:
         for index, text in enumerate(args.text):
