@@ -18,6 +18,17 @@ class ContextRetryTests(unittest.TestCase):
         finally:
             chat.close()
 
+    def test_scene_examples_are_unapproved_system_data_not_user_messages(self):
+        adapter = FakeModelAdapter(['おかえり。'])
+        chat = ChatSession(adapter, prompt_mode='character-scene')
+        try:
+            chat.turn('ただいま')
+            messages = adapter.requests[0]
+            self.assertIn('創作された未承認の口調例', messages[0]['content'])
+            self.assertEqual([(m['role'], m['content']) for m in messages[1:]], [('user', 'ただいま')])
+        finally:
+            chat.close()
+
     def test_sumanai_acknowledges_a_rejected_strategy(self):
         from companion_core.alignment import ConversationState, PolicyVerifier, ResponseSpec
         state = ConversationState('correction', None, 'negative', 'advise', 'rejected', 'medium', [])
@@ -38,6 +49,36 @@ class ContextRetryTests(unittest.TestCase):
         self.assertTrue(planner.plan(state, 'やり方を教えてほしい').advice_allowed)
         self.assertTrue(Acts.advice.search('疲れてるならゆっくり休んでください。'))
         self.assertFalse(Acts.advice.search('昨日はゆっくり休んでた。'))
+
+    def test_rejection_scope_does_not_cancel_separate_advice_request(self):
+        from companion_core.alignment import PolicyPlanner
+        planner = PolicyPlanner()
+        for text in ('質問はいらない。手順は教えて', '質問はいらないけど手順を教えて', 'アドバイスはいらないわけじゃない。方法を教えて'):
+            with self.subTest(text=text):
+                state = planner.observe(text, [])
+                self.assertTrue(planner.plan(state, text).advice_allowed)
+        text = '「アドバイスは要らん」という文の意味を説明して'
+        self.assertNotEqual(planner.observe(text, []).user_dialogue_act, 'rejection')
+        text = 'アドバイスはいらないわけじゃない'
+        state = planner.observe(text, [])
+        self.assertNotIn(state.user_dialogue_act, ('rejection', 'correction'))
+        self.assertFalse(planner.plan(state, text).advice_allowed)
+        text = '手順を教えて。今は助言いらない'
+        self.assertFalse(planner.plan(planner.observe(text, []), text).advice_allowed)
+        text = '手順教えて。でも今はいらない'
+        self.assertFalse(planner.plan(planner.observe(text, []), text).advice_allowed)
+
+    def test_separate_advice_request_is_allowed_after_question_rejected(self):
+        adapter = FakeModelAdapter(['どこに行った？', 'ごめん。手順は一番目に確認する。'])
+        chat = ChatSession(adapter)
+        try:
+            chat.turn('ただいま')
+            chat.turn('質問はいらない。手順は教えて')
+            spec = chat.alignment_trace['response_spec']
+            self.assertTrue(spec['advice_allowed'])
+            self.assertTrue(spec['acknowledge_misalignment'])
+        finally:
+            chat.close()
 
     def test_two_meta_leaks_report_deterministic_failure(self):
         leak = '修正後、以下が適切な返答です：おかえり。'

@@ -15,6 +15,12 @@ def norm(text):
     return unicodedata.normalize('NFKC', text).strip()
 
 
+def feedback_prose(text):
+    # Quoted examples are not feedback. A double negative is not a refusal.
+    text = StyleValidator.protected.sub('', norm(text))
+    return re.sub(r'(?:いらない|要らない|不要)(?:わけ|訳)(?:じゃ|では)ない', '', text)
+
+
 class Acts:
     question = re.compile(r'[?？]|(?:何|どう|どこ|いつ|誰|どれ|なぜ).{0,25}(?:か|の|たい)[。!！]*$|(?:かな|ますか|だろうか)[。!！]*$')
     advice = re.compile(r'(?:た|だ|し|寝|休|休ん|進め|やっ|備え|食べ|飲ん|行っ)(?:て|で)(?:ね|みて|みよう|ください|おこう)|(?:し|寝|備え|進め)よう|(?:休も|頑張ろ|やろ|取ろ)う|(?:した|する|寝た|休んだ)方が|べき|おすすめ|したらどう|するといい|しなよ')
@@ -91,8 +97,8 @@ class PolicyPlanner:
         recent = raw[-8:]
         previous = next((r for r in reversed(recent) if r['role'] == 'assistant'), None)
         t = norm(text)
-        corrected = bool(Acts.correction.search(t))
-        rejected = bool(Acts.rejection.search(t))
+        corrected = bool(Acts.correction.search(feedback_prose(t)))
+        rejected = bool(Acts.rejection.search(feedback_prose(t)))
         approved = bool(Acts.approval.fullmatch(t))
         continuation = bool(Acts.continuation.fullmatch(t)) or intent in {'continuation', 'ambiguous_followup'}
         feedback = 'rejection' if rejected else 'correction' if corrected else 'approval' if approved else None
@@ -135,13 +141,22 @@ class PolicyPlanner:
     def plan(self, state, text, intent='casual_chat'):
         act = state.user_dialogue_act
         rejected = state.reaction_to_previous in {'rejected', 'corrected'}
-        requested_advice = bool(re.search(r'どうすれば|どうしたら|助言(?:して|がほしい)|アドバイス|方法|手順|やり方(?:を|が)?(?:教えて|知りたい)', text)) and not Acts.rejection.search(text)
+        clauses = re.split(r'[。.!！?？\n]|けど|けれど(?:も)?', feedback_prose(text))
+        advice_request = re.compile(r'どうすれば|どうしたら|助言(?:して|がほしい)|(?:アドバイス|方法|手順|やり方)(?:を|が|は)?(?:教えて|知りたい|お願い|頼む|ほしい|ください|して)')
+        advice_refusal = re.compile(r'(?:助言|アドバイス|方法|手順|やり方)(?:は|を|が)?(?:いらない|要らない|いらん|要らん|不要|聞いてない|聞いていない|求めてない|求めていない|しないで)')
+        requested_advice = False
+        for clause in clauses:
+            elliptical_refusal = requested_advice and re.fullmatch(r'\s*(?:でも|しかし)?\s*(?:今は|今|もう)?(?:いらない|要らない|いらん|要らん|不要)\s*', clause)
+            if advice_refusal.search(clause) or elliptical_refusal:
+                requested_advice = False
+            elif advice_request.search(clause) and not Acts.rejection.search(clause):
+                requested_advice = True
         response_act = ('apologize' if rejected else 'acknowledge' if act in {'greeting', 'complaint', 'factual_answer', 'confirmation'}
                         else 'celebrate' if act == 'celebration' else 'answer' if act == 'question'
                         else 'explain' if act == 'task' else 'joke' if act == 'joke' else 'continue')
-        if requested_advice and not rejected:
+        if requested_advice:
             response_act = 'advise'
-        return ResponseSpec(act=response_act, advice_allowed=requested_advice and not rejected,
+        return ResponseSpec(act=response_act, advice_allowed=requested_advice,
                             praise_allowed=act == 'celebration' and not rejected,
                             acknowledge_misalignment=rejected,
                             length='medium' if act in {'question', 'task'} else 'short',

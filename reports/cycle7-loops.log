@@ -1,0 +1,21 @@
+test_context_and_replay_keep_completion (test_open_loops_behavior.CoreOpenLoopTests.test_context_and_replay_keep_completion) ... ok
+test_context_and_replay_preserve_unfinished_task_and_ignore_denied_plan (test_open_loops_behavior.CoreOpenLoopTests.test_context_and_replay_preserve_unfinished_task_and_ignore_denied_plan) ... ok
+test_other_person_completion_remains_open_after_replay (test_open_loops_behavior.CoreOpenLoopTests.test_other_person_completion_remains_open_after_replay) ... ok
+test_uncertain_completion_remains_open_after_replay (test_open_loops_behavior.CoreOpenLoopTests.test_uncertain_completion_remains_open_after_replay) ... ok
+test_bare_completion_closes_only_pending_task_without_deleting_it (test_open_loops_behavior.OpenLoopBehaviorTests.test_bare_completion_closes_only_pending_task_without_deleting_it) ... ok
+test_bare_completion_leaves_multiple_pending_tasks_ambiguous (test_open_loops_behavior.OpenLoopBehaviorTests.test_bare_completion_leaves_multiple_pending_tasks_ambiguous) ... ok
+test_denied_plan_does_not_create_or_cancel_task (test_open_loops_behavior.OpenLoopBehaviorTests.test_denied_plan_does_not_create_or_cancel_task) ... ok
+test_duplicate_and_new_task_after_completion (test_open_loops_behavior.OpenLoopBehaviorTests.test_duplicate_and_new_task_after_completion) ... ok
+test_equal_scoring_completion_does_not_choose_arbitrary_task (test_open_loops_behavior.OpenLoopBehaviorTests.test_equal_scoring_completion_does_not_choose_arbitrary_task) ... ok
+test_named_completion_closes_matching_task_only (test_open_loops_behavior.OpenLoopBehaviorTests.test_named_completion_closes_matching_task_only) ... ok
+test_obligation_is_not_mistaken_for_negative_plan (test_open_loops_behavior.OpenLoopBehaviorTests.test_obligation_is_not_mistaken_for_negative_plan) ... ok
+test_other_person_and_shared_verb_do_not_complete_user_task (test_open_loops_behavior.OpenLoopBehaviorTests.test_other_person_and_shared_verb_do_not_complete_user_task) ... ok
+test_qualified_or_other_person_completion_does_not_close_task (test_open_loops_behavior.OpenLoopBehaviorTests.test_qualified_or_other_person_completion_does_not_close_task) ... ok
+test_question_or_conditional_is_not_completion_evidence (test_open_loops_behavior.OpenLoopBehaviorTests.test_question_or_conditional_is_not_completion_evidence) ... ok
+test_quoted_example_is_not_a_plan_but_quoted_plan_is (test_open_loops_behavior.OpenLoopBehaviorTests.test_quoted_example_is_not_a_plan_but_quoted_plan_is) ... ok
+test_unfinished_reports_neither_close_nor_create_duplicate_tasks (test_open_loops_behavior.OpenLoopBehaviorTests.test_unfinished_reports_neither_close_nor_create_duplicate_tasks) ... ok
+
+----------------------------------------------------------------------
+Ran 16 tests in 0.159s
+
+OK

@@ -19,6 +19,9 @@ class OpenLoopTracker:
     CONDITIONAL_DONE = re.compile(
         r"(?:終わった|完了した|できた|済んだ|提出した|買った)(?:ら|場合|とき|時|あと|後)"
     )
+    UNCERTAIN_DONE = re.compile(
+        r'(?:終わった|完了した|できた|済んだ|提出した|買った)(?:と(?:は)?(?:言って|いって)ない|とは限らない|かもしれない|かも|可能性)'
+    )
     QUESTION = re.compile(r"[?？]|(?:です|ます)?か[。！!\s]*$")
     BARE_DONE = re.compile(
         r"(?:終わった|終わり|完了(?:した)?|できた|済んだ|提出した|買った)(?:です|よ|ね)*[。！!\s]*"
@@ -39,7 +42,7 @@ class OpenLoopTracker:
         # It must not fall through to task creation merely because it mentions
         # the existing task's verb. Mixed/ambiguous utterances stay unchanged.
         if not text or any(pattern.search(text) for pattern in (
-            self.NOT_DONE, self.NO_PLAN, self.CONDITIONAL_DONE, self.QUESTION
+            self.NOT_DONE, self.NO_PLAN, self.CONDITIONAL_DONE, self.UNCERTAIN_DONE, self.QUESTION
         )):
             return
         done = any(h in text for h in self.DONE_HINTS)
@@ -57,11 +60,15 @@ class OpenLoopTracker:
             return
         # Unknown names can also be subjects (e.g. 田中が提出した).
         # A leading task noun such as 宿題が終わった remains eligible.
-        subject = re.match(r'^([^、。\s]{1,16})が', text)
+        subject = re.match(r'^([^、。\s]{1,16})(?:が|は)', text)
         subject_text = subject[1].removesuffix('の') if subject else ''
         subject_target = self.TASK_VERBS.sub('', subject_text).replace('作業', '').strip('のをはが')
         matches_task = any(subject_text in loop.text or (subject_target and subject_target in loop.text) for loop in active)
         if subject and subject_text not in ('私', '僕', '俺', '自分') and not matches_task:
+            return
+        # An explicit cleft construction identifies someone else as actor.
+        cleft = re.search(r'(?:終わった|完了した|できた|済んだ|提出した|買った)のは([^、。\s]+)', text)
+        if cleft and not re.match(r'(?:私|僕|俺|自分|今日|昨日|一昨日|今朝|昨夜|先週|先月|先日|(?:午前|午後)?\d{1,2}時(?:\d{1,2}分)?)(?:だ|です|[。！!]|$)', cleft[1]):
             return
         if self.BARE_DONE.fullmatch(text):
             # A subject-free completion is resolvable only with one pending task.

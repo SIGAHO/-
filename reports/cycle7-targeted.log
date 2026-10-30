@@ -1,0 +1,17 @@
+test_experimental_low_risk_policy_violation_gets_one_retry (test_context_retry.ContextRetryTests.test_experimental_low_risk_policy_violation_gets_one_retry) ... ok
+test_explicit_edit_request_and_quotation_are_not_leaks (test_context_retry.ContextRetryTests.test_explicit_edit_request_and_quotation_are_not_leaks) ... ok
+test_minimal_experiment_keeps_real_roles_without_example_turns (test_context_retry.ContextRetryTests.test_minimal_experiment_keeps_real_roles_without_example_turns) ... ok
+test_mixed_meta_leak_cannot_win_over_clean_retry (test_context_retry.ContextRetryTests.test_mixed_meta_leak_cannot_win_over_clean_retry) ... ok
+test_rejected_method_is_not_mistaken_for_an_advice_request (test_context_retry.ContextRetryTests.test_rejected_method_is_not_mistaken_for_an_advice_request) ... ok
+test_rejection_scope_does_not_cancel_separate_advice_request (test_context_retry.ContextRetryTests.test_rejection_scope_does_not_cancel_separate_advice_request) ... ok
+test_retry_preserves_original_roles_and_excludes_corrupt_draft (test_context_retry.ContextRetryTests.test_retry_preserves_original_roles_and_excludes_corrupt_draft) ... ok
+test_scene_examples_are_unapproved_system_data_not_user_messages (test_context_retry.ContextRetryTests.test_scene_examples_are_unapproved_system_data_not_user_messages) ... ok
+test_separate_advice_request_is_allowed_after_question_rejected (test_context_retry.ContextRetryTests.test_separate_advice_request_is_allowed_after_question_rejected) ... ok
+test_sumanai_acknowledges_a_rejected_strategy (test_context_retry.ContextRetryTests.test_sumanai_acknowledges_a_rejected_strategy) ... ok
+test_two_corrupt_outputs_use_explicit_cpu_failure_and_provenance (test_context_retry.ContextRetryTests.test_two_corrupt_outputs_use_explicit_cpu_failure_and_provenance) ... ok
+test_two_meta_leaks_report_deterministic_failure (test_context_retry.ContextRetryTests.test_two_meta_leaks_report_deterministic_failure) ... ok
+
+----------------------------------------------------------------------
+Ran 12 tests in 0.377s
+
+OK

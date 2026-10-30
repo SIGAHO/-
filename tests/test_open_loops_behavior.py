@@ -9,6 +9,22 @@ from companion_core.open_loops import OpenLoopTracker
 
 
 class OpenLoopBehaviorTests(unittest.TestCase):
+    def test_qualified_or_other_person_completion_does_not_close_task(self):
+        for text in ('レポートを提出したとは言ってない', 'レポートを提出したとは限らない',
+                     'レポートを提出したかもしれない', '田中はレポートを提出した',
+                     'レポートを提出したのは田中だ'):
+            with self.subTest(text=text):
+                tracker = OpenLoopTracker()
+                tracker.observe('あとでレポートを提出する')
+                tracker.observe(text)
+                self.assertEqual(len(tracker.active()), 1)
+        for text in ('レポートは提出した', 'レポートを提出したのは私だ', 'レポートを提出したのは昨日だ', 'レポートを提出したのは午後3時だ'):
+            with self.subTest(text=text):
+                tracker = OpenLoopTracker()
+                tracker.observe('あとでレポートを提出する')
+                tracker.observe(text)
+                self.assertEqual(tracker.active(), [])
+
     def test_quoted_example_is_not_a_plan_but_quoted_plan_is(self):
         tracker = OpenLoopTracker()
         tracker.observe('「あとでレポートを提出する」という例文')
@@ -117,6 +133,13 @@ class OpenLoopBehaviorTests(unittest.TestCase):
 
 
 class CoreOpenLoopTests(unittest.TestCase):
+    def test_uncertain_completion_remains_open_after_replay(self):
+        core = CompanionCore()
+        core.handle('あとでレポートを提出する')
+        core.handle('レポートを提出したかもしれない')
+        core.replay()
+        self.assertEqual([x.text for x in core.open_loops.active()], ['あとでレポートを提出する'])
+
     def test_other_person_completion_remains_open_after_replay(self):
         core = CompanionCore()
         core.handle('あとで宿題を提出する')

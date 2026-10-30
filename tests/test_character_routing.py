@@ -11,6 +11,7 @@ class CharacterRoutingTests(unittest.TestCase):
         from companion_core.intent import IntentRouter
         router = IntentRouter()
         self.assertEqual(router.route('お前、ちょっと嫉妬した？'), 'casual_chat')
+        self.assertEqual(router.route('お前、ちょっと嫉妬する？'), 'casual_chat')
         self.assertEqual(router.route('友達は嫉妬した？'), 'external_knowledge')
 
     def test_time_pair_accepts_exact_hours_and_rejects_invalid_times(self):
