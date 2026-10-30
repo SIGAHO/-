@@ -20,6 +20,7 @@ from companion_core.chat import ChatSession
 from companion_core.model_adapter import FakeModelAdapter
 from companion_core.retrieval import RetrievalEngine
 from companion_core.alignment import ConversationState, ResponseSpec, PolicyVerifier
+from companion_core.models import Event
 
 
 def digest(value):
@@ -62,8 +63,14 @@ def prepare():
     # personal rank removed from the source dialogue (e.g. UUID containing 454).
     # This affects preparation only; real model inference is never mocked.
     fixture_ids = count(1)
+    fixture_times = count(0)
+    def fixed_event(*args, **kwargs):
+        # Stable timestamps keep evidence hashes reproducible as well as IDs.
+        kwargs.setdefault('ts', 1793380000.0 + next(fixture_times))
+        return Event(*args, **kwargs)
     with tempfile.TemporaryDirectory(dir=ROOT / 'work') as directory, patch(
-            'uuid.uuid4', side_effect=lambda: uuid.UUID(int=next(fixture_ids))):
+            'uuid.uuid4', side_effect=lambda: uuid.UUID(int=next(fixture_ids))), patch(
+            'companion_core.core.Event', side_effect=fixed_event), patch('time.time', return_value=1793380000.0):
         session = FrozenHistorySession(FakeModelAdapter(), Path(directory) / 'events.jsonl', retrieval=RetrievalEngine())
         try:
             for i, row in enumerate(source['turns']):

@@ -35,6 +35,8 @@ class OllamaAdapter(ModelAdapter):
             reply = data["message"]["content"]
             if not isinstance(reply, str) or not reply.strip() or data.get("done") is not True:
                 raise ValueError("empty or incomplete reply")
+            if data.get('done_reason') == 'length':
+                raise ValueError('reply exceeded generation limit')
             return reply.strip()
         except HTTPError as exc:
             raise ModelError(f"Ollama HTTP {exc.code}: check model '{self.model}' (ollama pull {self.model})") from exc

@@ -65,7 +65,7 @@ class RecordedAdapter(ModelAdapter):
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('--profile', required=True)
-    p.add_argument('--mode', choices=['legacy', 'compact', 'reaction', 'direct', 'anchored', 'character', 'character-repair', 'character-jp', 'character-jp-repair', 'character-minimal', 'character-scene', 'character-guided'], default='legacy')
+    p.add_argument('--mode', choices=['legacy', 'compact', 'reaction', 'direct', 'anchored', 'character', 'character-repair', 'character-jp', 'character-jp-repair', 'character-minimal', 'character-scene', 'character-guided', 'character-dialogue'], default='legacy')
     p.add_argument('--temperature', type=float, default=.6)
     p.add_argument('--retry-seed-delta', type=int, default=0, help='Experiment only: use a different seed for contextual retries')
     p.add_argument('--max-attempts', type=int, default=60, help='Experiment inference cap, at most 60')

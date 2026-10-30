@@ -178,6 +178,32 @@ class AdapterTests(unittest.TestCase):
                 with self.assertRaises(ModelError):
                     OllamaAdapter().generate([])
 
+    def test_generation_limit_is_failure_not_a_completed_reply(self):
+        import io
+        for reason, ok in [('length', False), ('stop', True), (None, True)]:
+            payload = {'done': True, 'message': {'content': 'ここまで'}}
+            if reason is not None:
+                payload['done_reason'] = reason
+            with self.subTest(reason=reason), patch('companion_core.model_adapter.urlopen', return_value=io.BytesIO(json.dumps(payload).encode())):
+                if ok:
+                    self.assertEqual(OllamaAdapter().generate([]), 'ここまで')
+                else:
+                    with self.assertRaises(ModelError):
+                        OllamaAdapter().generate([])
+
+    def test_truncated_generation_is_not_committed_as_assistant_reply(self):
+        import io
+        payload = {'done': True, 'done_reason': 'length', 'message': {'content': '不完全な返答'}}
+        chat = ChatSession(OllamaAdapter())
+        try:
+            with patch('companion_core.model_adapter.urlopen', return_value=io.BytesIO(json.dumps(payload).encode())):
+                with self.assertRaises(ModelError):
+                    chat.turn('こんにちは')
+            self.assertEqual([e.kind for e in chat.core.events.events], ['user_input'])
+            self.assertEqual(chat.fio.recorder.records, [])
+        finally:
+            chat.close()
+
     def test_environment_and_argument_priority(self):
         with patch.dict('os.environ', {'BREAKTAIL_MODEL': 'env-model', 'OLLAMA_HOST': 'localhost:1234'}):
             self.assertEqual(OllamaAdapter().model, 'env-model')

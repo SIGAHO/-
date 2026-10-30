@@ -32,6 +32,14 @@ class IntentRouter:
         # reaction is not a request for an externally verifiable fact.
         if re.fullmatch(r'(?:(?:お前|君|あなた|Breaktail)[、,\s]*(?:は|が)?[、,\s]*)?(?:ちょっと|少し|少しは|ちょっとは)?(?:嫉妬した|嫉妬する|やきもち焼いた|妬いた)[?。!\s]*', t, re.IGNORECASE):
             return 'casual_chat'
+        # A directly addressed reaction can follow an ordinary statement, but
+        # do not hide an earlier factual question behind this exception.
+        parts = re.split(r'[。！!]', t)
+        final = parts[-1].strip()
+        prefix = ''.join(parts[:-1])
+        if (prefix and not re.search(r'[?？]|教えて|説明して|とは|って何', prefix)
+                and re.fullmatch(r'(?:お前|君|あなた|Breaktail)[、,\s]*(?:は|が)?[、,\s]*(?:ちょっと|少し|少しは|ちょっとは)?(?:嫉妬した|嫉妬する|やきもち焼いた|妬いた)[?。!\s]*', final, re.IGNORECASE)):
+            return 'casual_chat'
         if self.casual.fullmatch(t):
             return 'casual_chat'
         if self.ambiguous.fullmatch(t):

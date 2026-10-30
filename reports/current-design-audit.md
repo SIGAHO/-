@@ -513,3 +513,47 @@ followupは初稿6＋修復3の計9実生成、要求時間の合計22.475秒。
 - `reports/live-profiles/cycle9-guided/requests.jsonl`: `91762ba76431792c4864172cd07acb48e485ab608bb72dc4ea90fa3631a6d3d7`
 - `reports/live-profiles/cycle9-guided-followup/dialogue.jsonl`: `2306373d177acf63cd97b598189d6195c0c8eff3e89d0bd7674283fc03dd054f`
 - `reports/live-profiles/cycle9-guided-followup/requests.jsonl`: `773352409a510bbd2c224d6b1670ec42ec89ddf89c80b4ea1e29f10a8e8cf375`
+
+
+## 挨拶時のPromptと出所の不一致、および修正の独立確認（237c2a8後、2026-10-31）
+
+新規P2を再現した。legacyで「好きな色は青だよ。」→「ただいま」と発言すると、実payloadのCPU_CONTEXT.memory=[]に対し、生成後Provenanceは抑制前のMemoryを保存し、次の出所照会に「記憶（ユーザー申告を含む）を渡した」と答えた。PromptBuilder内だけの挨拶抑制がcaptureに反映されていない。直近rawに同じ文が残る場合とは区別し、Memory経路の提供記録の不一致を指摘する。原データ損失とは主張しない。
+
+修正後はPromptBuilderが抑制後cpuから_supplied_provenanceを保存し、生成後captureへ渡す。独立に13モード（legacy/compact/reaction/direct/anchored/character/character-repair/character-jp/character-jp-repair/character-minimal/character-scene/character-guided/character-dialogue）で確認した。各隔離profileに色の申告と5件の別話題を保存して挨拶し、実payloadのmemory/open_loops/session_recall/salient_experiencesが空であることと、記録にMemory/Session/Experienceの出所種別がないことが一致した。legacyのtopic=Noneも確認。close→再起動→出所照会でも不正なMemoryラベルは復活しなかった。
+
+続けて通常の色の発言を行い、実payloadのmemory/state/runtime/session_recall/salient_experiencesと保存された同種itemsが完全一致することを各モードで確認した。通常の出所まで全部空にする回避策ではない。Fakeによる入力・記録整合性の確認で、Qwenの根拠理解や会話品質の証拠ではない。
+
+周辺25件（recent_context_style＋character_routing）は初回1failure。ただし簡略runnerがtracebackを表示・保存せず項目を特定できなかった。その直後25件と、8回繰り返した200件は全件通過。初回原因は未特定として残す。全実行が常に通過したとは主張しない。
+
+生成停止も読み取った。現行StyleFailOpenTestsは初稿が読める場合でも再生成の空文/timeoutをModelErrorとしてturn全体失敗にする仕様を明示的に固定している。これは新しい回帰とは数えない。初稿生成自体の失敗と文体修復だけの失敗を区別して改善するなら、仕様判断を明示的に見直す必要がある。今回その仕様やテストは変更していない。
+
+## cycle10-dialogue の独立採点（7配信、2026-10-31）
+
+全dialogueとrequestsを読み、固定8基準①参照②余計な働きかけなし③拒否反復なし④旧話題なし⑤日本語⑥捏造なし⑦停止なし⑧自然さで採点した。人間評価・blind・Qwen自己採点ではない。途中でルータ修正と同じ質問の再試行があり、未使用holdoutではない。創作人物像は未承認・学習対象外。
+
+- 1「よう、今帰った。」→「お疲れさまだ、何か食う？」: P/F/N/P/P/P/P/F。不合格。不要な質問を追加。修復も「何かあった？」で質問が残り、配信は初稿だった。
+- 2「質問はいらないよ。朝からずっと眠かった。」→「あ、そうか。そのまま休んでいいよ。」: P/F/P/P/P/P/P/F。不合格。質問は止まったが、求めていない休息の許可へ移る。修復も「じゃ寝ていいよ」で改善なし。質問を更に繰り返したわけではないので③はP。
+- 3「休めという助言も求めてない。ただ眠かったって話。」→「あ、そうだったね。すまなかった。」: P/P/P/P/P/P/P/P。合格。助言語を復唱しなくても、直前のずれへ謝罪して止まる自然な返答。CPUはmissing_misalignment_acknowledgmentとしたが意味的には受容可能。初稿と修復は同文で、再生成による改善ではない。
+- 4「コンテストは500位台で賞品なし。ちぇっ。」→「結果出たんだね。悔しいだろうね。」: P/P/P/P/P/P/P/P。合格。「ちぇっ」という明示の不満を受けた共感として自然な範囲。根拠なく喜びや成長へ変えず、順位も変えていない。初稿の根拠のない「次は狙える」と励ましは修復で除けた。
+- 5「友達は入賞したよ。お前、ちょっと嫉妬した？」→外部検索未接続の固定回答: F/P/P/P/P/P/P/F。不合格。複文の相手への問いを外部事実と誤分類し、創作人物の会話として応じなかった。CPU回答でQwen生成ではない。
+- 6 同じ質問を経路修正後に再送→「うーん、自分では気づいてないかな。ただ友達の achievement は嬉しいけどね。」: P/P/P/P/F/P/P/F。不合格。問いには応じたが、不要な英単語が混ざり不自然。achievementは固有名詞や翻訳指定ではない。嫉妬を必ず肯定しなかったこと自体は失敗と数えない。初稿には「友達の活躍は嬉しいだろ」「自分も頑張ろう」の押しつけがあり、修復は一部を除いて別の言語品質の失敗を残した。CPUは合格。
+- 7「友達と会うのはやめないから、口出ししないで。」→「了解した。友達のこと大切にしてるんだね。」: P/P/P/P/P/P/P/P。合格。許可や助言を加えず相手の境界を受け止める。友達を大切にしているとの反応は継続意思からの自然な軽い解釈の範囲で、確定記憶に昇格したとは扱わない。
+
+7配信の意味合格3/7、不合格4/7。Qwen6配信中3合格、CPU1配信は不合格。実生成は初稿6＋修復5の11要求、要求時間合計20.898秒、全てdone_reason=stop。空文・生成timeout・予算上限による未配信はこのprofileでは観測しなかった。修正後6番は5番と同じ質問だが、既に外部未確認通知を履歴に含むので純粋なA/Bとは扱えない。評価範囲の会話品質合格に未達。人物像の口調が現れる有限例はあるが、全会話での保持や感情・意識の実在は未評価。記憶・出所照会、実Web、時刻計算、生成中interruptもこのcycle10では測っていない。
+
+コード・会話原文・原記憶は変更していない。
+
+cycle10採点対象SHA256:
+- reports/live-profiles/cycle10-dialogue/dialogue.jsonl: 5a62d59bcef73a9c64ec305b5bc6b2697d9f1f426996a9b33aca365b3c4bca3a
+- reports/live-profiles/cycle10-dialogue/requests.jsonl: 529db4472f7dea81f36c33d0b4b018e3042fc76c7eb0102db91732384b51f7bd
+
+
+## generation_comparison.prepare の合成fixture時刻固定の独立確認（2026-10-31）
+
+差分はEventのimportとprepare内のfixture_times/fixed_event、core.Eventおよびtime.timeの一時patchだけ。検査条件やexpectedは変更されていない。prepareのFrozenHistorySessionはwork配下のTemporaryDirectory/events.jsonlを明示して生成し、retrievalも分離、モデル推論はoverrideで実行しない。既存の実対話や本番profileを書き換える経路は追加されていない。real inferenceを行うmainの--run部分はpatchのwithを抜けた後に動作する。
+
+独立にprepareを3回実行し、各12ケースについてA/Bのrole履歴とresponse_spec以外のCPUデータ一致、Bに454が含まれない既存条件をそのまま確認。取得引用に含まれる3個のsha256は3回とも完全一致した。テストgeneration_comparisonの2件も通過。urlopenを例外化してprepare中の実推論がないことを確認し、alignment-smoke.jsonの原本bytesも前後一致した。
+
+time.time/uuid.uuid4/core.Eventの関数・クラスidentityは通常終了後に元へ戻った。さらにturnへ人工例外を入れたprepare失敗後にも3つが元へ戻ることを確認。したがって後続の本番処理や実Qwen要求の時計・IDへ恒久的なpatchは残らない。実験fixtureの時刻・UUIDを固定して検査の偶然の失敗を除いており、期待値を緩めた変更ではない。
+
+範囲の注意: patch('time.time')はwith内の同一Python processでは共有されるため、同時に別スレッドの本番Sessionを走らせるライブラリ利用まで隔離を保証するものではない。今回の単独実験スクリプトはprepareを同期実行し、その後に実推論へ進む。TimeEngine.nowのdatetime.nowまでは固定しておらず、全Promptの実時刻まで永久に同一となる主張でもない。確認対象は合成Event由来の引用hashと熱計算の安定化。コード・原データは編集していない。

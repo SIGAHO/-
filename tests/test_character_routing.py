@@ -7,6 +7,20 @@ from companion_core.chat import ChatSession
 from companion_core.model_adapter import FakeModelAdapter
 
 class CharacterRoutingTests(unittest.TestCase):
+    def test_greeting_provenance_uses_filtered_prompt_memory(self):
+        adapter = FakeModelAdapter(['青なんだな。', 'おかえり。'])
+        chat = ChatSession(adapter)
+        try:
+            chat.turn('好きな色は青だよ')
+            chat.turn('ただいま')
+            kinds = [s['kind'] for s in chat.core.provenance.last['sources']]
+            self.assertNotIn('memory', kinds)
+            self.assertNotIn('session_recall', kinds)
+            self.assertIn('"memory": []', adapter.requests[-1][0]['content'])
+            self.assertNotIn('記憶（ユーザー申告を含む）', chat.turn('その情報はどこから？'))
+        finally:
+            chat.close()
+
     def test_memory_recall_keeps_declarative_favorite_after_restart(self):
         import tempfile
         from companion_core.models import SourceType
@@ -69,6 +83,8 @@ class CharacterRoutingTests(unittest.TestCase):
         self.assertEqual(router.route('お前、ちょっと嫉妬した？'), 'casual_chat')
         self.assertEqual(router.route('お前、ちょっと嫉妬する？'), 'casual_chat')
         self.assertEqual(router.route('友達は嫉妬した？'), 'external_knowledge')
+        self.assertEqual(router.route('友達は入賞したよ。お前、ちょっと嫉妬した？'), 'casual_chat')
+        self.assertEqual(router.route('富士山の高さは？お前、ちょっと嫉妬した？'), 'external_knowledge')
 
     def test_time_pair_accepts_exact_hours_and_rejects_invalid_times(self):
         from companion_core.cpu_answer import CPUAnswer
