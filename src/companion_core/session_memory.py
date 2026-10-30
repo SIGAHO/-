@@ -219,8 +219,12 @@ class SessionIndex:
                         if remaining < 80:
                             continue
                         limit = min(700, remaining//2)
+                        user_complete = len(item['user']) <= limit
+                        assistant_complete = len(item['assistant']) <= limit
                         excerpt = {'turn_id': item['turn_id'], 'timestamp': item['timestamp'],
-                                   'user': item['user'][:limit], 'assistant': item['assistant'][:limit],
+                                   'user': item['user'] if user_complete else '',
+                                   'assistant': item['assistant'] if assistant_complete else '',
+                                   'user_complete': user_complete, 'assistant_complete': assistant_complete,
                                    'user_source': 'user_statement', 'assistant_source': 'assistant_generated',
                                    'verified': False, 'sha256': hashlib.sha256(json.dumps(item, ensure_ascii=False, sort_keys=True).encode()).hexdigest()}
                         used += len(excerpt['user']) + len(excerpt['assistant'])

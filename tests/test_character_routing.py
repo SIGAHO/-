@@ -7,6 +7,57 @@ from companion_core.chat import ChatSession
 from companion_core.model_adapter import FakeModelAdapter
 
 class CharacterRoutingTests(unittest.TestCase):
+    def test_memory_recall_keeps_declarative_favorite_after_restart(self):
+        import tempfile
+        from companion_core.models import SourceType
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / 'events.jsonl'
+            chat = ChatSession(FakeModelAdapter(['青が好きなんだな。']), path)
+            chat.turn('好きな色は青')
+            chat.close()
+            chat = ChatSession(FakeModelAdapter(), path)
+            try:
+                self.assertTrue(any(m.text == '好きな色は青' and m.source == SourceType.USER_STATEMENT for m in chat.core.memory.items))
+                self.assertIn('好きな色は青', chat.turn('覚えてる？'))
+            finally:
+                chat.close()
+            chat = ChatSession(FakeModelAdapter(), path)
+            try:
+                explanation = chat.turn('その情報はどこから？')
+                self.assertIn('好きな色は青', explanation)
+                self.assertNotIn('過去の会話引用', explanation)
+            finally:
+                chat.close()
+
+    def test_memory_and_recall_provenance_do_not_truncate_negation(self):
+        from companion_core.memory import MemoryEngine
+        from companion_core.models import SourceType
+        from companion_core.provenance import ProvenanceResponder
+        text = '背景。' * 45 + '私は大会に参加したわけではない。'
+        memory = MemoryEngine()
+        memory.add(text, SourceType.USER_STATEMENT)
+        answer, records = ProvenanceResponder.memory_answer(memory)
+        self.assertEqual(records, [text])
+        self.assertIn(text, answer)
+        p = ProvenanceResponder()
+        p.last = {'generated': True, 'sources': [{'kind': 'session_recall', 'items': [
+            {'exchanges': [{'turn_id': 'user-42', 'user_source': 'user_statement', 'user_complete': True, 'user': text}]}]}]}
+        self.assertIn(text, p.answer())
+
+    def test_unavailable_external_fact_is_recorded_as_cpu_bypass(self):
+        from companion_core.retrieval import RetrievalEngine
+        chat = ChatSession(FakeModelAdapter(), retrieval=RetrievalEngine())
+        try:
+            answer = chat.turn('富士山の高さは何メートル？')
+            self.assertIn('未確認', answer)
+            self.assertTrue(chat.last_response_meta['cpu'])
+            self.assertTrue(chat.last_response_meta['unverified'])
+            self.assertTrue(chat.alignment_trace['verifier_result']['cpu_bypass'])
+            self.assertFalse(chat.core.provenance.last['generated'])
+            self.assertEqual(chat.adapter.requests, [])
+        finally:
+            chat.close()
+
     def test_jealousy_question_addressed_to_companion_is_not_web_search(self):
         from companion_core.intent import IntentRouter
         router = IntentRouter()
@@ -47,7 +98,7 @@ class CharacterRoutingTests(unittest.TestCase):
         from companion_core.provenance import ProvenanceResponder
         responder = ProvenanceResponder()
         responder.last = {'generated': True, 'sources': [{'kind': 'session_recall', 'items': [
-            {'exchanges': [{'turn_id': 'user-42', 'user_source': 'user_statement', 'user': '色は緑だ'},
+            {'exchanges': [{'turn_id': 'user-42', 'user_source': 'user_statement', 'user_complete': True, 'user': '色は緑だ'},
                            {'turn_id': 'ai-1', 'user_source': 'assistant_generated', 'user': '根拠なき文'}]}]}]}
         answer = responder.answer()
         self.assertIn('色は緑だ', answer)

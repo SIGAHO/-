@@ -6,6 +6,25 @@ from companion_core.chat import ChatSession
 from companion_core.model_adapter import FakeModelAdapter
 
 class ContextRetryTests(unittest.TestCase):
+    def test_experiment_retry_seed_is_distinct_and_recorded(self):
+        import io, json, tempfile
+        from unittest.mock import patch
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
+        import live_dialogue
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            (root / 'reports').mkdir()
+            directory = root / 'profile'
+            directory.mkdir()
+            adapter = live_dialogue.RecordedAdapter(directory, .6, 'budget.jsonl', 3, 101)
+            response = b'{"done":true,"message":{"content":"ok"}}'
+            with patch.object(live_dialogue, 'ROOT', root), patch.object(live_dialogue, 'urlopen', side_effect=lambda *a, **k: io.BytesIO(response)):
+                adapter.generate([{'role': 'system', 'content': 'base'}, {'role': 'user', 'content': 'x'}])
+                adapter.generate([{'role': 'system', 'content': 'base\n再生成: test'}, {'role': 'user', 'content': 'x'}])
+            rows = [json.loads(line) for line in (directory / 'requests.jsonl').read_text(encoding='utf-8').splitlines()]
+            self.assertEqual([r['payload']['options']['seed'] for r in rows], [20261030, 20261131])
+            self.assertEqual(len((root / 'reports/budget.jsonl').read_text().splitlines()), 2)
+
     def test_minimal_experiment_keeps_real_roles_without_example_turns(self):
         adapter = FakeModelAdapter(['おかえり。', '眠いんだな。'])
         chat = ChatSession(adapter, prompt_mode='character-minimal')

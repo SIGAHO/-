@@ -17,11 +17,12 @@ from companion_core.retrieval import RetrievalEngine
 
 
 class RecordedAdapter(ModelAdapter):
-    def __init__(self, directory, temperature, budget_name='live-budget.jsonl', max_attempts=100):
+    def __init__(self, directory, temperature, budget_name='live-budget.jsonl', max_attempts=100, retry_seed_delta=0):
         self.path = directory / 'requests.jsonl'
         self.temperature = temperature
         self.budget_name = budget_name
         self.max_attempts = max_attempts
+        self.retry_seed_delta = retry_seed_delta
 
     def generate(self, messages):
         ledger = ROOT / 'reports' / self.budget_name
@@ -30,8 +31,9 @@ class RecordedAdapter(ModelAdapter):
             raise ModelError('inference / 2 hour experiment budget exhausted')
         with ledger.open('a', encoding='utf-8') as f:
             f.write(json.dumps({'time': time.time(), 'profile': str(self.path.parent.name)}) + '\n')
+        is_retry = any(m.get('role') == 'system' and '\n再生成:' in m.get('content', '') for m in messages)
         payload = {'model': 'qwen2.5:14b', 'messages': messages, 'stream': False,
-                   'options': {'temperature': self.temperature, 'seed': 20261030,
+                   'options': {'temperature': self.temperature, 'seed': 20261030 + (self.retry_seed_delta if is_retry else 0),
                                'num_ctx': 8192, 'num_predict': 256}}
         row = {'payload': payload, 'time': time.time()}
         try:
@@ -65,6 +67,7 @@ def main():
     p.add_argument('--profile', required=True)
     p.add_argument('--mode', choices=['legacy', 'compact', 'reaction', 'direct', 'anchored', 'character', 'character-repair', 'character-jp', 'character-jp-repair', 'character-minimal', 'character-scene'], default='legacy')
     p.add_argument('--temperature', type=float, default=.6)
+    p.add_argument('--retry-seed-delta', type=int, default=0, help='Experiment only: use a different seed for contextual retries')
     p.add_argument('--experiment', help='New isolated inference budget name (letters, digits, hyphen)')
     p.add_argument('text', nargs='+')
     args = p.parse_args()
@@ -74,16 +77,20 @@ def main():
         p.error('experiment must be a simple name')
     directory = ROOT / 'reports/live-profiles' / args.profile
     directory.mkdir(parents=True, exist_ok=True)
-    config = {'mode': args.mode, 'temperature': args.temperature, 'training_eligible': False,
+    config = {'mode': args.mode, 'temperature': args.temperature, 'retry_seed_delta': args.retry_seed_delta, 'training_eligible': False,
               'human_approved': False, 'web': 'disabled', 'profile': args.profile}
     config_path = directory / 'config.json'
-    if config_path.exists() and json.loads(config_path.read_text(encoding='utf-8')) != config:
-        raise ValueError('Use a new profile for a new condition')
-    config_path.write_text(json.dumps(config, ensure_ascii=False, indent=2), encoding='utf-8')
+    if config_path.exists():
+        existing = json.loads(config_path.read_text(encoding='utf-8'))
+        existing.setdefault('retry_seed_delta', 0)
+        if existing != config:
+            raise ValueError('Use a new profile for a new condition')
+    else:
+        config_path.write_text(json.dumps(config, ensure_ascii=False, indent=2), encoding='utf-8')
     budget_name = ('live-experiment-' + args.experiment + '.jsonl' if args.experiment else
                    'live-character-followup-budget.jsonl' if args.mode == 'character' else 'live-budget.jsonl')
     adapter = RecordedAdapter(directory, args.temperature, budget_name, 60 if args.experiment else
-                              20 if args.mode == 'character' else 100)
+                              20 if args.mode == 'character' else 100, args.retry_seed_delta)
     session = ChatSession(adapter, directory / 'events.jsonl', retrieval=RetrievalEngine(), prompt_mode=args.mode)
     try:
         for index, text in enumerate(args.text):

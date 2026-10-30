@@ -3,6 +3,7 @@ import re
 from datetime import datetime, timezone
 from .intent import IntentRouter, normalized
 from .models import SourceType, Status
+from .session_memory import EXPLICIT_RECALL
 
 
 class ProvenanceResponder:
@@ -41,6 +42,11 @@ class ProvenanceResponder:
             return '直前の文は、初稿の言語混在と書き直しの空文により、システムが固定の失敗通知を返したもの。会話内容の事実根拠ではない。'
         if self.last.get('fallback') == 'candidates_integrity_failure':
             return '直前の文は、生成候補に文章の破綻または内部指示の混入が検出され、システムが固定の失敗通知を返したもの。会話内容の事実根拠ではない。'
+        if 'memory_recall' in self.last:
+            records = self.last['memory_recall']
+            if not records:
+                return '直前の記憶照会では、条件に合う保存済みユーザー申告が見つからなかった。'
+            return '直前の記憶照会は、保存済みのユーザー申告「' + '」「'.join(records) + '」を引用した。外部事実としての確認はしていない。'
         calculation = self.last.get('calculation')
         if calculation:
             return ('直前の回答は、あなたの入力「' + calculation['input'] +
@@ -53,12 +59,16 @@ class ProvenanceResponder:
         message = '直前回答に渡した情報は、' + '・'.join(names) + '。' if names else '直前回答には確認済みの事実根拠はない。'
         exchanges = [item for source in self.last.get('sources', []) if source['kind'] == 'session_recall'
                      for hit in source.get('items', []) for item in hit.get('exchanges', [])
-                     if item.get('user_source') == 'user_statement' and item.get('user')]
+                     if item.get('user_source') == 'user_statement' and item.get('user') and item.get('user_complete') is True]
         if exchanges:
-            excerpts = ['「' + x['user'][:120] + '」（発言ID ' + str(x['turn_id']) + '）'
+            excerpts = ['「' + x['user'] + '」（発言ID ' + str(x['turn_id']) + '）'
                         for x in exchanges[-2:] if x.get('turn_id')]
             if excerpts:
                 message += '渡された過去のユーザー発言には' + '、'.join(excerpts) + 'がある。発言は未検証。'
+        if any(item.get('user_complete') is not True for source in self.last.get('sources', [])
+               if source['kind'] == 'session_recall' for hit in source.get('items', [])
+               for item in hit.get('exchanges', []) if item.get('user_source') == 'user_statement'):
+            message += '原文全体を確認できない発言は引用していない。'
         web = [item for source in self.last.get('sources', []) if source['kind'] == 'web' for item in source['items']]
         if web:
             message = '直前回答に渡したWeb資料（未検証）は以下。\n' + '\n'.join(
@@ -74,10 +84,12 @@ class ProvenanceResponder:
 
     @staticmethod
     def memory_answer(memory):
-        records = [m.text[:80] for m in memory.items if m.status == Status.ACTIVE
+        records = [m.text for m in memory.items if m.status == Status.ACTIVE
                    and m.source in {SourceType.USER_STATEMENT, SourceType.USER_CORRECTION}
                    and not re.search(r'[?？]', m.text)
-                   and IntentRouter().route(m.text) not in {'self_state_memory', 'time_calculation', 'ambiguous_followup'}]
+                   and not EXPLICIT_RECALL.search(m.text)
+                   and not IntentRouter.provenance.search(m.text)
+                   and IntentRouter().route(m.text) not in {'time_calculation', 'ambiguous_followup'}]
         records = records[-2:]
         if not records:
             return '保存済みのユーザー申告はまだ見つからない。AIの発言は記憶の事実根拠に入れていない。', records

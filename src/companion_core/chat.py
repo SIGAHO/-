@@ -59,11 +59,12 @@ class ChatSession:
             return self.core.provenance.answer()
         if context['intent'] == 'self_state_memory' and self.core.provenance.generic_memory_query(context['user_input']):
             reply, records = self.core.provenance.memory_answer(self.core.memory)
-            self.pending_provenance = self.core.provenance.capture({**context, 'memory': records, 'state': {}, 'runtime': {}, 'prompt_context': {}}, generated=False)
+            self.pending_provenance = self.core.provenance.capture({'intent': context['intent'], 'memory': records}, generated=False)
+            self.pending_provenance['memory_recall'] = records
             self.last_response_meta = {'unverified': False, 'regenerated': False, 'cpu': True}
             return reply
         if context["knowledge"]["external_required"] and not context.get('external_evidence'):
-            self.last_response_meta = {"unverified": True, "regenerated": False}
+            self.last_response_meta = {"unverified": True, "regenerated": False, "cpu": True}
             self.pending_provenance = self.core.provenance.capture({**context, "state": {}, "runtime": {}, "memory": [], "prompt_context": {}}, generated=False)
             status = context.get('external_retrieval', {}).get('status', 'disabled')
             if status in {'disabled', 'offline'}:

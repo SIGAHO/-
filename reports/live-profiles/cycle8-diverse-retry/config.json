@@ -1,0 +1,9 @@
+{
+  "mode": "character-scene",
+  "temperature": 0.6,
+  "retry_seed_delta": 101,
+  "training_eligible": false,
+  "human_approved": false,
+  "web": "disabled",
+  "profile": "cycle8-diverse-retry"
+}

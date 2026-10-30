@@ -188,6 +188,26 @@ class IndexTests(unittest.TestCase):
         hits = self.index.search('望遠鏡', char_budget=300)
         self.assertLessEqual(sum(len(e['user'])+len(e['assistant']) for h in hits for e in h['exchanges']), 300)
 
+    def test_long_user_turn_is_omitted_not_quoted_with_lost_negation(self):
+        from companion_core.provenance import ProvenanceResponder
+        user = '背景。' * 230 + '今私は大会に参加したわけではない。'
+        self.load([record(user=user)])
+        hit = self.index.search('大会について覚えてる？', explicit=True)[0]
+        item = hit['exchanges'][0]
+        self.assertFalse(item['user_complete'])
+        self.assertEqual(item['user'], '')
+        p = ProvenanceResponder()
+        p.last = {'generated': True, 'sources': [{'kind': 'session_recall', 'items': [hit]}]}
+        self.assertNotIn('私は大会に参加した', p.answer())
+        self.assertIn('原文全体を確認できない', p.answer())
+
+    def test_legacy_excerpt_without_completeness_marker_is_not_quoted(self):
+        from companion_core.provenance import ProvenanceResponder
+        p = ProvenanceResponder()
+        p.last = {'generated': False, 'sources': [{'kind': 'session_recall', 'items': [
+            {'exchanges': [{'turn_id': 'old', 'user_source': 'user_statement', 'user': '参加した'}]}]}]}
+        self.assertNotIn('「参加した」', p.answer())
+
     def test_source_and_hash(self):
         row = record(user='望遠鏡')
         self.load([row])
