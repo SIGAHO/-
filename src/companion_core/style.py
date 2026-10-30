@@ -122,10 +122,22 @@ class StyleValidator:
             parts.pop()
         return reply[:end].strip()
 
+    def instruction_leaks(self, reply, user_text=''):
+        # Diagnostic signal for the observed model editing its own reply.
+        # Quoted material and explicit editing tasks are not classified.
+        if re.search(r'(?:修正|添削|書き直|推敲|校正|編集)', user_text):
+            return []
+        prose = self.protected.sub('', reply)
+        if re.search(r'(?:修正後|修正版)[、,:：\s]*(?:以下|次|こちら).{0,20}(?:適切|返答|文章|回答)', prose):
+            return ['instruction_leak']
+        return []
+
     def process(self, reply, messages, adapter, style, *, policy_check=None, response_spec=None, risk='low', retry_full_context=False, reject_unreadable=False):
         user_text = next((m['content'] for m in reversed(messages) if m['role'] == 'user'), '')
+        def integrity(text):
+            return self.language_issues(text, user_text) + (self.instruction_leaks(text, user_text) if reject_unreadable else [])
         def check(text):
-            return self.violations(text, style) + self.language_issues(text, user_text)
+            return self.violations(text, style) + integrity(text)
         def policy(text):
             return policy_check(text)['issues'] if policy_check else []
         issues = check(reply) + policy(reply)
@@ -172,19 +184,22 @@ class StyleValidator:
         # complete boilerplate tails, never cut substantive text or code.
         original = self.clean_tail(reply) or reply
         candidate = self.clean_tail(candidate.strip())
-        if (reject_unreadable and self.language_issues(original, user_text)
-                and (not candidate or self.language_issues(candidate, user_text))):
+        if (reject_unreadable and integrity(original)
+                and (not candidate or integrity(candidate))):
             fallback = 'ごめん、返事がうまくまとまらなかった。'
+            if candidate and self.language_issues(original, user_text) and self.language_issues(candidate, user_text):
+                reason = 'both_candidates_language_mixing'
+            else:
+                reason = 'candidates_integrity_failure'
             return fallback, {'regenerated': True, 'issues': issues,
                               'remaining_issues': check(fallback) + policy(fallback),
                               'fail_open': False, 'quality_fallback': True,
-                              'fallback_reason': ('both_candidates_language_mixing' if candidate else
-                                                  'original_language_and_candidate_empty')}
+                              'fallback_reason': reason}
         if not candidate or check(candidate) or policy(candidate):
             choices = [x for x in (original, candidate) if x]
             # A more casual rewrite must not replace clean Japanese with a
             # foreign/malformed sentence. Prefer language integrity, then style.
-            candidate = min(choices, key=lambda x: (len(self.language_issues(x, user_text)), len(policy(x)), len(check(x)), len(x)))
+            candidate = min(choices, key=lambda x: (len(integrity(x)), len(policy(x)), len(check(x)), len(x)))
         remaining = check(candidate) + policy(candidate)
         return candidate, {"regenerated": True, "issues": issues,
                            "remaining_issues": remaining, "fail_open": bool(remaining)}

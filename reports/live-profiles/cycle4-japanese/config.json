@@ -1,0 +1,8 @@
+{
+  "mode": "character-jp",
+  "temperature": 0.2,
+  "training_eligible": false,
+  "human_approved": false,
+  "web": "disabled",
+  "profile": "cycle4-japanese"
+}

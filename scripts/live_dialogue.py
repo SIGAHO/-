@@ -7,6 +7,7 @@ import sys
 import time
 from pathlib import Path
 from urllib.request import Request, urlopen
+from urllib.error import HTTPError
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'src'))
@@ -43,6 +44,13 @@ class RecordedAdapter(ModelAdapter):
             if not data.get('done') or not data['message']['content'].strip() or data.get('done_reason') == 'length':
                 raise ModelError('empty, incomplete or truncated response')
             return data['message']['content'].strip()
+        except HTTPError as exc:
+            # Preserve a bounded diagnostic without silently retrying or
+            # assuming GPU exhaustion was the cause of a server error.
+            row['http_status'] = exc.code
+            row['http_error_body'] = exc.read(4096).decode('utf-8', errors='replace')
+            row['error'] = str(exc)
+            raise ModelError(str(exc)) from exc
         except Exception as exc:
             row['error'] = str(exc)
             raise ModelError(str(exc)) from exc
@@ -55,7 +63,7 @@ class RecordedAdapter(ModelAdapter):
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('--profile', required=True)
-    p.add_argument('--mode', choices=['legacy', 'compact', 'reaction', 'direct', 'anchored', 'character', 'character-repair'], default='legacy')
+    p.add_argument('--mode', choices=['legacy', 'compact', 'reaction', 'direct', 'anchored', 'character', 'character-repair', 'character-jp', 'character-jp-repair'], default='legacy')
     p.add_argument('--temperature', type=float, default=.6)
     p.add_argument('--experiment', help='New isolated inference budget name (letters, digits, hyphen)')
     p.add_argument('text', nargs='+')
