@@ -15,9 +15,9 @@ class CorrectionEngine:
     """Explicit correction detector only. Ambiguous cases are intentionally ignored."""
 
     PATTERNS = [
-        ("not_a_but_b", re.compile(r"(?<![^、。！？\n])(?P<old>[^、。！？\n]{1,40}?)(?:じゃなくて|ではなくて|ではなく|じゃなく)(?!て)(?P<new>[^、。！？\n]{1,60})(?![^、。！？\n])")),
-        ("means", re.compile(r"(?<![^、。！？\n])(?P<old>[^、。！？\n]{1,30}?)(?:っていうのは|ってのは|というのは)(?P<new>[^、。！？\n]{1,80}?)(?:って意味|という意味|って話)(?:だよ|だね|なんだ|です|だ)?(?=$|[。！!\n])")),
-        ("no_it_is", re.compile(r"(?:^|[。！？\n])\s*(?:違う|ちがう)[、,\s]+(?P<new>[^、。！？\n]{1,80})(?![^、。！？\n])")),
+        ("not_a_but_b", re.compile(r"(?<![^、,。！？!\n])(?P<old>[^、,。！？!\n]{1,40}?)(?:じゃなくて|ではなくて|ではなく|じゃなく)(?!て)(?P<new>[^、,。！？!\n]{1,60})(?![^、,。！？!\n])")),
+        ("means", re.compile(r"(?<![^、,。！？!\n])(?P<old>[^、,。！？!\n]{1,30}?)(?:っていうのは|ってのは|というのは)(?P<new>[^、,。！？!\n]{1,80}?)(?:って意味|という意味|って話)(?:だよ|だね|なんだ|です|だ)?(?=$|[。！!\n])")),
+        ("no_it_is", re.compile(r"(?:^|[。！？!\n])\s*(?:違う|ちがう)[、,\s]+(?P<new>[^、,。！？!\n]{1,80})(?![^、,。！？!\n])")),
     ]
 
     # These phrases reject a previous answer without supplying a new value.
@@ -29,21 +29,45 @@ class CorrectionEngine:
         r"(?:です|だ|んだ|よ|ね)*"
     )
 
+    @staticmethod
+    def uncertain_value(value: str) -> bool:
+        # Japanese adjectives such as 素晴らしい contain the same characters
+        # as conjectural らしい. Only treat a terminal auxiliary as uncertain;
+        # the analyzer remains imperfect, so this is not semantic certainty.
+        if re.search(r'らしい(?:です)?[よねな]{0,2}[。\s]*$', value):
+            from .topic_evidence import _tokenizer
+            tokens = list(_tokenizer().tokenize(value))
+            if any(t.surface == 'らしい' and t.part_of_speech.startswith('助動詞')
+                   for t in tokens[-4:]):
+                return True
+        return bool(re.search(r'(?:かもしれない|かもしれません|かも(?:ね|な|しれない|しれません)?|だろう(?:ね|な)?|でしょう|(?:だ|と)?思(?:う|います))[よねな]{0,2}[。\s]*$', value))
+
     def detect(self, text: str) -> list[Correction]:
+        # Protect grouped numeric commas while treating punctuation between
+        # clauses as separators. The sentinel never leaves this parser.
+        sentinel = '\ue000'
+        protected = {',': sentinel, '!': '\ue001', '、': '\ue002', '！': '\ue003'}
+        if any(mark in text for mark in protected.values()):
+            return []
+        text = re.sub(r'(?<=\d),(?=\d{3}(?:\D|$))', sentinel, text)
         # A reported quotation is not the current speaker confirming a value.
         # Leave the original text intact and refuse ambiguous mixed clauses.
         quoted = re.findall(r'「[^「」]*」|『[^『』]*』|"[^"\n]*"', text)
         if any(re.search(r'じゃなく|ではなく|っていうのは|ってのは|というのは|(?:違う|ちがう)[、,]', part)
                for part in quoted):
             return []
+        # Punctuation inside a quoted value is data, not a clause boundary.
+        def protect_quote(match):
+            return ''.join(protected.get(char, char) for char in match.group())
+        text = re.sub(r'「[^「」]*」|『[^『』]*』|"[^"\n]*"', protect_quote, text)
         # If one replacement exceeds the bounded parser, do not silently choose
         # a different candidate in the same utterance as the sole correction.
         if re.search(r'(?:って意味|という意味|って話)(?:ではない|じゃない|でない|ではありません|じゃありません|かもしれない|かも|ですか|なのか|[?？])', text):
             return []
         if (re.search(r'(?:じゃなくて|ではなくて|ではなく|じゃなく)[^。！？\n]*[?？]', text)
-                or re.search(r'(?:^|[。！？\n])\s*(?:違う|ちがう)[、,\s]+[^。！？\n]*[?？]', text)):
+                or re.search(r'(?:^|[。！？!\n])\s*(?:違う|ちがう)[、,\s]+[^。！？\n]*[?？]', text)):
             return []
-        for clause in re.split(r'[、。！？!\n]', text):
+        for clause in re.split(r'[、,。！？!\n]', text):
             replacement = re.search(r'じゃなくて|ではなくて|ではなく|じゃなく', clause)
             if replacement and (len(clause[:replacement.start()]) > 40 or len(clause[replacement.end():]) > 60):
                 return []
@@ -56,7 +80,7 @@ class CorrectionEngine:
                 # and make a different correction look uniquely applicable.
                 if not self.PATTERNS[1][1].fullmatch(clause.strip()):
                     return []
-        if re.search(r'(?:^|[。！？\n])\s*(?:違う|ちがう)[、,\s]+[^、。！？\n]{81,}', text):
+        if re.search(r'(?:^|[。！？!\n])\s*(?:違う|ちがう)[、,\s]+[^、,。！？!\n]{81,}', text):
             return []
         found: list[tuple[int, Correction]] = []
         for name, pattern in self.PATTERNS:
@@ -64,7 +88,13 @@ class CorrectionEngine:
                 gd = m.groupdict()
                 old = gd.get("old")
                 new = gd.get("new", "").strip()
-                if re.search(r'(?:かもしれない|かもしれません|かも(?:ね|な|しれない|しれません)?|だろう(?:ね|な)?|でしょう|らしい(?:です)?|(?:だ|と)?思(?:う|います))[。\s]*$', new):
+                for original, marker in protected.items():
+                    old = old.replace(marker, original) if old else old
+                    new = new.replace(marker, original)
+                # Attributed reported speech is not a confirmed correction.
+                if re.search(r'と[^。！？\n]{0,30}(?:言った|言ってた|言っていた|話した)[。\s]*$', new):
+                    return []
+                if self.uncertain_value(new):
                     return []
                 if not new or self.UNRESOLVED_VALUE.fullmatch(new):
                     continue

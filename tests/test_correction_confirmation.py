@@ -30,12 +30,61 @@ class CorrectionConfirmationTests(unittest.TestCase):
 
     def test_quoted_and_polite_uncertainty_are_not_confirmed(self):
         engine = CorrectionEngine()
-        for text in ('赤じゃなく青かもしれません。', '赤じゃなく青だと思います。', '赤じゃなく青らしい。',
+        for text in ('赤じゃなく青かもしれません。', '赤じゃなく青だと思います。', '赤じゃなく青らしい。', '赤じゃなく青かもしれませんよ。', '赤じゃなく青だと思いますね。', '赤じゃなく「青」と友達が言った。',
                      '違う、青かもしれません。', '「赤じゃなく青」と言ったのは友達だ。',
                      '「違う、青」と友達が言った。', '赤じゃなく青。『緑じゃなく黄色』と友達が言った。'):
             with self.subTest(text=text):
                 self.assertEqual(engine.detect(text), [])
         self.assertEqual(engine.detect('「赤」じゃなく「青」')[0].new, '「青」')
+
+    def test_lexical_adjective_is_not_conjectural_auxiliary(self):
+        engine = CorrectionEngine()
+        for adjective in ('素晴らしい', '男らしい', '新しい'):
+            with self.subTest(adjective=adjective):
+                self.assertEqual(engine.detect('普通じゃなく' + adjective)[0].new, adjective)
+                self.assertEqual(engine.detect('普通っていうのは' + adjective + 'って意味')[0].new, adjective)
+        for text in ('普通じゃなく青らしい', '普通じゃなく青らしいです', '普通じゃなく明日は晴れらしい'):
+            self.assertEqual(engine.detect(text), [])
+
+    def test_quoted_value_punctuation_is_preserved(self):
+        engine = CorrectionEngine()
+        for punctuation in (',', '!', '、', '！'):
+            with self.subTest(punctuation=punctuation):
+                old, new = '「A' + punctuation + 'B」', '「C' + punctuation + 'D」'
+                found = engine.detect(old + 'じゃなく' + new + '。')
+                self.assertEqual([(c.old, c.new) for c in found], [(old, new)])
+                core = CompanionCore()
+                core.handle(old + 'じゃなく' + new + '。', correction_key='name')
+                self.assertEqual(core.state.snapshot()['name']['value'], new)
+                core.replay()
+                self.assertEqual(core.state.snapshot()['name']['value'], new)
+
+    def test_thousands_separator_is_not_a_clause_separator(self):
+        engine = CorrectionEngine()
+        for text, old, new in (('1,000じゃなく2,000。', '1,000', '2,000'),
+                               ('1,200,000じゃなく2,300,000。', '1,200,000', '2,300,000')):
+            with self.subTest(text=text):
+                correction = engine.detect(text)
+                self.assertEqual(len(correction), 1)
+                self.assertEqual((correction[0].old, correction[0].new), (old, new))
+                core = CompanionCore()
+                core.handle(text, correction_key='price')
+                self.assertEqual(core.state.snapshot()['price']['value'], new)
+                core.replay()
+                self.assertEqual(core.state.snapshot()['price']['value'], new)
+
+    def test_ascii_and_fullwidth_separators_keep_candidates_distinct(self):
+        engine = CorrectionEngine()
+        for separator in ('!', '！', ',', '、'):
+            with self.subTest(separator=separator):
+                found = engine.detect('赤じゃなく青' + separator + '緑じゃなく黄色。')
+                self.assertEqual([x.new for x in found], ['青', '黄色'])
+                core = CompanionCore()
+                core.handle('青じゃなく緑', correction_key='color')
+                core.handle('赤じゃなく青' + separator + '緑じゃなく黄色。', correction_key='color')
+                self.assertEqual(core.state.snapshot()['color']['value'], '緑')
+                core.replay()
+                self.assertEqual(core.state.snapshot()['color']['value'], '緑')
 
     def test_overlong_replacement_is_not_silently_truncated(self):
         engine = CorrectionEngine()
@@ -83,7 +132,8 @@ class CoreCorrectionAdmissionTests(unittest.TestCase):
         before = core.state.snapshot()['favorite_color']
         previous = [(m.text, m.status) for m in core.memory.items if m.source == SourceType.USER_CORRECTION]
         for text in ('赤じゃなく青かもしれません。', '赤じゃなく青だと思います。',
-                     '「赤じゃなく青」と言ったのは友達だ。'):
+                     '赤じゃなく青かもしれませんよ。', '赤じゃなく青だと思いますね。',
+                     '赤じゃなく「青」と友達が言った。', '「赤じゃなく青」と言ったのは友達だ。'):
             core.handle(text, correction_key='favorite_color')
             self.assertEqual(core.state.snapshot()['favorite_color'], before)
             self.assertEqual([(m.text, m.status) for m in core.memory.items if m.source == SourceType.USER_CORRECTION], previous)

@@ -11,6 +11,8 @@ class CharacterRoutingTests(unittest.TestCase):
         router = IntentRouter()
         self.assertEqual(router.route('友達だけ入賞した。お前はちょっと妬いたか？'), 'casual_chat')
         self.assertEqual(router.route('さっきの順位は何位だった？'), 'self_state_memory')
+        self.assertEqual(router.route('だから妬いたの？'), 'casual_chat')
+        self.assertEqual(router.route('嫉妬とは何？'), 'external_knowledge')
         self.assertEqual(router.route('今年の大会の順位は何位だった？'), 'external_knowledge')
 
     def test_memory_and_source_phrasings_use_local_context(self):
@@ -18,6 +20,7 @@ class CharacterRoutingTests(unittest.TestCase):
         self.assertEqual(router.route('先週カメラを買ったって言ったっけ？'), 'self_state_memory')
         self.assertEqual(router.route('その答えの出所は？'), 'self_state_memory')
         self.assertTrue(IntentRouter.provenance.search('その答えの出所は？'))
+        self.assertTrue(IntentRouter.provenance.search('その話の出所は？'))
         self.assertEqual(router.route('カメラとは何？'), 'external_knowledge')
 
     def test_recent_denial_and_recall_are_not_external_lookup(self):
