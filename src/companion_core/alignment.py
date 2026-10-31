@@ -30,7 +30,7 @@ class Acts:
     encourage = re.compile(r'頑張|がんば|応援|きっと.{0,12}(?:できる|大丈夫)|ファイト|負けるな|諦めないで')
     praise = re.compile(r'すごい|凄い|(?:すごく|凄く)(?:上手|優秀|立派)|素晴らし|立派|偉い|えらい|誇[りれ]|よくやった')
     reframe = re.compile(r'(?:でも|けど|むしろ|逆に).{0,35}(?:良い|いい|成長|経験|機会|価値|達成)|成長につなが|いい経験|達成感|順位より|結果より')
-    rejection = re.compile(r'そういうことじゃない|そうじゃない|それは違う|違うって|やめて|いらない|望んでない|求めてない|押し付け|励まさないで|質問しないで|褒めないで|助言しないで|(?:褒め|励まさ|質問し|助言し)なくていい|(?:方法|手順|助言|アドバイス)(?:は|を|が)?(?:聞いてない|聞いていない|求めていない|求めてない|要らん|いらん|不要)')
+    rejection = re.compile(r'そういうことじゃない|そうじゃない|それは違う|違うって|やめて|いらない|望んでない|求めてない|押し付け|励まさないで|質問(?:は|を)?しないで|褒めないで|助言しないで|(?:褒め|励まさ|質問し|助言し)なくていい|(?:方法|手順|助言|アドバイス)(?:は|を|が)?(?:聞いてない|聞いていない|求めていない|求めてない|要らん|いらん|不要)')
     correction = re.compile(r'じゃなく|ではなく|訂正|違う[、,]|じゃない[。．、,]')
     approval = re.compile(r'^(?:その返し(?:が|で)いい|そういう返しがいい|今の返答(?:が|で)いい|今の返事(?:が|で)いい|その回答(?:が|で)いい)[。!！\s]*$')
     greeting = re.compile(r'^(?:よお|よう|やあ|おはよう|こんにちは|こんばんは|起きた|起きたよ|おーい|ただいま)[。!！\s]*$')
@@ -159,7 +159,18 @@ class PolicyPlanner:
                         else 'explain' if act == 'task' else 'joke' if act == 'joke' else 'continue')
         if requested_advice:
             response_act = 'advise'
+        # A direct request for a question is distinct from a question the user
+        # wants to ask us. Later refusal cancels earlier permission.
+        question_requested = False
+        for clause in re.split(r'[、,。.!！?？\n]|けど|けれど(?:も)?', feedback_prose(text)):
+            if re.search(r'質問(?:は|を)?(?:しないで|やめて|いらない|不要|してほしくない|してほしいわけじゃない)', clause):
+                question_requested = False
+            elif re.search(r'(?:質問(?:を)?(?:して(?!も?いい)(?:ほしい|ください|くれ)?|ちょうだい)|(?:俺|私|僕|自分)に(?:何か|なんか)?聞いて)', clause):
+                question_requested = True
+        if question_requested and not requested_advice:
+            response_act = 'ask'
         return ResponseSpec(act=response_act, advice_allowed=requested_advice,
+                            question_allowed=question_requested, max_questions=1 if question_requested else 0,
                             praise_allowed=act == 'celebration' and not rejected,
                             acknowledge_misalignment=rejected,
                             length='medium' if act in {'question', 'task'} else 'short',

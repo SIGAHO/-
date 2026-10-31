@@ -181,7 +181,8 @@ class StyleValidator:
             retry_messages[0]['content'] += ('\n再生成: 直近のユーザー発言に、上記の会話文脈から一度だけ返答する。'
                 '会話内容の事実を変えず、求められていない質問や助言を加えない。返答本文のみ。')
             if guided_retry:
-                guidance = {'forbidden_ask': '質問をせず相手の発言を受け止める。',
+                guidance = {'possible_subject_shift': '出来事の主体を直近の相手の発言に合わせ、本人と友人を混同しない。',
+                            'forbidden_ask': '質問をせず相手の発言を受け止める。',
                             'too_many_questions': '追加の質問をしない。',
                             'forbidden_advise': '解決策や行動の勧めを出さず、その話に反応する。',
                             'forbidden_encourage': '励ましを足さず、相手の話を受け止める。',

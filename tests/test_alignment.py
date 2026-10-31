@@ -137,6 +137,21 @@ class AlignmentIntegrationTests(unittest.TestCase):
         self.assertFalse(candidate['human_approved'])
         self.assertFalse(candidate['teacher_generated'])
 
+    def test_question_requested_is_allowed_and_later_refusal_wins(self):
+        from companion_core.alignment import PolicyPlanner, PolicyVerifier
+        planner = PolicyPlanner()
+        for text in ('俺に何か質問して。', '俺に質問してほしい。', '友達は質問しないでと言っていた。俺には何か質問して。'):
+            state = planner.observe(text, [])
+            spec = planner.plan(state, text)
+            self.assertTrue(spec.question_allowed, text)
+            self.assertEqual(spec.max_questions, 1)
+            self.assertEqual(spec.act, 'ask')
+            self.assertNotIn('forbidden_ask', PolicyVerifier().verify('今日はどうだった？', spec, state, text)['issues'])
+        text = '質問して。やっぱり質問はしないで。'
+        self.assertFalse(planner.plan(planner.observe(text, []), text).question_allowed)
+        for text in ('俺が質問してもいい？', '俺が質問していい？', '質問していい？', '質問してほしくない', '質問してほしいわけじゃない'):
+            self.assertFalse(planner.plan(planner.observe(text, []), text).question_allowed)
+
     def test_third_party_report_is_not_feedback_on_assistant(self):
         from companion_core.chat import ChatSession
         from companion_core.model_adapter import FakeModelAdapter

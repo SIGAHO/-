@@ -49,11 +49,15 @@ class IntentRouter:
         if (re.fullmatch(r'さっき(?:私|僕|俺|自分)(?:は|が)何(?:に|を|で).+[?。!\s]*', t)
                 or re.fullmatch(r'(?:今|さっき)の話で(?:私|僕|俺|自分)(?:は|が)何を(?:否定|訂正)した[?。!\s]*', t)):
             return 'self_state_memory'
+        if re.fullmatch(r'さっき(?:俺|僕|私)(?:が|は)[^?。!]{1,30}(?:場所|ところ)(?:は|を)?[?。!\s]*', t):
+            return 'self_state_memory'
         if re.fullmatch(r'[^?。!]{1,100}(?:って|と)言ったっけ[?。!\s]*', t):
             return 'self_state_memory'
         if (re.fullmatch(r'さっきの順位(?:は|が)何位(?:だった|ですか|だ)?[?。!\s]*', t)
                 or re.fullmatch(r'(?:それを踏まえて[、,\s]*)?(?:俺|私|僕)(?:は|が)何位だった[?。!\s]*', t)):
             return 'self_state_memory'
+        if re.fullmatch(r'(?:(?:俺|私|僕)(?:が|は))?質問して(?:も)?いい(?:ですか|か|の)?[?。!\s]*', t):
+            return 'casual_chat'
         if self.casual.fullmatch(t):
             return 'casual_chat'
         if self.ambiguous.fullmatch(t):

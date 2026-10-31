@@ -46,6 +46,29 @@ class ContextRetryTests(unittest.TestCase):
         finally:
             chat.close()
 
+    def test_experimental_attribution_signal_retries_only_supported_shape(self):
+        from companion_core.attribution import unsupported_attribution
+        recent = [{'role': 'user', 'text': '大会は454位で賞品なし'}]
+        self.assertTrue(unsupported_attribution('「お前が入賞して嬉しそう」', '友達は入賞してた', recent))
+        self.assertFalse(unsupported_attribution('友達は入賞したんだね', '友達は入賞してた', recent))
+        self.assertFalse(unsupported_attribution('お前が入賞したんだね', '友達は入賞した。俺も入賞した', recent))
+        self.assertFalse(unsupported_attribution('お前が入賞したんだね', '友達は入賞していない', recent))
+        self.assertFalse(unsupported_attribution('お前が入賞したの？', '友達は入賞してた', recent))
+        self.assertFalse(unsupported_attribution('お前が入賞したわけじゃない', '友達は入賞してた', recent))
+        self.assertFalse(unsupported_attribution('お前が入賞したのではなく、友達が入賞した', '友達は入賞してた', recent))
+        self.assertFalse(unsupported_attribution('お前が入賞したら嬉しい', '友達は入賞してた', recent))
+        self.assertFalse(unsupported_attribution('お前が入賞した', '友達は入賞した？', recent))
+        self.assertTrue(unsupported_attribution('お前が入賞した', '友達は入賞していた', recent))
+        adapter = FakeModelAdapter(['お前が入賞して嬉しそう。', '友達は入賞したんだな。'])
+        chat = ChatSession(adapter, prompt_mode='character-attribution')
+        try:
+            response = chat.turn('友達は入賞してた。お前、ちょっと妬いた？')
+            self.assertEqual(response, '友達は入賞したんだな。')
+            self.assertIn('possible_subject_shift', chat.alignment_trace['verifier_result']['initial']['issues'])
+            self.assertTrue(chat.last_response_meta['regenerated'])
+        finally:
+            chat.close()
+
     def test_guided_retry_preserves_rank_precision(self):
         adapter = FakeModelAdapter(['450位だったのか。', '450位台だったのか。'])
         chat = ChatSession(adapter, prompt_mode='character-fewshot')
