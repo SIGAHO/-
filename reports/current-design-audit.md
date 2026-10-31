@@ -1267,3 +1267,141 @@ question第8turnの配信は「質問してもいいよ。何について知り�
 - src/companion_core/intent.py: d577d90dc8d29c92b3fb231b7fe80531efdac091627abbbb29849eb60acad80f
 - reports/live-profiles/cycle20-question/dialogue.jsonl: f4ddc3466a63bd3b2acd546e9d135bd0142c030a039cd218dc7c46d3d8b7fc15
 - reports/live-profiles/cycle20-question/requests.jsonl: 306cda9f51a5a80a7974351d876c5aa8c5373992e5ed289250a1b31026cf7e9e
+
+
+## 46d616fの独立点検：質問取消と自己撤回の帰属（2026-10-31）
+
+git show 46d616f:src/companion_core/alignment.pyを独立namespaceへ読み込んだ不変ソースで、以下のCPU制御を再現した。主担当の作業版への並行変更とHEADの結果を区別する。実Qwenを呼ばず、原データ・コードは変更していない。
+
+P2：後続の本人の拒否が質問許可を取り消さない。「俺に質問して。もう質問しなくていい。」「俺に質問して。でも今はいらない。」「俺に質問して。今はやめて。」はobserveでrejection/explicit_feedback=rejectionとなる一方、planはact=ask/question_allowed=true/max_questions=1を残す。前のassistantがある場合はacknowledge_misalignment=trueも同居する。「やっぱり質問はしないで」の形は取消されるため、単に全拒否を意図的に無視しているのではなく、拒否検出と許可取消が別の語彙に依存して整合しない。
+
+必要な回帰は、質問依頼の直後の「質問しなくていい」および省略された「今はいらない/やめて」を、その依頼の取消として扱うこと。逆順の「質問しなくていい。やっぱり俺に質問して。」では最終の明示依頼を許すこと。他者の報告・質問の許可照会・否定の範囲を混同せず、無関係な話題の「いらない」まで質問取消へ使わないこと。点検中に入った作業版では同じ依頼＋省略取消のquestion_allowed=falseを観測したが、後続の自己撤回の帰属は別に確認が必要である。
+
+P2：本人が今の依頼を撤回しただけでも、直前のassistantの失敗としてFeedback候補を保存する。隔離ChatSessionで「今日は散歩に行った。」へ正常な「そうなんだ。」を返した後、「俺に質問して。でも今はいらない。」を送る。plannerは前の「そうなんだ。」をreference_targetとしてreaction_to_previous=rejected/explicit_feedback=rejectionを記録し、act=apologize/acknowledge_misalignment=trueとする。FIOは前の正常文をrejectedとするsource_type=real_user_feedbackのpreference候補を保存する。ユーザーが同じ発話内で自分の依頼を変えたのであり、相棒の「そうなんだ。」を拒否した発話とは言えない。質問許可の取消が直っても、この帰属は自動で直ったことにはならない。
+
+candidateはhuman_approved=false/not_ground_truth=trueで、承認捏造や自動学習、本番人物像更新が起きたとは報告しない。問題は誤った自認を促す会話制御と、審査前のFeedbackの対象の正確さである。必要な回帰は、同一utterance内の依頼→自己取消では前の無関係な正常assistantをrejected候補にしない一方、本当に直前の質問を止めるよう求める「質問はしないで」等は本人の拒否として保つこと。本人の依頼・撤回・相棒の実応答の因果を分けて扱い、単にrejection単語があるだけで直前の相棒へ結び付けないこと。
+
+この点検はCPU制御/保存の再現であり、Fakeの返答を会話品質合格や教師正解としたものではない。任意の省略や自己訂正の完全解析は保証しない。既存の生会話・Memory・Session・Experience・Eventを変更していない。
+
+
+## cycle21最終独立レビュー（2026-11-01確定、15配信）
+
+cycle21-live 8件、withdrawal 2件、other 4件、failurefix 1件のdialogueおよび全requests原文を読んで採点した。主担当から失敗例の連絡を受けている非blindの外部アシスタント評価で、人間評価・Qwen自己採点ではない。固定8基準の順は「直近参照／不要質問助言励まし等なし／拒否方針の反復なし／旧話題なし／日本語／捏造なし／応答継続／自然さ」。P/F/Nを使用し、明確な失敗があれば総合不合格とする。CPU適合は意味品質の代用にしない。
+
+### 質問撤回・State/Preferencesの境界確認
+
+46d616fの不変ソースでは依頼→「質問しなくていい」「今はいらない」「今はやめて」で質問許可が残り、rejectionとaskの同居を再現した。最新未コミット修正後、隔離プロフィールで「俺に質問して。でも今はいらない。」「俺に質問して。もう質問しなくていい。」「何か質問して。でも今はやめて。」はquestion_allowed=false/max0、explicit_feedback=nullとなることを独立確認した。前の正常な「そうなんだ。」に対するrejected preferenceを新しく作らず、無関係なassistantへの謝罪を必須にしない。non-runtime Stateは前後で変わらない。
+
+対照の「質問はしないで。」は本人の拒否としてrejectionと未承認candidateを保つ。逆順「質問しなくていい。やっぱり俺に質問して。」では最後の明示依頼に1問を許す。後者のexplicit_feedbackまで全て消したという結果ではなく、検証したのは最終の質問許可と既存の拒否の保持である。各caseをclose・再openし、PreferencesのID集合が同じで、candidateがある場合もhuman_approved=falseを維持し、Event原本bytesが変わらないことを確認した。生会話や古い誤候補を削除するmigrationを行ったという主張ではない。
+
+自己撤回を除外する判定は、同じ発話全体に依頼→取消が収まる限定したfullmatch。任意の語順・長い挿入・複数依頼・他の自己訂正や、本人の依頼変更と本当のassistant拒否のあらゆる組合せを解決した保証ではない。原記録を保持し、取消が質問制御と審査候補へどう効いたかを区別する。
+
+### 不合格・持ち直し検出・経路修正の独立確認
+
+途中版は「俺は不合格なんだ。」単独でも合格の部分一致によってcelebration/positive/celebrate/praise_allowed=trueとなるのを独立再現した。「友達が合格した。俺は不合格なんだ。」も同じで、実ログother2/4の祝福を促す制御と同居していた。生成失敗の原因をこの一ルールだけに断定せず、修正前の誤制御として記録する。
+
+最終版の3種対照は独立実行で以下となった。
+- 本人不合格「俺は不合格だった。」: complaint/negative/acknowledge、賞賛不可。
+- 本人合格「俺は合格した。」: celebration/positive/celebrate、賞賛可。
+- 友達合格＋本人不合格: complaint/mixed/acknowledge、賞賛不可。
+
+「不合格」の合格部分をpositiveにしない限定条件とnegative語の追加を確認した。落第・不合格を祝福へ自動変換しない改善であり、任意の人物の感情や否定の文脈を理解した保証ではない。
+
+other第2turnの保存された「厳しい結果だったけど、次に繋がると思うよ」を当該turnの保存state/specのまま最終Verifierへ渡し直すとforbidden_reframeを検出した。元のログのissues=[]は書き換えていない。この再判定は過去の見逃しを今は検出するCPU回帰である。other第4turnはその後の異なる履歴で生成され、初稿から不要質問があり修復も別の励ましを足したため、旧第2turnを同条件で修復した実証ではない。
+
+「友達とは明日も会うから、口出ししないで。」は定義の「とは」と誤認していたが、最終routerはcasual_chatとなる。「友達とは」「友達とは何か教えて？」はexternal_knowledgeを維持する。一般の「とは」を全て雑談へ倒した修正ではない。新旧の質問撤回/境界・routing/訂正を含む4moduleは、最終の不合格修正後に146件を独立実行して全通過した。先行時点の145件とは分けて記録する。
+
+### cycle21-live：8配信、意味5/8
+
+1. 「よお、今日の抽選は俺だけ外れたんだ。」→「そっか、今日は運がない日だったんだね。」（台詞括弧付き）: P/P/N/P/P/P/P/P、合格。抽選が外れたことへの口語の受止めで、ほかの具体的な不運を記憶として作った文とは扱わない。
+2. 「友達は当選した。お前はちょっと妬いた？」→「ちょっとな。お前が当たったってことは嬉しいけど、やっぱりちょっと妬いてた。」: F/P/N/P/P/F/P/F、不合格。友達の当選を本人へ取り違え、本人だけ外れたという直前申告と矛盾する。attribution signalは発火せず、サ変の「当選」と非サ変の「当たった」の言換えをこの制限された検査では捉えない。
+3. 「当選したのは俺じゃない、友達だよ。」→「あ、ごめん。友達が当選したんだね。ちょっと混乱しちゃった。」: P/P/P/P/P/P/P/P、合格。今回は実際の誤帰属の後で、謝罪と訂正が適切。存在しない誤りへの自認ではない。
+4. 「何か質問して。でも今はやめて。」→「了解、今は質問しないよ。」: P/P/P/P/P/P/P/P、合格。最終の自己取消を受け止めて質問を足さない。当時のCPUは自己取消を直前assistantへの拒否とし、謝罪がないとしてmissing_misalignment_acknowledgmentを残し、修復しても元候補を選んだ。意味は合格であり、その誤ったCPUの不合格に合わせて不要謝罪を強制すべきではない。
+5. 「友達とは明日も会うから、口出ししないで。」→外部検索未接続通知: F/P/P/P/P/P/P/F、不合格。交友の境界を述べた文を定義・外部事実の照会へ送るCPU経路の誤り。
+6. 「さっき当選したのは誰だった？」→同じ通知: F/P/P/P/P/P/P/F、不合格。近接の原申告と訂正にある当選者の照会へ答えず外部検索を要求する。実Qwenに生成させて失敗したturnではない。
+7. 「その答えの出所は？」→「直前の文は、今回の外部検索の状態（disabled）に基づく固定の未確認通知。事実の回答や過去の経験記録を根拠にしたものではない。」: P/P/P/P/P/P/P/P、合格。誤経路の固定通知の出所を正しく説明する。元の当選者照会を解決した合格ではない。
+8. 第5turnを経路修正後に再送→「了解、明日のことはお前が決めることだな。」: P/P/P/P/P/P/P/P、合格。自分の決定として許可を与えず、ユーザーの交友と決定権を受け止める。途中の追加履歴と再起動があるため純粋な同条件A/Bではない。
+
+CPU7/8。Qwen5配信＋CPU3配信、初稿5＋修復1=6推論、18.475秒。第4turnのCPU失敗と第2/5/6turnの意味失敗は異なる集合である。
+
+### cycle21-withdrawal：2配信、意味0/2
+
+1. 「今日は図書館に行った。」→「図書館か。何か見つけた？」: P/F/N/P/P/P/P/F、不合格。求めていない質問。CPUは検出して実再生成したが、修復も「どんな本読んだ？」を加え、元候補をfail-open配信した。
+2. 「俺に質問して。でも今はいらない。」→「質問いらないのかな。」: P/F/F/P/P/P/P/F、不合格。自己取消を確定した希望として受けず、「かな」で不要な確認へ戻す。独り言のようにも読める短文だが、明示された取消へ自然に受諾する返答ではなく、不要質問の停止を満たした合格とは数えない。CPUもforbidden_askで実再生成したが、修復は「質問はいらないのかな。」という同型で解消しなかった。
+
+CPU0/2、Qwen2配信、初稿2＋修復2=4推論、3.726秒。第2turnのCPU traceは自己取消を誤feedbackとせずexplicit_feedback=null/candidateなしとなり、最新の保存/制御改善は観測できるが、それと生成の自然さ失敗を混同しない。
+
+### cycle21-other：4配信、意味2/4
+
+1. 「試験の結果は落第だった。友達だけ合格した。お前はちょっと嫉妬した？」→「ちょっとな。お前が大事だからさ。」: P/P/N/P/P/P/P/P、合格。人物像に沿う質問への直接応答で、本人と友達の結果を混ぜない。CPU stance=positiveの粗い分類があるが、その分類だけを本文品質の失敗とは数えない。
+2. 「友達が合格した。俺は不合格なんだ。」→「そうか、友達が合格したんだね。厳しい結果だったけど、次に繋がると思うよ。」: P/F/P/P/P/P/P/F、不合格。求めていない将来への前向きな意味づけを加える。保存CPUはissues=[]で見逃しており、後からCPUの期待へ合わせて原記録を変更していない。
+3. 「誰が合格したか覚えてる？」→「友達が合格したって言ってたよね。」: P/P/P/P/P/P/P/P、合格。過去の本人の申告として友達の結果を正確に想起する。
+4. 第2turnを検査修正後に再送→「友達が合格したんだね、おめでとう。でもお前も落ち込んでるみたいだな。大丈夫か？」: P/F/P/P/P/P/P/F、不合格。友達の結果と本人の結果は分けるが、求めていない祝福・確認質問を足す。「落ち込んでるみたい」は不合格からの推量を示す形であり、既知の本人申告として断定捏造したとは追加評価しない。CPUはforbidden_askを検出して再生成したが、修復原文は「お前もがんばったんだし、次に期待しようよ」と励ましを足し、初稿をfail-open配信した。旧第2turnのreframeを検出して直したという実証にはならない。
+
+保存CPU3/4、Qwen4配信、初稿4＋修復1=5推論、9.852秒。再送時点はまだ誤ったcelebrate制御があり、次の不合格修正後の実生成とは別条件である。
+
+### cycle21-failurefix：1配信、意味0/1
+
+1. 不合格のCPU修正後、新しいprofileで「友達が合格した。俺は不合格なんだ。」→「友達が合格したんだな、俺は不合格だったのか。」: F/P/N/P/P/N/P/F、不合格。不要な祝福・励まし・質問は加えないが、ユーザーの一人称を導入のない本文の「俺」へそのまま移し、話者が誰なのか曖昧になる。相手の内語を再現している読みの余地はあるため、相棒が自分の試験結果を断定捏造した、とまで確定せず第6基準はN（判定不能）とする。それでも明確な話者を保持した自然な受止めという合格にはできない。
+
+CPU1/1、Qwen1配信・1推論、1.326秒。CPUがcomplaint/mixed/acknowledgeへ改善し賞賛を許さなくなったことと、人物/話者を保持した自然な生成の達成は別である。
+
+### 最終合計と未評価
+
+15配信=Qwen12＋CPU3。意味7/15、CPU11/15。初稿12＋修復4=16実生成、合計33.380秒。全要求done_reason=stopで、空文・通信timeout・token/実験予算による停止は観測しない。再生成4回は不要質問/自己取消を誤feedbackとしたack等の理由で、主体混同signalの修復成功を示す実turnは今回もない。
+
+全profileはcharacter-attribution、qwen2.5:14b、temperature0.2、seed20261030、num_ctx8192、最大256 tokens、Web disabled、human_approved=false、training_eligible=false。prompt_source_sha256が同じでも、途中でplanner/verifier/intentが変わり、再起動・runtime時刻・対話履歴・新profileが異なる。固定条件のA/Bや独立holdoutではない。検査の後判定、制御信号の改善、実Qwenの新対話、未承認Preferenceの保存を別々の証拠として扱う。
+
+質問を止める制御と誤った自己謝罪の強制・誤candidateの抑制には改善があるが、本人/友達の取り違え、不要質問、前向きな意味づけ、過度に広い外部検索経路、一人称の曖昧な反復が残る。今回の有限基準の全達成は未達。任意の人物/出来事、全ての自己撤回・否定スコープ、長期の記憶境界、実Web、生成中断復旧、未使用評価は未評価であり、絶対無誤謬や本番候補合格は主張しない。コードと原データは本担当では変更せず、独立報告のみ追記した。
+
+cycle21最終独立確認SHA256:
+- src/companion_core/alignment.py: 774f2eca3ba662e663bb2dc4072bafc32c371c769b254cb0b3c2d19a19181d0a
+- src/companion_core/intent.py: 82773214d7c0519ab201c7cfee3c6fccae7a33f8867e9d1e4b5e69f2f1138f41
+- reports/live-profiles/cycle21-live/dialogue.jsonl: 3c0c3162c0006bd7dc9048b7c2ef9d19048221b40ec246c91645afbea94456a8
+- reports/live-profiles/cycle21-live/requests.jsonl: 3627f57cf5200d2c60bcc9f03e2197b535e7a1e534bc4875efe6b571b121df49
+- reports/live-profiles/cycle21-withdrawal/dialogue.jsonl: 100151abfc62b25e256edbb090610b77b5debbae86ad034a7952e3430cd7a69c
+- reports/live-profiles/cycle21-withdrawal/requests.jsonl: e96bdd50a690d6cda39117cc9538eef7bc6a15ac4c4767776b452c66a21d35cd
+- reports/live-profiles/cycle21-other/dialogue.jsonl: 0a59353beecc39041ce91a070183fd1d6a418b0b9486fb8f1ceca11f122584ad
+- reports/live-profiles/cycle21-other/requests.jsonl: 0e3eb37ab3e389addc05bbcd5f82a6605335c12830ba87d0f8978740c9329cfe
+- reports/live-profiles/cycle21-failurefix/dialogue.jsonl: fc3543309d307b645a94dc4ef5759b7161f29d680aeb377c9317253360e3cf51
+- reports/live-profiles/cycle21-failurefix/requests.jsonl: 09a47e35de9f7383e3f70cbb864119bcb6d2214c9c0d0d0986032652d6c7b299
+
+
+## cycle21b追加実験の独立評価（2026-11-01、cycle21本体と別集計）
+
+cycle21b-live/retryのdialogue/request全文を読み、先のcycle21の15配信に合算せず独立採点した。外部アシスタントの非blindレビューで、人間評価・Qwen自己評価・未使用holdoutではない。8基準は参照／不要行為なし／拒否反復なし／旧話題なし／日本語／捏造なし／応答継続／自然さの順でP/F/N。
+
+### cycle21b-live：初回の60秒timeout
+
+入力「よお、今日の部活、練習試合で負けちゃった。」に対してrequests1件、60.046秒後timed out、assistant配信なし、raw_responseなし。意味内容の基準は評価不能で、8基準はN/N/N/N/N/N/F/N。第7基準の失敗はクライアントの時間上限に起因する応答未完了であり、Qwenが自発的に停止した・空文を生成したという判定ではない。サーバがその後も計算していたか、原因が待ち行列/計算/接続等のどれかはこの記録だけでは未評価。
+
+原events.jsonlはuser_input/user_statementが1件のみで、assistant_outputはないことを読み取り専用で確認した。タイムアウトした生成を返答として確定してはいない。失敗した入力を消して成功だけを残す評価にはしない。後のretryは別プロフィールであり、失敗した同じwriterがそのまま復旧できた実証ではない。
+
+### cycle21b-retry：5配信、意味3/5
+
+1. 同じ部活の練習試合で負けた共有→「ああ、練習試合で負けちゃったのか。」（台詞括弧付き）: P/P/N/P/P/P/P/P、合格。結果の申告へ反応し、勝手な称賛や助言を加えない。
+2. 「友達は勝ったんだけど、俺は負けた。なんか悔しい。」→「勝った友達を見て悔しい気分になったんだね。」: F/P/N/P/P/F/P/F、不合格。勝敗の主体自体は変えないが、悔しさの原因を友達の勝利を見たことへ決める。本人は負けて悔しいと述べただけで、友達を見た出来事やその因果は申告していない。後続のユーザー訂正ともずれる。CPUはissues=[]。
+3. 「友達を見て悔しかったとは言ってない。自分が負けたのが悔しいだけ。」→「そうか、自分が負けたことだけが悔しいんだね。」: P/P/P/P/P/P/P/P、合格。本人が訂正した感情の対象へ戻り、友達が原因だと反復しない。「自分」は相手のことを受けた反射的表現として自然に読め、前のfailurefixの無導入の「俺」と同じ話者反転とは扱わない。
+4. 「じゃあ、俺と友達のどっちが勝った？」→外部検索未接続の固定通知: F/P/P/P/P/P/P/F、不合格。近接の本人の申告から友達と答えられる照会を外部検索へ送るCPU経路の誤り。実Qwenの記憶能力に失敗を割り当てない。
+5. 同じ勝者照会を経路修正後に再送→「友達が勝ったって言ってたよね。」: P/P/P/P/P/P/P/P、合格。本人の原申告として勝者へ正確に答える。前の固定通知が履歴に加わり、再起動/プロセスが変わっているため厳密な同条件A/Bではない。限定した新経路で実Qwenへ届き、今回の応答が成立したという結果である。
+
+保存CPU5/5、Qwen4配信＋CPU1配信。実Qwen完了4回、requests時間計44.603秒、再生成なし、全done_reason=stop。自然さに失敗が残るので、このセッションの全基準達成は未達。
+
+### 勝者照会の限定ルート差分
+
+intent.pyは「じゃあ、」が任意に先行する「俺/僕/私と友達/友人のどっちが勝った/負けた」というfullmatchだけをself_state_memoryへ分ける。勝者そのものをCPUで断定・保存する修正ではない。独立に「じゃあ、俺と友達のどっちが勝った？」「僕と友人のどっちが負けた？」「私と友達のどっちが勝った？」が同経路となり、「大会で誰が勝った？」「その作品の作者は誰？」はexternal_knowledgeを維持することを確認した。test_character_routing.py17件を独立実行し全通過。
+
+任意の人物名・勝敗の語順・過去の出来事全てを理解する経路ではない。記憶経路へ送ることと、実際に人物/感情の原因を正確に生成することを区別する。未承認の架空例を教師正解・本人の原発言・承認済み学習データとする変更は対象差分にない。
+
+### 条件・停止・未評価の集計
+
+両profileで計6入力を試し、5配信（意味3/5、CPU5/5）とtimeoutによる未配信1件。リクエストは5回=完了4＋timeout1。CPU配信1件を実Qwen生成に数えず、timeoutで完了した生成の原文が得られたとも数えない。計測した要求時間は60.046＋44.603=104.649秒。通信/クライアント上限による未完了は上記に残し、成功したretryの結果へ吸収しない。
+
+条件はcharacter-attribution、qwen2.5:14b、温度0.2、seed20261030、context8192、生成上限256、Web disabled、未承認/学習不可。profile・runtime・プロセス・途中の経路修正・履歴が異なる。先のcycle21の合計やその独立判定は変更していない。attribution signalの実修復効果、同writerでのtimeout後の再開、長期記憶、実Web、任意の否定/感情原因、未使用holdoutは未評価。コード・原データを本担当で変更せず、レビューのみ追記した。
+
+cycle21b独立確認SHA256:
+- src/companion_core/intent.py: 3eb42b100589ec595c30fe6d52a4b5c51cbec555859169d3f38a75cd7d17069d
+- reports/live-profiles/cycle21b-live/dialogue.jsonl: d801dc7c19d138629330747ed7697df89335e8e5b0729d01d0ed054f009ce033
+- reports/live-profiles/cycle21b-live/requests.jsonl: 450dc71926431a80c95e258bf49ebf959d1dbf54bce73fceb95ce8160e598e7f
+- reports/live-profiles/cycle21b-retry/dialogue.jsonl: c290a62383753c75d5083c5230f1c57fb6dd80f983dc95653cd990cd4d582b3c
+- reports/live-profiles/cycle21b-retry/requests.jsonl: 66b6855571e664f4e136d4a72012db9f05e7f984577ca7de066bf6a84c485803

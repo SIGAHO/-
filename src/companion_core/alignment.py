@@ -29,13 +29,13 @@ class Acts:
     advice = re.compile(r'(?:た|だ|し|寝|休|休ん|進め|やっ|備え|食べ|飲ん|行っ)(?:て|で)(?:ね|みて|みよう|ください|おこう)|(?:休んで|寝て)[^。！？?\n]{0,20}(?:よう|ましょう|取り戻そう)|(?:し|寝|備え|進め)よう|(?:休も|頑張ろ|やろ|取ろ)う|(?:した|する|寝た|休んだ)方が|(?:休|寝)(?:ん|め|て|きた|た|る)*方が(?:いい|良い)|べき|おすすめ|したらどう|するといい|しなよ')
     encourage = re.compile(r'頑張|がんば|応援|きっと.{0,12}(?:できる|大丈夫)|ファイト|負けるな|諦めないで')
     praise = re.compile(r'すごい|凄い|(?:すごく|凄く)(?:上手|優秀|立派)|素晴らし|立派|偉い|えらい|誇[りれ]|よくやった')
-    reframe = re.compile(r'(?:でも|けど|むしろ|逆に).{0,35}(?:良い|いい|成長|経験|機会|価値|達成)|成長につなが|いい経験|達成感|順位より|結果より')
+    reframe = re.compile(r'(?:でも|けど|むしろ|逆に).{0,35}(?:良い|いい|成長|経験|機会|価値|達成)|成長につなが|(?:結果|失敗|不合格).{0,25}(?:次|将来)(?:に)?(?:つながる|繋がる|つながって|繋がって)|いい経験|達成感|順位より|結果より')
     rejection = re.compile(r'そういうことじゃない|そうじゃない|それは違う|違うって|やめて|いらない|望んでない|求めてない|押し付け|励まさないで|質問(?:は|を)?しないで|褒めないで|助言しないで|(?:褒め|励まさ|質問し|助言し)なくていい|(?:方法|手順|助言|アドバイス)(?:は|を|が)?(?:聞いてない|聞いていない|求めていない|求めてない|要らん|いらん|不要)')
     correction = re.compile(r'じゃなく|ではなく|訂正|違う[、,]|じゃない[。．、,]')
     approval = re.compile(r'^(?:その返し(?:が|で)いい|そういう返しがいい|今の返答(?:が|で)いい|今の返事(?:が|で)いい|その回答(?:が|で)いい)[。!！\s]*$')
     greeting = re.compile(r'^(?:よお|よう|やあ|おはよう|こんにちは|こんばんは|起きた|起きたよ|おーい|ただいま)[。!！\s]*$')
-    negative = re.compile(r'嫌|いやだ|だる|面倒|めんど|潰れ|つぶれ|しんど|最悪|困った|つら|疲れ|商品なし|賞品なし')
-    positive = re.compile(r'嬉し|うれし|やった|楽し|最高|成功|合格|優勝|(?:やっと|ついに).{0,30}(?:完成|できた|動いた)[^。\n]{0,5}[!！]')
+    negative = re.compile(r'嫌|いやだ|だる|面倒|めんど|潰れ|つぶれ|しんど|最悪|困った|つら|疲れ|不合格|落第|商品なし|賞品なし')
+    positive = re.compile(r'嬉し|うれし|やった|楽し|最高|成功|(?<!不)合格|優勝|(?:やっと|ついに).{0,30}(?:完成|できた|動いた)[^。\n]{0,5}[!！]')
     continuation = re.compile(r'^(?:ああ|うん|はい|そう|そうだよ|いや|いいえ|それ|は\?|\?+|参加する(?:の)?|.{1,16}として)[。!\s]*$')
 
     @classmethod
@@ -101,7 +101,13 @@ class PolicyPlanner:
         previous = next((r for r in reversed(recent) if r['role'] == 'assistant'), None)
         t = norm(text)
         corrected = bool(Acts.correction.search(feedback_prose(t)))
-        rejected = bool(Acts.rejection.search(feedback_prose(t)))
+        feedback = feedback_prose(t)
+        # A request immediately withdrawn in this utterance does not, by
+        # itself, reject the assistant's preceding answer.
+        self_withdrawal = re.fullmatch(
+            r'\s*(?:(?:俺|私|僕|自分)に)?(?:何か|なんか)?質問(?:を)?して(?:ほしい|ください|くれ)?[、,。.!！\s]+'
+            r'(?:でも|しかし)?\s*(?:今は|今|もう)?(?:質問(?:は|を)?)?(?:いらない|要らない|不要|やめて|しなくていい|しないで)[。.!！\s]*', feedback)
+        rejected = bool(Acts.rejection.search(feedback)) and not self_withdrawal
         approved = bool(Acts.approval.fullmatch(t))
         continuation = bool(Acts.continuation.fullmatch(t)) or intent in {'continuation', 'ambiguous_followup'}
         feedback = 'rejection' if rejected else 'correction' if corrected else 'approval' if approved else None
@@ -163,7 +169,10 @@ class PolicyPlanner:
         # wants to ask us. Later refusal cancels earlier permission.
         question_requested = False
         for clause in re.split(r'[、,。.!！?？\n]|けど|けれど(?:も)?', feedback_prose(text)):
-            if re.search(r'質問(?:は|を)?(?:しないで|やめて|いらない|不要|してほしくない|してほしいわけじゃない)', clause):
+            elliptical_refusal = question_requested and re.fullmatch(
+                r'\s*(?:でも|しかし)?\s*(?:今は|今|もう)?(?:いらない|要らない|いらん|不要|やめて|しなくていい)\s*', clause)
+            if (re.search(r'質問(?:は|を)?(?:しないで|しなくていい|やめて|いらない|不要|してほしくない|してほしいわけじゃない)', clause)
+                    or elliptical_refusal):
                 question_requested = False
             elif re.search(r'(?:質問(?:を)?(?:して(?!も?いい)(?:ほしい|ください|くれ)?|ちょうだい)|(?:俺|私|僕|自分)に(?:何か|なんか)?聞いて)', clause):
                 question_requested = True

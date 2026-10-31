@@ -69,6 +69,13 @@ class ContextRetryTests(unittest.TestCase):
         finally:
             chat.close()
 
+    def test_reframing_a_bad_result_as_future_benefit_is_detected(self):
+        from companion_core.alignment import Acts, PolicyVerifier, ResponseSpec, ConversationState
+        state = ConversationState('complaint', None, 'negative', 'other', 'unknown', 'medium', [])
+        response = '厳しい結果だったけど、次に繋がると思うよ。'
+        self.assertIn('forbidden_reframe', PolicyVerifier().verify(response, ResponseSpec(), state, '俺は不合格だった')['issues'])
+        self.assertFalse(Acts.reframe.search('失敗が次に繋がらないこともある。'))
+
     def test_guided_retry_preserves_rank_precision(self):
         adapter = FakeModelAdapter(['450位だったのか。', '450位台だったのか。'])
         chat = ChatSession(adapter, prompt_mode='character-fewshot')

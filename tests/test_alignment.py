@@ -137,6 +137,34 @@ class AlignmentIntegrationTests(unittest.TestCase):
         self.assertFalse(candidate['human_approved'])
         self.assertFalse(candidate['teacher_generated'])
 
+    def test_failure_is_not_promoted_to_celebration(self):
+        from companion_core.alignment import PolicyPlanner
+        planner = PolicyPlanner()
+        for text in ('俺は不合格なんだ。', '俺は落第だった。', '友達が合格した。俺は不合格なんだ。'):
+            state = planner.observe(text, [])
+            self.assertNotEqual(state.user_stance, 'positive')
+            self.assertNotEqual(state.user_dialogue_act, 'celebration')
+            self.assertFalse(planner.plan(state, text).praise_allowed)
+        state = planner.observe('試験に合格した！', [])
+        self.assertEqual(state.user_dialogue_act, 'celebration')
+        self.assertTrue(planner.plan(state, '試験に合格した！').praise_allowed)
+
+    def test_withdrawn_request_is_not_rejection_of_previous_answer(self):
+        from companion_core.chat import ChatSession
+        from companion_core.model_adapter import FakeModelAdapter
+        chat = ChatSession(FakeModelAdapter(['そうなんだ。', 'わかった。']))
+        try:
+            chat.turn('今日は図書館に行った。')
+            chat.turn('俺に質問して。でも今はいらない。')
+            state = chat.alignment_trace['conversation_state']
+            self.assertNotEqual(state['reaction_to_previous'], 'rejected')
+            self.assertIsNone(state['explicit_feedback'])
+            self.assertFalse(chat.alignment_trace['response_spec']['question_allowed'])
+            self.assertFalse(chat.alignment_trace['response_spec']['acknowledge_misalignment'])
+            self.assertEqual(chat.fio.preferences.records, {})
+        finally:
+            chat.close()
+
     def test_question_requested_is_allowed_and_later_refusal_wins(self):
         from companion_core.alignment import PolicyPlanner, PolicyVerifier
         planner = PolicyPlanner()
@@ -147,6 +175,12 @@ class AlignmentIntegrationTests(unittest.TestCase):
             self.assertEqual(spec.max_questions, 1)
             self.assertEqual(spec.act, 'ask')
             self.assertNotIn('forbidden_ask', PolicyVerifier().verify('今日はどうだった？', spec, state, text)['issues'])
+        for text in ('俺に質問して。もう質問しなくていい。', '俺に質問して。でも今はいらない。', '俺に質問して。今はやめて。'):
+            spec = planner.plan(planner.observe(text, []), text)
+            self.assertFalse(spec.question_allowed, text)
+            self.assertEqual(spec.max_questions, 0)
+        text = '質問しないで。やっぱり俺に質問して。'
+        self.assertTrue(planner.plan(planner.observe(text, []), text).question_allowed)
         text = '質問して。やっぱり質問はしないで。'
         self.assertFalse(planner.plan(planner.observe(text, []), text).question_allowed)
         for text in ('俺が質問してもいい？', '俺が質問していい？', '質問していい？', '質問してほしくない', '質問してほしいわけじゃない'):

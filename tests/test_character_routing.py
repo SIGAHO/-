@@ -15,6 +15,7 @@ class CharacterRoutingTests(unittest.TestCase):
         self.assertEqual(router.route('さっき俺が行った場所は？'), 'self_state_memory')
         self.assertEqual(router.route('だから妬いたの？'), 'casual_chat')
         self.assertEqual(router.route('俺が質問してもいい？'), 'casual_chat')
+        self.assertEqual(router.route('じゃあ、俺と友達のどっちが勝った？'), 'self_state_memory')
         self.assertEqual(router.route('質問していい？'), 'casual_chat')
         self.assertEqual(router.route('嫉妬とは何？'), 'external_knowledge')
         self.assertEqual(router.route('今年の大会の順位は何位だった？'), 'external_knowledge')
@@ -32,6 +33,8 @@ class CharacterRoutingTests(unittest.TestCase):
         self.assertEqual(router.route('寝不足とは言ってないぞ。決めつけるな。'), 'casual_chat')
         self.assertEqual(router.route('今の話で俺は何を否定した？'), 'self_state_memory')
         self.assertEqual(router.route('寝不足とは何か教えて？'), 'external_knowledge')
+        self.assertEqual(router.route('友達とは明日も会うから、口出ししないで。'), 'casual_chat')
+        self.assertEqual(router.route('量子力学とは'), 'external_knowledge')
 
     def test_generic_memory_query_is_not_itself_a_remembered_claim(self):
         import tempfile

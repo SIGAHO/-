@@ -58,6 +58,8 @@ class IntentRouter:
             return 'self_state_memory'
         if re.fullmatch(r'(?:(?:俺|私|僕)(?:が|は))?質問して(?:も)?いい(?:ですか|か|の)?[?。!\s]*', t):
             return 'casual_chat'
+        if re.fullmatch(r'(?:じゃあ[、,\s]*)?(?:俺|僕|私)と(?:友達|友人)のどっちが(?:勝った|負けた)[?。!\s]*', t):
+            return 'self_state_memory'
         if self.casual.fullmatch(t):
             return 'casual_chat'
         if self.ambiguous.fullmatch(t):
@@ -76,7 +78,7 @@ class IntentRouter:
                 and self.quantity_question.search(prior)):
             return 'continuation'
         # New named factual requests and elliptical factual attributes use the gate.
-        if (EXPLICIT_REQUEST.search(t) or re.search(r"とは|って何", t)) and (entities(t) or re.search(r'誰|いつ|価格|値段|作者|歌手|発売|意味|とは|どこ', t)
+        if (EXPLICIT_REQUEST.search(t) or re.search(r"とは\s*(?:$|[?？。]|何|なに|どう|どんな)|って何", t)) and (entities(t) or re.search(r'誰|いつ|価格|値段|作者|歌手|発売|意味|とは|どこ', t)
                                       or previous_subjects and re.search(r'その|それ|あの|続き', t)):
             return 'external_knowledge'
         if re.search(r'[?？]|教えて|説明して|解説して', t):
