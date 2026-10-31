@@ -30,7 +30,7 @@ class IntentRouter:
             return 'self_state_memory'
         # A question addressed to the companion about its conversational
         # reaction is not a request for an externally verifiable fact.
-        if re.fullmatch(r'(?:(?:お前|君|あなた|Breaktail)[、,\s]*(?:は|が)?[、,\s]*)?(?:ちょっと|少し|少しは|ちょっとは)?(?:嫉妬した|嫉妬する|やきもち焼いた|妬いた)[?。!\s]*', t, re.IGNORECASE):
+        if re.fullmatch(r'(?:(?:お前|君|あなた|Breaktail)[、,\s]*(?:は|が)?[、,\s]*)?(?:ちょっと|少し|少しは|ちょっとは)?(?:嫉妬した|嫉妬する|やきもち焼いた|妬いた)(?:か)?[?。!\s]*', t, re.IGNORECASE):
             return 'casual_chat'
         # A directly addressed reaction can follow an ordinary statement, but
         # do not hide an earlier factual question behind this exception.
@@ -38,7 +38,7 @@ class IntentRouter:
         final = parts[-1].strip()
         prefix = ''.join(parts[:-1])
         if (prefix and not re.search(r'[?？]|教えて|説明して|とは|って何', prefix)
-                and re.fullmatch(r'(?:お前|君|あなた|Breaktail)[、,\s]*(?:は|が)?[、,\s]*(?:ちょっと|少し|少しは|ちょっとは)?(?:嫉妬した|嫉妬する|やきもち焼いた|妬いた)[?。!\s]*', final, re.IGNORECASE)):
+                and re.fullmatch(r'(?:お前|君|あなた|Breaktail)[、,\s]*(?:は|が)?[、,\s]*(?:ちょっと|少し|少しは|ちょっとは)?(?:嫉妬した|嫉妬する|やきもち焼いた|妬いた)(?:か)?[?。!\s]*', final, re.IGNORECASE)):
             return 'casual_chat'
         # Refusal of a conversational phrase is not a definition request.
         if (re.search(r'(?:とは|って)(?:言わないで|言うな|言ってない|言っていない)', t)
@@ -48,6 +48,8 @@ class IntentRouter:
                 or re.fullmatch(r'(?:今|さっき)の話で(?:私|僕|俺|自分)(?:は|が)何を(?:否定|訂正)した[?。!\s]*', t)):
             return 'self_state_memory'
         if re.fullmatch(r'[^?。!]{1,100}(?:って|と)言ったっけ[?。!\s]*', t):
+            return 'self_state_memory'
+        if re.fullmatch(r'さっきの順位(?:は|が)何位(?:だった|ですか|だ)?[?。!\s]*', t):
             return 'self_state_memory'
         if self.casual.fullmatch(t):
             return 'casual_chat'

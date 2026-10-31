@@ -30,6 +30,12 @@ class CorrectionEngine:
     )
 
     def detect(self, text: str) -> list[Correction]:
+        # A reported quotation is not the current speaker confirming a value.
+        # Leave the original text intact and refuse ambiguous mixed clauses.
+        quoted = re.findall(r'「[^「」]*」|『[^『』]*』|"[^"\n]*"', text)
+        if any(re.search(r'じゃなく|ではなく|っていうのは|ってのは|というのは|(?:違う|ちがう)[、,]', part)
+               for part in quoted):
+            return []
         # If one replacement exceeds the bounded parser, do not silently choose
         # a different candidate in the same utterance as the sole correction.
         if re.search(r'(?:って意味|という意味|って話)(?:ではない|じゃない|でない|ではありません|じゃありません|かもしれない|かも|ですか|なのか|[?？])', text):
@@ -58,7 +64,7 @@ class CorrectionEngine:
                 gd = m.groupdict()
                 old = gd.get("old")
                 new = gd.get("new", "").strip()
-                if re.search(r'(?:かもしれない|かも(?:ね|な)?|だろう(?:ね|な)?|だと思う)[。\s]*$', new):
+                if re.search(r'(?:かもしれない|かもしれません|かも(?:ね|な|しれない|しれません)?|だろう(?:ね|な)?|でしょう|らしい(?:です)?|(?:だ|と)?思(?:う|います))[。\s]*$', new):
                     return []
                 if not new or self.UNRESOLVED_VALUE.fullmatch(new):
                     continue

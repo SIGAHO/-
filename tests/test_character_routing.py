@@ -7,6 +7,12 @@ from companion_core.chat import ChatSession
 from companion_core.model_adapter import FakeModelAdapter
 
 class CharacterRoutingTests(unittest.TestCase):
+    def test_reaction_and_recent_rank_question_do_not_require_web(self):
+        router = IntentRouter()
+        self.assertEqual(router.route('友達だけ入賞した。お前はちょっと妬いたか？'), 'casual_chat')
+        self.assertEqual(router.route('さっきの順位は何位だった？'), 'self_state_memory')
+        self.assertEqual(router.route('今年の大会の順位は何位だった？'), 'external_knowledge')
+
     def test_memory_and_source_phrasings_use_local_context(self):
         router = IntentRouter()
         self.assertEqual(router.route('先週カメラを買ったって言ったっけ？'), 'self_state_memory')

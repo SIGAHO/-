@@ -28,6 +28,15 @@ class CorrectionConfirmationTests(unittest.TestCase):
                 self.assertEqual(engine.detect(text), [])
         self.assertEqual(engine.detect('赤じゃなくて青')[0].new, '青')
 
+    def test_quoted_and_polite_uncertainty_are_not_confirmed(self):
+        engine = CorrectionEngine()
+        for text in ('赤じゃなく青かもしれません。', '赤じゃなく青だと思います。', '赤じゃなく青らしい。',
+                     '違う、青かもしれません。', '「赤じゃなく青」と言ったのは友達だ。',
+                     '「違う、青」と友達が言った。', '赤じゃなく青。『緑じゃなく黄色』と友達が言った。'):
+            with self.subTest(text=text):
+                self.assertEqual(engine.detect(text), [])
+        self.assertEqual(engine.detect('「赤」じゃなく「青」')[0].new, '「青」')
+
     def test_overlong_replacement_is_not_silently_truncated(self):
         engine = CorrectionEngine()
         self.assertEqual(engine.detect('古い説明じゃなくて' + 'あ' * 60)[0].new, 'あ' * 60)
@@ -68,6 +77,20 @@ class CorrectionConfirmationTests(unittest.TestCase):
 
 
 class CoreCorrectionAdmissionTests(unittest.TestCase):
+    def test_reported_or_uncertain_correction_preserves_confirmed_memory(self):
+        core = CompanionCore()
+        core.handle('青じゃなくて緑', correction_key='favorite_color')
+        before = core.state.snapshot()['favorite_color']
+        previous = [(m.text, m.status) for m in core.memory.items if m.source == SourceType.USER_CORRECTION]
+        for text in ('赤じゃなく青かもしれません。', '赤じゃなく青だと思います。',
+                     '「赤じゃなく青」と言ったのは友達だ。'):
+            core.handle(text, correction_key='favorite_color')
+            self.assertEqual(core.state.snapshot()['favorite_color'], before)
+            self.assertEqual([(m.text, m.status) for m in core.memory.items if m.source == SourceType.USER_CORRECTION], previous)
+        core.replay()
+        self.assertEqual(core.state.snapshot()['favorite_color'], before)
+        self.assertEqual([(m.text, m.status) for m in core.memory.items if m.source == SourceType.USER_CORRECTION], previous)
+
     def test_negated_definition_does_not_replace_state_or_memory_on_replay(self):
         core = CompanionCore()
         core.handle('ルクルアっていうのは祭りって意味', correction_key='term.meaning')
