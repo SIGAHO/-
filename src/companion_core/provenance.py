@@ -16,6 +16,9 @@ class ProvenanceResponder:
         for kind in ('session_recall', 'salient_experiences'):
             if context.get(kind):
                 sources.append({'kind': kind, 'items': context[kind], 'verified': False, 'fact_evidence': False})
+        if generated and context.get('raw_dialogue'):
+            sources.append({'kind': 'raw_dialogue', 'items': context['raw_dialogue'],
+                            'verified': False, 'fact_evidence': False})
         if context.get('memory'):
             sources.append({'kind': 'memory', 'items': context['memory'], 'verified': False})
         if context.get('state'):
@@ -57,6 +60,7 @@ class ProvenanceResponder:
                     calculation['result'] + '」。')
         labels = {'memory': '記憶（ユーザー申告を含む）', 'state': 'CPU管理の状態',
                   'runtime': '実行環境の観測', 'external': '信頼済み資料',
+                  'raw_dialogue': '直近の会話原文（ユーザー申告と未検証のAI発言）',
                   'session_recall': '過去の会話引用（未検証）', 'salient_experiences': '過去の経験記録（未検証）'}
         names = [labels[s['kind']] for s in self.last.get('sources', []) if s['kind'] in labels]
         message = '直前回答に渡した情報は、' + '・'.join(names) + '。' if names else '直前回答には確認済みの事実根拠はない。'
@@ -90,6 +94,7 @@ class ProvenanceResponder:
         records = [m.text for m in memory.items if m.status == Status.ACTIVE
                    and m.source in {SourceType.USER_STATEMENT, SourceType.USER_CORRECTION}
                    and not re.search(r'[?？]', m.text)
+                   and not ProvenanceResponder.generic_memory_query(m.text)
                    and not EXPLICIT_RECALL.search(m.text)
                    and not IntentRouter.provenance.search(m.text)
                    and IntentRouter().route(m.text) not in {'time_calculation', 'ambiguous_followup'}]

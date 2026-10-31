@@ -10,7 +10,7 @@ def normalized(text):
 
 
 class IntentRouter:
-    provenance = re.compile(r'(?:どこ|何|なに).*(?:情報|根拠|出典)|(?:情報|根拠|出典).*(?:どこ|何|なに)|何を根拠|^(?:それ|その話).*どこから|^どこから[?？。\s]*$|^その(?:記憶|回答|返答|話)の(?:根拠|出典)(?:は|を教えて)?[?？。\s]*$')
+    provenance = re.compile(r'^(?:その|直前の)(?:答え|回答|返答)(?:の)?出所(?:は|を教えて)?[?？。\s]*$|(?:どこ|何|なに).*(?:情報|根拠|出典)|(?:情報|根拠|出典).*(?:どこ|何|なに)|何を根拠|^(?:それ|その話).*どこから|^どこから[?？。\s]*$|^その(?:記憶|回答|返答|話)の(?:根拠|出典)(?:は|を教えて)?[?？。\s]*$')
     memory = re.compile(r'記憶|覚えて|覚えた|メモリ|内部状態|自分の状態')
     casual = re.compile(r'(?:調子どう|元気|こんにちは|こんばんは|おはよう|おーい|やあ|ありがとう|おやすみ|眠い|疲れた|今日は眠い)[。!?\s]*')
     ambiguous = re.compile(r'(?:は|え|ん|なに|何|どういうこと|どういう意味)?[!?\s]+|(?:は|え|ん|なに|何|どういうこと|どういう意味)[。!！?？\s]*')
@@ -41,10 +41,13 @@ class IntentRouter:
                 and re.fullmatch(r'(?:お前|君|あなた|Breaktail)[、,\s]*(?:は|が)?[、,\s]*(?:ちょっと|少し|少しは|ちょっとは)?(?:嫉妬した|嫉妬する|やきもち焼いた|妬いた)[?。!\s]*', final, re.IGNORECASE)):
             return 'casual_chat'
         # Refusal of a conversational phrase is not a definition request.
-        if (re.search(r'(?:とは|って)(?:言わないで|言うな)', t)
+        if (re.search(r'(?:とは|って)(?:言わないで|言うな|言ってない|言っていない)', t)
                 and not re.search(r'[?？]|教えて|調べ|説明|解説', t)):
             return 'casual_chat'
-        if re.fullmatch(r'さっき(?:私|僕|俺|自分)(?:は|が)何(?:に|を|で).+[?。!\s]*', t):
+        if (re.fullmatch(r'さっき(?:私|僕|俺|自分)(?:は|が)何(?:に|を|で).+[?。!\s]*', t)
+                or re.fullmatch(r'(?:今|さっき)の話で(?:私|僕|俺|自分)(?:は|が)何を(?:否定|訂正)した[?。!\s]*', t)):
+            return 'self_state_memory'
+        if re.fullmatch(r'[^?。!]{1,100}(?:って|と)言ったっけ[?。!\s]*', t):
             return 'self_state_memory'
         if self.casual.fullmatch(t):
             return 'casual_chat'

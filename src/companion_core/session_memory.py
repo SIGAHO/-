@@ -16,7 +16,7 @@ import unicodedata
 from .ownership import LogLease
 
 
-EXPLICIT_RECALL = re.compile(r'前に.*(?:話|何|なに)|前の会話|この前|以前.*話|覚えて(?:る|いる|います)|思い出して|さっき.*話')
+EXPLICIT_RECALL = re.compile(r'前に.*(?:話|何|なに)|前の会話|この前|以前.*話|覚えて(?:る|いる|います)|思い出して|さっき.*話|(?:って|と)言ったっけ')
 
 
 def normalize(text):
@@ -30,7 +30,7 @@ def grams(text):
 
 def query_text(text):
     # Remove recall boilerplate, not substantive words. No model query rewriting.
-    text = re.sub(r'前の会話|この前の会話|前に|以前|この前|さっき|覚えていますか|覚えている|覚えてる|思い出して|何を話した|何話した|なに話した|何の話|の話したよな|の話した|話したよな|話した|の話|したよな|教えて', ' ', text)
+    text = re.sub(r'前の会話|この前の会話|前に|以前|この前|さっき|覚えていますか|覚えている|覚えてる|思い出して|何を話した|何話した|なに話した|何の話|の話したよな|の話した|話したよな|話した|の話|(?:って|と)言ったっけ|したよな|教えて', ' ', text)
     return normalize(text.strip(' ？?。！!'))
 
 

@@ -7,6 +7,42 @@ from companion_core.chat import ChatSession
 from companion_core.model_adapter import FakeModelAdapter
 
 class CharacterRoutingTests(unittest.TestCase):
+    def test_memory_and_source_phrasings_use_local_context(self):
+        router = IntentRouter()
+        self.assertEqual(router.route('先週カメラを買ったって言ったっけ？'), 'self_state_memory')
+        self.assertEqual(router.route('その答えの出所は？'), 'self_state_memory')
+        self.assertTrue(IntentRouter.provenance.search('その答えの出所は？'))
+        self.assertEqual(router.route('カメラとは何？'), 'external_knowledge')
+
+    def test_recent_denial_and_recall_are_not_external_lookup(self):
+        router = IntentRouter()
+        self.assertEqual(router.route('寝不足とは言ってないぞ。決めつけるな。'), 'casual_chat')
+        self.assertEqual(router.route('今の話で俺は何を否定した？'), 'self_state_memory')
+        self.assertEqual(router.route('寝不足とは何か教えて？'), 'external_knowledge')
+
+    def test_generic_memory_query_is_not_itself_a_remembered_claim(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / 'events.jsonl'
+            chat = ChatSession(FakeModelAdapter(), path)
+            chat.turn('梨が好きだよ')
+            chat.turn('木曜日に図書館へ行く')
+            answer = chat.turn('記憶に入ってる。')
+            self.assertIn('梨が好き', answer)
+            self.assertIn('木曜日に図書館', answer)
+            self.assertNotIn('記憶に入ってる', answer)
+            source = chat.turn('その記憶の根拠は？')
+            self.assertNotIn('記憶に入ってる', source)
+            chat.close()
+            chat = ChatSession(FakeModelAdapter(), path)
+            try:
+                answer = chat.turn('記憶に入ってる。')
+                self.assertIn('梨が好き', answer)
+                self.assertIn('木曜日に図書館', answer)
+                self.assertNotIn('記憶に入ってる', answer)
+            finally:
+                chat.close()
+
     def test_refusal_and_recent_personal_question_do_not_trigger_web(self):
         router = IntentRouter()
         self.assertEqual(router.route('休めとは言わないで。今日は聞いてくれればいい。'), 'casual_chat')
@@ -19,6 +55,21 @@ class CharacterRoutingTests(unittest.TestCase):
             self.assertEqual(chat.turn('今7時10分、50分後は何時？'), '8時00分。')
             self.assertEqual(chat.turn('23:50、20分後は何時？'), '1日後の0時10分。')
             self.assertIn('CPUで確定できない', chat.turn('25時10分、50分後は何時？'))
+        finally:
+            chat.close()
+
+    def test_raw_dialogue_provenance_records_only_real_history_ids(self):
+        adapter = FakeModelAdapter(['そうなんだな。', 'おはよう。'])
+        chat = ChatSession(adapter)
+        try:
+            chat.turn('俺は杉並に住んでいる。', event_id='first')
+            chat.turn('おはよう。', event_id='second')
+            raw = [x for x in chat.core.provenance.last['sources'] if x['kind'] == 'raw_dialogue']
+            self.assertEqual(len(raw), 1)
+            self.assertEqual(raw[0]['items'][0], {'turn_id': 'first', 'role': 'user'})
+            self.assertFalse(raw[0]['verified'])
+            self.assertNotIn('杉並', str(raw[0]))
+            self.assertIn('直近の会話原文', chat.turn('その情報はどこから？'))
         finally:
             chat.close()
 
