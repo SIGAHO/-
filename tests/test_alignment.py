@@ -137,6 +137,19 @@ class AlignmentIntegrationTests(unittest.TestCase):
         self.assertFalse(candidate['human_approved'])
         self.assertFalse(candidate['teacher_generated'])
 
+    def test_negated_achievement_does_not_become_celebration(self):
+        from companion_core.alignment import PolicyPlanner
+        planner = PolicyPlanner()
+        for text in ('俺は合格していない。', '俺は合格しなかった。', '友達は合格していない。俺は受験していない。'):
+            state = planner.observe(text, [])
+            self.assertNotEqual(state.user_stance, 'positive', text)
+            self.assertFalse(planner.plan(state, text).praise_allowed, text)
+        state = planner.observe('友達は合格していない。でも俺は合格した！', [])
+        self.assertEqual(state.user_stance, 'mixed')
+        self.assertNotEqual(state.user_dialogue_act, 'celebration')
+        state = planner.observe('合格した！', [])
+        self.assertEqual(state.user_dialogue_act, 'celebration')
+
     def test_failure_is_not_promoted_to_celebration(self):
         from companion_core.alignment import PolicyPlanner
         planner = PolicyPlanner()

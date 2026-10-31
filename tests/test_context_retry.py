@@ -76,6 +76,21 @@ class ContextRetryTests(unittest.TestCase):
         self.assertIn('forbidden_reframe', PolicyVerifier().verify(response, ResponseSpec(), state, '俺は不合格だった')['issues'])
         self.assertFalse(Acts.reframe.search('失敗が次に繋がらないこともある。'))
 
+    def test_natural_candidate_does_not_inject_unneeded_memory(self):
+        adapter = FakeModelAdapter(['青なんだな。', 'おかえり。'])
+        chat = ChatSession(adapter, prompt_mode='character-natural')
+        try:
+            chat.turn('好きな色は青だよ')
+            chat.turn('ただいま')
+            messages = adapter.requests[-1]
+            self.assertNotIn('好きな色は青', messages[0]['content'])
+            self.assertEqual(messages[-1], {'role': 'user', 'content': 'ただいま'})
+            self.assertEqual(messages[-3]['content'], '好きな色は青だよ')
+            self.assertNotIn('memory', [s['kind'] for s in chat.core.provenance.last['sources']])
+            self.assertIn('raw_dialogue', [s['kind'] for s in chat.core.provenance.last['sources']])
+        finally:
+            chat.close()
+
     def test_guided_retry_preserves_rank_precision(self):
         adapter = FakeModelAdapter(['450位だったのか。', '450位台だったのか。'])
         chat = ChatSession(adapter, prompt_mode='character-fewshot')

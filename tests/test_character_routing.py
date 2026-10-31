@@ -14,6 +14,8 @@ class CharacterRoutingTests(unittest.TestCase):
         self.assertEqual(router.route('それを踏まえて、俺は何位だった？'), 'self_state_memory')
         self.assertEqual(router.route('さっき俺が行った場所は？'), 'self_state_memory')
         self.assertEqual(router.route('だから妬いたの？'), 'casual_chat')
+        self.assertEqual(router.route('それを聞いて、お前はちょっと妬いた？'), 'casual_chat')
+        self.assertEqual(router.route('嫉妬の由来を教えて。お前は妬いた？'), 'external_knowledge')
         self.assertEqual(router.route('俺が質問してもいい？'), 'casual_chat')
         self.assertEqual(router.route('じゃあ、俺と友達のどっちが勝った？'), 'self_state_memory')
         self.assertEqual(router.route('質問していい？'), 'casual_chat')

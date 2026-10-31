@@ -47,20 +47,21 @@ class CorrectionEngine:
         # clauses as separators. The sentinel never leaves this parser.
         sentinel = '\ue000'
         protected = {',': sentinel, '!': '\ue001', '、': '\ue002', '！': '\ue003',
-                     '。': '\ue004', '？': '\ue005', '?': '\ue006'}
+                     '。': '\ue004', '？': '\ue005', '?': '\ue006',
+                     '\n': '\ue007', '\r': '\ue008'}
         if any(mark in text for mark in protected.values()):
             return []
         text = re.sub(r'(?<=\d),(?=\d{3}(?:\D|$))', sentinel, text)
         # A reported quotation is not the current speaker confirming a value.
         # Leave the original text intact and refuse ambiguous mixed clauses.
-        quoted = re.findall(r'「[^「」]*」|『[^『』]*』|"[^"\n]*"', text)
+        quoted = re.findall(r'「[^「」]*」|『[^『』]*』|"[^"]*"', text)
         if any(re.search(r'じゃなく|ではなく|っていうのは|ってのは|というのは|(?:違う|ちがう)[、,]', part)
                for part in quoted):
             return []
         # Punctuation inside a quoted value is data, not a clause boundary.
         def protect_quote(match):
             return ''.join(protected.get(char, char) for char in match.group())
-        text = re.sub(r'「[^「」]*」|『[^『』]*』|"[^"\n]*"', protect_quote, text)
+        text = re.sub(r'「[^「」]*」|『[^『』]*』|"[^"]*"', protect_quote, text)
         # If one replacement exceeds the bounded parser, do not silently choose
         # a different candidate in the same utterance as the sole correction.
         if re.search(r'(?:って意味|という意味|って話)(?:ではない|じゃない|でない|ではありません|じゃありません|かもしれない|かも|ですか|なのか|[?？])', text):
@@ -93,7 +94,7 @@ class CorrectionEngine:
                     old = old.replace(marker, original) if old else old
                     new = new.replace(marker, original)
                 # Attributed reported speech is not a confirmed correction.
-                if re.search(r'(?:と|って)[^。！？\n]{0,30}(?:言った|言ってた|言っていた|話した)[。\s]*$', new):
+                if re.search(r'(?:と|って)[^。！？\n]{0,30}(?:言った|言ってた|言っていた|言っていない|言ってない|言わなかった|話した)[。\s]*$', new):
                     return []
                 if self.uncertain_value(new):
                     return []

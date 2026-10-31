@@ -98,7 +98,7 @@ class ChatSession:
                 result['attribution_signal'] = 'experimental_bounded_not_fact_checking'
             return result
         initial_verifier = copy.deepcopy(verify(reply))
-        if (self.prompts.mode in {'character-jp-repair', 'character-scene', 'character-guided', 'character-dialogue', 'character-fewshot', 'character-turncard', 'character-roles', 'character-recall', 'character-roleclarity', 'character-transcript', 'character-attribution'} and state.response_risk == 'low'
+        if (self.prompts.mode in {'character-jp-repair', 'character-scene', 'character-guided', 'character-dialogue', 'character-fewshot', 'character-turncard', 'character-roles', 'character-recall', 'character-roleclarity', 'character-transcript', 'character-attribution', 'character-natural'} and state.response_risk == 'low'
                 and not initial_verifier['adherent']):
             state = replace(state, response_risk='medium')
             self.planned_state = state
@@ -108,9 +108,9 @@ class ChatSession:
                                              style,
                                              policy_check=verify, response_spec=spec.to_dict(),
                                              risk=state.response_risk,
-                                             retry_full_context=self.prompts.mode in {'character-repair', 'character-jp-repair', 'character-scene', 'character-guided', 'character-dialogue', 'character-fewshot', 'character-turncard', 'character-roles', 'character-recall', 'character-roleclarity', 'character-transcript', 'character-attribution'},
-                                             reject_unreadable=self.prompts.mode in {'character-repair', 'character-jp-repair', 'character-scene', 'character-guided', 'character-dialogue', 'character-fewshot', 'character-turncard', 'character-roles', 'character-recall', 'character-roleclarity', 'character-transcript', 'character-attribution'},
-                                             guided_retry=self.prompts.mode in {'character-guided', 'character-dialogue', 'character-fewshot', 'character-turncard', 'character-roles', 'character-recall', 'character-roleclarity', 'character-transcript', 'character-attribution'})
+                                             retry_full_context=self.prompts.mode in {'character-repair', 'character-jp-repair', 'character-scene', 'character-guided', 'character-dialogue', 'character-fewshot', 'character-turncard', 'character-roles', 'character-recall', 'character-roleclarity', 'character-transcript', 'character-attribution', 'character-natural'},
+                                             reject_unreadable=self.prompts.mode in {'character-repair', 'character-jp-repair', 'character-scene', 'character-guided', 'character-dialogue', 'character-fewshot', 'character-turncard', 'character-roles', 'character-recall', 'character-roleclarity', 'character-transcript', 'character-attribution', 'character-natural'},
+                                             guided_retry=self.prompts.mode in {'character-guided', 'character-dialogue', 'character-fewshot', 'character-turncard', 'character-roles', 'character-recall', 'character-roleclarity', 'character-transcript', 'character-attribution', 'character-natural'})
         context['verifier_result'] = copy.deepcopy(verify(reply))
         context['verifier_result']['initial'] = initial_verifier
         context['verifier_result']['candidate_count'] = 2 if meta.get('regenerated') else 1

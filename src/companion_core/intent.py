@@ -34,6 +34,9 @@ class IntentRouter:
             return 'casual_chat'
         if re.fullmatch(r'(?:だから|それで)(?:ちょっと|少し)?(?:妬いた|嫉妬した|やきもち焼いた)(?:の|か)?[?。!\s]*', t):
             return 'casual_chat'
+        # A discourse lead-in still asks for the companion's own reaction.
+        if re.fullmatch(r'(?:それを聞いて|それを聞いたら|それで)[、,\s]*(?:お前|君|あなた|Breaktail)(?:は|が)?[、,\s]*(?:ちょっと|少し)?(?:妬いた|嫉妬した|やきもち焼いた)(?:の|か)?[?。!\s]*', t, re.IGNORECASE):
+            return 'casual_chat'
         # A directly addressed reaction can follow an ordinary statement, but
         # do not hide an earlier factual question behind this exception.
         parts = re.split(r'[。！!]', t)

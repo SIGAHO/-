@@ -24,6 +24,13 @@ def feedback_prose(text):
     return re.sub(r'(?:いらない|要らない|不要)(?:わけ|訳)(?:じゃ|では)ない', '', text)
 
 
+# Restrict denial masking to the achievement predicate's own clause;
+# a separate affirmative achievement must remain visible.
+NEGATED_ACHIEVEMENT = re.compile(
+    r'(?:合格|優勝|成功)(?:し(?:て)?(?:いない|いません|ない|なかった|ません)|でき(?:ない|なかった|ません)|してない)'
+)
+
+
 class Acts:
     question = re.compile(r'[?？]|(?:何|どう|どこ|いつ|誰|どれ|なぜ).{0,25}(?:か|の|たい)[。!！]*$|(?:かな|ますか|だろうか)[。!！]*$')
     advice = re.compile(r'(?:た|だ|し|寝|休|休ん|進め|やっ|備え|食べ|飲ん|行っ)(?:て|で)(?:ね|みて|みよう|ください|おこう)|(?:休んで|寝て)[^。！？?\n]{0,20}(?:よう|ましょう|取り戻そう)|(?:し|寝|備え|進め)よう|(?:休も|頑張ろ|やろ|取ろ)う|(?:した|する|寝た|休んだ)方が|(?:休|寝)(?:ん|め|て|きた|た|る)*方が(?:いい|良い)|べき|おすすめ|したらどう|するといい|しなよ')
@@ -113,7 +120,9 @@ class PolicyPlanner:
         feedback = 'rejection' if rejected else 'correction' if corrected else 'approval' if approved else None
         reaction = ('rejected' if rejected else 'corrected' if corrected else 'accepted' if approved else
                     'neutral' if continuation else 'unknown') if previous else 'unknown'
-        negative, positive = bool(Acts.negative.search(t)), bool(Acts.positive.search(t))
+        negated = bool(NEGATED_ACHIEVEMENT.search(t))
+        negative = bool(Acts.negative.search(t)) or negated
+        positive = bool(Acts.positive.search(NEGATED_ACHIEVEMENT.sub('', t)))
         stance = 'mixed' if negative and positive else 'negative' if negative or rejected else 'positive' if positive else 'neutral'
         if rejected:
             act = 'rejection'
@@ -125,7 +134,7 @@ class PolicyPlanner:
             act = 'greeting'
         elif continuation:
             act = 'continuation'
-        elif Acts.negative.search(t) or re.search(r'眠い|眠たい', t):
+        elif negative or re.search(r'眠い|眠たい', t):
             act = 'complaint'
         elif Acts.question.search(t) or intent == 'self_state_memory' and EXPLICIT_RECALL.search(t):
             act = 'question'
