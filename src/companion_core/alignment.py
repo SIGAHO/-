@@ -23,7 +23,7 @@ def feedback_prose(text):
 
 class Acts:
     question = re.compile(r'[?？]|(?:何|どう|どこ|いつ|誰|どれ|なぜ).{0,25}(?:か|の|たい)[。!！]*$|(?:かな|ますか|だろうか)[。!！]*$')
-    advice = re.compile(r'(?:た|だ|し|寝|休|休ん|進め|やっ|備え|食べ|飲ん|行っ)(?:て|で)(?:ね|みて|みよう|ください|おこう)|(?:し|寝|備え|進め)よう|(?:休も|頑張ろ|やろ|取ろ)う|(?:した|する|寝た|休んだ)方が|(?:休|寝)(?:ん|め|て|きた|た|る)*方が(?:いい|良い)|べき|おすすめ|したらどう|するといい|しなよ')
+    advice = re.compile(r'(?:た|だ|し|寝|休|休ん|進め|やっ|備え|食べ|飲ん|行っ)(?:て|で)(?:ね|みて|みよう|ください|おこう)|(?:休んで|寝て)[^。！？?\n]{0,20}(?:よう|ましょう|取り戻そう)|(?:し|寝|備え|進め)よう|(?:休も|頑張ろ|やろ|取ろ)う|(?:した|する|寝た|休んだ)方が|(?:休|寝)(?:ん|め|て|きた|た|る)*方が(?:いい|良い)|べき|おすすめ|したらどう|するといい|しなよ')
     encourage = re.compile(r'頑張|がんば|応援|きっと.{0,12}(?:できる|大丈夫)|ファイト|負けるな|諦めないで')
     praise = re.compile(r'すごい|凄い|(?:すごく|凄く)(?:上手|優秀|立派)|素晴らし|立派|偉い|えらい|誇[りれ]|よくやった')
     reframe = re.compile(r'(?:でも|けど|むしろ|逆に).{0,35}(?:良い|いい|成長|経験|機会|価値|達成)|成長につなが|いい経験|達成感|順位より|結果より')
@@ -165,7 +165,7 @@ class PolicyPlanner:
 
 class PolicyVerifier:
     def verify(self, reply, spec, state, user_text=''):
-        prose = StyleValidator.protected.sub('', reply)
+        prose = StyleValidator().analysis_prose(reply, user_text)
         issues = []
         detected = {name: bool(pattern.search(norm(prose))) for name, pattern in
                     [('ask', Acts.question), ('advise', Acts.advice), ('encourage', Acts.encourage),

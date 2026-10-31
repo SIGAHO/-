@@ -9,6 +9,25 @@ from companion_core.correction import CorrectionEngine
 
 
 class CorrectionConfirmationTests(unittest.TestCase):
+    def test_negated_or_uncertain_definition_is_not_promoted(self):
+        engine = CorrectionEngine()
+        for tail in ('って意味ではない', 'って意味じゃない', 'という意味ではない',
+                     'って意味かもしれない', 'って意味？', 'って意味ですか', 'って意味なの？', 'って意味なら'):
+            with self.subTest(tail=tail):
+                self.assertEqual(engine.detect('ルクルアっていうのは大会' + tail), [])
+                self.assertEqual(engine.detect('赤じゃなくて青。ルクルアっていうのは大会' + tail), [])
+        for tail in ('って意味', 'という意味だ', 'って話です'):
+            self.assertEqual(engine.detect('ルクルアっていうのは大会' + tail)[0].new, '大会')
+        self.assertEqual(engine.detect('ルクルアっていうのは大会って意味!')[0].new, '大会')
+
+    def test_question_and_speculation_do_not_commit_corrections(self):
+        engine = CorrectionEngine()
+        for text in ('赤じゃなくて青？', '赤じゃなくて青?', '違う、青？', '違う、青?',
+                     '赤じゃなくて青かもしれない', '違う、青かも'):
+            with self.subTest(text=text):
+                self.assertEqual(engine.detect(text), [])
+        self.assertEqual(engine.detect('赤じゃなくて青')[0].new, '青')
+
     def test_overlong_replacement_is_not_silently_truncated(self):
         engine = CorrectionEngine()
         self.assertEqual(engine.detect('古い説明じゃなくて' + 'あ' * 60)[0].new, 'あ' * 60)
@@ -49,6 +68,19 @@ class CorrectionConfirmationTests(unittest.TestCase):
 
 
 class CoreCorrectionAdmissionTests(unittest.TestCase):
+    def test_negated_definition_does_not_replace_state_or_memory_on_replay(self):
+        core = CompanionCore()
+        core.handle('ルクルアっていうのは祭りって意味', correction_key='term.meaning')
+        before = core.state.snapshot()['term.meaning']
+        before_corrections = [m.text for m in core.memory.items if m.source == SourceType.USER_CORRECTION]
+        text = 'ルクルアっていうのは大会って意味ではない'
+        core.handle(text, correction_key='term.meaning')
+        self.assertEqual(core.state.snapshot()['term.meaning'], before)
+        self.assertEqual([m.text for m in core.memory.items if m.source == SourceType.USER_CORRECTION], before_corrections)
+        self.assertTrue(any(e.kind == 'user_input' and e.payload['text'] == text for e in core.events.events))
+        core.replay()
+        self.assertEqual(core.state.snapshot()['term.meaning'], before)
+
     def test_overlong_negative_correction_is_not_promoted_even_after_replay(self):
         core = CompanionCore()
         text = '古い説明じゃなくて' + '背景' * 29 + '大会に参加するわけではない'

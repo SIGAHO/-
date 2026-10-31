@@ -52,6 +52,19 @@ class StyleValidator:
     language_request = re.compile(r'(?:英語|中国語|韓国語|フランス語|ドイツ語|スペイン語)(?:で|に|への|訳)|原文のまま')
     chinese_grammar = re.compile(r'你|您|什么|怎么|吗|呢|吧|这个|那个|我们|谢谢|[见续]')
 
+    def analysis_prose(self, reply, user_text=''):
+        # A generated conversational line sometimes comes entirely wrapped in
+        # dialogue quotes. It is still the model's response, not a quotation
+        # from a source, unless the user actually asked for quoted text.
+        text = reply.strip()
+        quotation_request = re.search(r'引用|原文|翻訳|訳して|何(?:て|と)言|何(?:て|と)書|セリフ|台詞', user_text)
+        if not quotation_request:
+            for left, right in (('「', '」'), ('『', '』'), ('“', '”'), ('"', '"')):
+                if text.startswith(left) and text.endswith(right) and len(text) > 2:
+                    text = text[len(left):-len(right)]
+                    break
+        return self.protected.sub('', text)
+
     def other_language_requested(self, user_text):
         if re.search(r'日本語(?:で|に|へ)|和訳', user_text):
             return False
@@ -62,7 +75,7 @@ class StyleValidator:
         # delete unfamiliar Han text or transliterate code/names as a repair.
         if self.other_language_requested(user_text):
             return []
-        prose = self.protected.sub('', reply)
+        prose = self.analysis_prose(reply, user_text)
         for sentence in re.split(r'[。！？!?，,\n]', prose):
             if (len(re.findall(r'[\u4e00-\u9fff]', sentence)) >= 4
                     and not re.search(r'[ぁ-ゖァ-ヺ]', sentence)
@@ -127,7 +140,7 @@ class StyleValidator:
         # Quoted material and explicit editing tasks are not classified.
         if re.search(r'(?:修正|添削|書き直|推敲|校正|編集)', user_text):
             return []
-        prose = self.protected.sub('', reply)
+        prose = self.analysis_prose(reply, user_text)
         if re.search(r'(?:修正後|修正版)[、,:：\s]*(?:以下|次|こちら).{0,20}(?:適切|返答|文章|回答)', prose):
             return ['instruction_leak']
         return []
