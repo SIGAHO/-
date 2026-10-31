@@ -28,6 +28,24 @@ class ContextRetryTests(unittest.TestCase):
         finally:
             chat.close()
 
+    def test_transcript_experiment_preserves_role_and_input_as_data(self):
+        import json
+        adapter = FakeModelAdapter(['そうか。', '聞いてるよ。'])
+        chat = ChatSession(adapter, prompt_mode='character-transcript')
+        try:
+            chat.turn('友達は赤を選んだ')
+            chat.turn('俺は青だ')
+            messages = adapter.requests[-1]
+            self.assertEqual(len(messages), 2)
+            envelope = json.loads(messages[-1]['content'])
+            self.assertEqual(envelope['発言'], '俺は青だ')
+            self.assertEqual(envelope['会話記録'], [
+                {'role': 'user', 'content': '友達は赤を選んだ'},
+                {'role': 'assistant', 'content': 'そうか。'}])
+            self.assertIn('raw_dialogue', [s['kind'] for s in chat.core.provenance.last['sources']])
+        finally:
+            chat.close()
+
     def test_guided_retry_preserves_rank_precision(self):
         adapter = FakeModelAdapter(['450位だったのか。', '450位台だったのか。'])
         chat = ChatSession(adapter, prompt_mode='character-fewshot')

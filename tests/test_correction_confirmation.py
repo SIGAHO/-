@@ -30,7 +30,7 @@ class CorrectionConfirmationTests(unittest.TestCase):
 
     def test_quoted_and_polite_uncertainty_are_not_confirmed(self):
         engine = CorrectionEngine()
-        for text in ('赤じゃなく青かもしれません。', '赤じゃなく青だと思います。', '赤じゃなく青らしい。', '赤じゃなく青かもしれませんよ。', '赤じゃなく青だと思いますね。', '赤じゃなく「青」と友達が言った。',
+        for text in ('赤じゃなく青かもしれません。', '赤じゃなく青だと思います。', '赤じゃなく青らしい。', '赤じゃなく青かもしれませんよ。', '赤じゃなく青だと思いますね。', '赤じゃなく「青」と友達が言った。', '赤じゃなく青って友達が言った。',
                      '違う、青かもしれません。', '「赤じゃなく青」と言ったのは友達だ。',
                      '「違う、青」と友達が言った。', '赤じゃなく青。『緑じゃなく黄色』と友達が言った。'):
             with self.subTest(text=text):
@@ -48,7 +48,7 @@ class CorrectionConfirmationTests(unittest.TestCase):
 
     def test_quoted_value_punctuation_is_preserved(self):
         engine = CorrectionEngine()
-        for punctuation in (',', '!', '、', '！'):
+        for punctuation in (',', '!', '、', '！', '。', '？', '?'):
             with self.subTest(punctuation=punctuation):
                 old, new = '「A' + punctuation + 'B」', '「C' + punctuation + 'D」'
                 found = engine.detect(old + 'じゃなく' + new + '。')
@@ -133,7 +133,7 @@ class CoreCorrectionAdmissionTests(unittest.TestCase):
         previous = [(m.text, m.status) for m in core.memory.items if m.source == SourceType.USER_CORRECTION]
         for text in ('赤じゃなく青かもしれません。', '赤じゃなく青だと思います。',
                      '赤じゃなく青かもしれませんよ。', '赤じゃなく青だと思いますね。',
-                     '赤じゃなく「青」と友達が言った。', '「赤じゃなく青」と言ったのは友達だ。'):
+                     '赤じゃなく「青」と友達が言った。', '赤じゃなく青って友達が言った。', '「赤じゃなく青」と言ったのは友達だ。'):
             core.handle(text, correction_key='favorite_color')
             self.assertEqual(core.state.snapshot()['favorite_color'], before)
             self.assertEqual([(m.text, m.status) for m in core.memory.items if m.source == SourceType.USER_CORRECTION], previous)

@@ -137,6 +137,22 @@ class AlignmentIntegrationTests(unittest.TestCase):
         self.assertFalse(candidate['human_approved'])
         self.assertFalse(candidate['teacher_generated'])
 
+    def test_third_party_report_is_not_feedback_on_assistant(self):
+        from companion_core.chat import ChatSession
+        from companion_core.model_adapter import FakeModelAdapter
+        from companion_core.alignment import PolicyPlanner
+        planner = PolicyPlanner()
+        self.assertNotEqual(planner.observe('友達は質問しないでと言っていた。', []).user_dialogue_act, 'rejection')
+        self.assertEqual(planner.observe('友達は質問しないでと言っていた。私には質問しないで。', []).user_dialogue_act, 'rejection')
+        chat = ChatSession(FakeModelAdapter(['そうなんだな。', 'そうか。']))
+        try:
+            chat.turn('今日は図書館へ行った')
+            chat.turn('友達は質問しないでと言っていた。')
+            self.assertNotEqual(chat.alignment_trace['conversation_state']['reaction_to_previous'], 'rejected')
+            self.assertEqual(chat.fio.preferences.records, {})
+        finally:
+            chat.close()
+
     def test_outbox_recovery_is_idempotent_and_memory_boundary_survives(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / 'events.jsonl'

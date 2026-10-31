@@ -51,7 +51,8 @@ class IntentRouter:
             return 'self_state_memory'
         if re.fullmatch(r'[^?。!]{1,100}(?:って|と)言ったっけ[?。!\s]*', t):
             return 'self_state_memory'
-        if re.fullmatch(r'さっきの順位(?:は|が)何位(?:だった|ですか|だ)?[?。!\s]*', t):
+        if (re.fullmatch(r'さっきの順位(?:は|が)何位(?:だった|ですか|だ)?[?。!\s]*', t)
+                or re.fullmatch(r'(?:それを踏まえて[、,\s]*)?(?:俺|私|僕)(?:は|が)何位だった[?。!\s]*', t)):
             return 'self_state_memory'
         if self.casual.fullmatch(t):
             return 'casual_chat'

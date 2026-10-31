@@ -18,6 +18,9 @@ def norm(text):
 def feedback_prose(text):
     # Quoted examples are not feedback. A double negative is not a refusal.
     text = StyleValidator.protected.sub('', norm(text))
+    # A third party's reported request is not feedback from the user to us.
+    # Only suppress the reported clause; separate direct feedback remains.
+    text = re.sub(r'(?:友達|友人|彼|彼女|家族|先生|他の人)(?:は|が)[^、,。！？!?\n]{0,80}?(?:と|って)(?:言っていた|言ってた|言った|話していた|話した)', '', text)
     return re.sub(r'(?:いらない|要らない|不要)(?:わけ|訳)(?:じゃ|では)ない', '', text)
 
 

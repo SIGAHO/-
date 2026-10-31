@@ -11,6 +11,7 @@ class CharacterRoutingTests(unittest.TestCase):
         router = IntentRouter()
         self.assertEqual(router.route('友達だけ入賞した。お前はちょっと妬いたか？'), 'casual_chat')
         self.assertEqual(router.route('さっきの順位は何位だった？'), 'self_state_memory')
+        self.assertEqual(router.route('それを踏まえて、俺は何位だった？'), 'self_state_memory')
         self.assertEqual(router.route('だから妬いたの？'), 'casual_chat')
         self.assertEqual(router.route('嫉妬とは何？'), 'external_knowledge')
         self.assertEqual(router.route('今年の大会の順位は何位だった？'), 'external_knowledge')

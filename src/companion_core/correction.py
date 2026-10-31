@@ -46,7 +46,8 @@ class CorrectionEngine:
         # Protect grouped numeric commas while treating punctuation between
         # clauses as separators. The sentinel never leaves this parser.
         sentinel = '\ue000'
-        protected = {',': sentinel, '!': '\ue001', '、': '\ue002', '！': '\ue003'}
+        protected = {',': sentinel, '!': '\ue001', '、': '\ue002', '！': '\ue003',
+                     '。': '\ue004', '？': '\ue005', '?': '\ue006'}
         if any(mark in text for mark in protected.values()):
             return []
         text = re.sub(r'(?<=\d),(?=\d{3}(?:\D|$))', sentinel, text)
@@ -92,7 +93,7 @@ class CorrectionEngine:
                     old = old.replace(marker, original) if old else old
                     new = new.replace(marker, original)
                 # Attributed reported speech is not a confirmed correction.
-                if re.search(r'と[^。！？\n]{0,30}(?:言った|言ってた|言っていた|話した)[。\s]*$', new):
+                if re.search(r'(?:と|って)[^。！？\n]{0,30}(?:言った|言ってた|言っていた|話した)[。\s]*$', new):
                     return []
                 if self.uncertain_value(new):
                     return []
