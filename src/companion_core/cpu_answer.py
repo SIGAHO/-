@@ -37,6 +37,14 @@ class CPUAnswer:
         t = normalized(text)
         n = datetime.fromisoformat(facts['time.iso'])
         try:
+            offset = re.fullmatch(r'(?:今)?(\d{1,2})(?::(\d{1,2})|時(\d{1,2})分)[、,\s]*(\d{1,4})分後(?:は)?何時[?。!\s]*', t)
+            if offset:
+                hour, minute, delta = int(offset[1]), int(offset[2] or offset[3]), int(offset[4])
+                if hour >= 24 or minute >= 60:
+                    raise ValueError('invalid time')
+                total = hour * 60 + minute + delta
+                day, clock = divmod(total, 1440)
+                return (f'{day}日後の' if day else '') + f'{clock // 60}時{clock % 60:02d}分。'
             pair = re.fullmatch(r'(\d{1,2})(?::(\d{1,2})|時(?:(\d{1,2})分?)?)\s*(?:→|から)\s*(\d{1,2})(?::(\d{1,2})|時(?:(\d{1,2})分?)?)(?:まで)?(?:は|あと)?(?:何分)?[?。\s]*', t)
             if pair:
                 h, end_h = int(pair[1]), int(pair[4])

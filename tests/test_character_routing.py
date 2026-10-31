@@ -7,6 +7,21 @@ from companion_core.chat import ChatSession
 from companion_core.model_adapter import FakeModelAdapter
 
 class CharacterRoutingTests(unittest.TestCase):
+    def test_refusal_and_recent_personal_question_do_not_trigger_web(self):
+        router = IntentRouter()
+        self.assertEqual(router.route('休めとは言わないで。今日は聞いてくれればいい。'), 'casual_chat')
+        self.assertEqual(router.route('さっき俺は何に困っていた？'), 'self_state_memory')
+        self.assertEqual(router.route('休めとはどういう意味？'), 'external_knowledge')
+
+    def test_clock_offset_and_cross_midnight(self):
+        chat = ChatSession(FakeModelAdapter())
+        try:
+            self.assertEqual(chat.turn('今7時10分、50分後は何時？'), '8時00分。')
+            self.assertEqual(chat.turn('23:50、20分後は何時？'), '1日後の0時10分。')
+            self.assertIn('CPUで確定できない', chat.turn('25時10分、50分後は何時？'))
+        finally:
+            chat.close()
+
     def test_greeting_provenance_uses_filtered_prompt_memory(self):
         adapter = FakeModelAdapter(['青なんだな。', 'おかえり。'])
         chat = ChatSession(adapter)

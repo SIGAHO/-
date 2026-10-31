@@ -40,11 +40,18 @@ class IntentRouter:
         if (prefix and not re.search(r'[?？]|教えて|説明して|とは|って何', prefix)
                 and re.fullmatch(r'(?:お前|君|あなた|Breaktail)[、,\s]*(?:は|が)?[、,\s]*(?:ちょっと|少し|少しは|ちょっとは)?(?:嫉妬した|嫉妬する|やきもち焼いた|妬いた)[?。!\s]*', final, re.IGNORECASE)):
             return 'casual_chat'
+        # Refusal of a conversational phrase is not a definition request.
+        if (re.search(r'(?:とは|って)(?:言わないで|言うな)', t)
+                and not re.search(r'[?？]|教えて|調べ|説明|解説', t)):
+            return 'casual_chat'
+        if re.fullmatch(r'さっき(?:私|僕|俺|自分)(?:は|が)何(?:に|を|で).+[?。!\s]*', t):
+            return 'self_state_memory'
         if self.casual.fullmatch(t):
             return 'casual_chat'
         if self.ambiguous.fullmatch(t):
             return 'ambiguous_followup'
-        if self.time_request.search(t) or (self.arithmetic.fullmatch(t) and re.search(r'\d\s*[+*/%-]', t)):
+        if (re.fullmatch(r'(?:今)?\d{1,2}(?::\d{1,2}|時\d{1,2}分)[、,\s]*\d{1,4}分後(?:は)?何時[?。!\s]*', t)
+                or self.time_request.search(t)) or (self.arithmetic.fullmatch(t) and re.search(r'\d\s*[+*/%-]', t)):
             return 'time_calculation'
         if re.search(r'(?:私|僕|俺|自分|あなた|Breaktail)の(?:職業|名前|好み|好き|予定|状態)|好きな色', t):
             return 'self_state_memory'

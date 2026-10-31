@@ -16,6 +16,7 @@ class FIOMemory:
         self.index.rebuild(self.recorder.records)
         self.experiences = ExperienceStore(prefix + '.experiences.sqlite3' if prefix else None, config=heat_config)
         self.pending = None
+        self.needs_recovery = False
         self.preferences = PreferenceStore(prefix + '.preferences' if prefix else None)
 
     def recover(self, events):
@@ -24,6 +25,18 @@ class FIOMemory:
         for event in events:
             if event.kind == 'assistant_output' and event.payload.get('fio_commit'):
                 self.commit(event.payload['fio_commit'])
+        # Existing sidecars can contain recovered records appended after later
+        # turns. Event outbox order is authoritative for known records; leave
+        # records without an outbox in their original slots, without rewriting JSONL.
+        order = [e.payload['fio_commit']['session']['turn_id'] for e in events
+                 if e.kind == 'assistant_output' and e.payload.get('fio_commit')]
+        position = {turn_id: i for i, turn_id in enumerate(order)}
+        records = self.recorder.records
+        known = iter(sorted((r for r in records if r['turn_id'] in position),
+                            key=lambda r: position[r['turn_id']]))
+        ordered = [next(known) if r['turn_id'] in position else r for r in records]
+        if ordered != self.index.records:
+            self.index.rebuild(ordered)
         # A crash can occur after the raw user event fsync but before begin().
         # Recover that last unconfirmed reaction without inventing an answer.
         raw = [e for e in events if e.kind in {'user_input', 'assistant_output'}]
@@ -49,6 +62,9 @@ class FIOMemory:
                         'rejected_strategy': state['previous_assistant_strategy'] if state['reaction_to_previous'] in {'rejected', 'corrected'} else None,
                         'inferred_not_ground_truth': True}, 'user_statement'))
                 self.pending = None
+
+        self.pending = None
+        self.needs_recovery = False
 
     def begin(self, core, context):
         user = next(e for e in reversed(core.events.events) if e.kind == 'user_input')
@@ -174,10 +190,12 @@ class FIOMemory:
 
     def confirmed(self, core, reply, provenance):
         envelope = self.envelope(reply, provenance)
+        self.needs_recovery = True
         core.record_assistant_output(reply, provenance, fio_commit=envelope)
         self.commit(envelope)
         self.experiences.reinforce([r['id'] for r in self.pending['context']['salient_experiences']])
         self.pending = None
+        self.needs_recovery = False
 
     def failed(self, error):
         if self.pending:

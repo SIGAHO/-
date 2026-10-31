@@ -468,6 +468,87 @@ class IntegrationTests(unittest.TestCase):
         self.chat.fio.recover(self.chat.core.events.events)
         self.assertEqual(self.chat.fio.experiences.all(), before)
 
+    def test_failed_sidecar_is_recovered_before_next_chat_turn(self):
+        original = self.chat.fio.commit
+        with patch.object(self.chat.fio, 'commit', side_effect=OSError('temporary')):
+            with self.assertRaises(OSError):
+                self.chat.turn('紅玉望遠鏡', event_id='first')
+        self.assertTrue(self.chat.fio.needs_recovery)
+        self.chat.turn('二番目', event_id='second')
+        self.assertFalse(self.chat.fio.needs_recovery)
+        self.assertEqual([r['turn_id'] for r in self.chat.fio.recorder.records], ['first', 'second'])
+        self.chat.close()
+        self.chat = ChatSession(FakeModelAdapter(), self.path)
+        self.assertEqual([r['turn_id'] for r in self.chat.fio.index.records], ['first', 'second'])
+
+    def test_recovery_failure_blocks_new_input_and_generation(self):
+        with patch.object(self.chat.fio, 'commit', side_effect=OSError('temporary')):
+            with self.assertRaises(OSError):
+                self.chat.turn('最初', event_id='first')
+        before = len(self.chat.core.events.events)
+        with patch.object(self.chat.fio, 'recover', side_effect=OSError('still unavailable')):
+            with patch.object(self.chat.adapter, 'generate') as generate:
+                with self.assertRaises(OSError):
+                    self.chat.turn('次', event_id='second')
+                generate.assert_not_called()
+        self.assertEqual(len(self.chat.core.events.events), before)
+
+    def test_recovery_uses_event_order_without_rewriting_sidecar(self):
+        self.chat.turn('紅玉望遠鏡', event_id='first')
+        self.chat.turn('二番目', event_id='second')
+        self.chat.turn('三番目', event_id='third')
+        path = self.chat.fio.recorder.path
+        self.chat.close()
+        # Reproduce a legacy late recovery while preserving each raw record.
+        lines = path.read_bytes().splitlines(keepends=True)
+        path.write_bytes(lines[1] + lines[2] + lines[0])
+        original = path.read_bytes()
+        for _ in range(2):
+            self.chat = ChatSession(FakeModelAdapter(), self.path)
+            self.assertEqual([r['turn_id'] for r in self.chat.fio.index.records], ['first', 'second', 'third'])
+            result = self.chat.fio.index.search('紅玉望遠鏡', explicit=True)
+            self.assertTrue(result)
+            quoted = [q['turn_id'] for q in result[0]['exchanges']]
+            self.assertIn('second', quoted)
+            self.assertNotIn('third', quoted)
+            self.assertEqual(path.read_bytes(), original)
+            self.chat.close()
+
+    def test_failed_sidecar_is_recovered_before_next_daemon_turn(self):
+        daemon = CompanionDaemon(FakeModelAdapter(['うん。']), self.path)
+        try:
+            with patch.object(daemon.session.fio, 'commit', side_effect=OSError('temporary')):
+                with self.assertRaises(OSError):
+                    daemon.turn('紅玉望遠鏡', event_id='first')
+            daemon.turn('二番目', event_id='second')
+            self.assertEqual([r['turn_id'] for r in daemon.session.fio.recorder.records], ['first', 'second'])
+        finally:
+            daemon.close()
+
+    def test_cancel_after_recovery_records_current_user(self):
+        with patch.object(self.chat.fio, 'commit', side_effect=OSError('temporary')):
+            with self.assertRaises(OSError):
+                self.chat.turn('最初', event_id='first')
+        with patch.object(self.chat.planner, 'observe', side_effect=KeyboardInterrupt):
+            with self.assertRaises(KeyboardInterrupt):
+                self.chat.turn('中断する', event_id='second')
+        cancelled = [r for r in self.chat.fio.experiences.all() if r['kind'] == 'generation_cancelled']
+        self.assertEqual([r['turn_id'] for r in cancelled], ['second'])
+
+    def test_daemon_cancel_after_recovery_records_current_user(self):
+        daemon = CompanionDaemon(FakeModelAdapter(['うん。']), self.path)
+        try:
+            with patch.object(daemon.session.fio, 'commit', side_effect=OSError('temporary')):
+                with self.assertRaises(OSError):
+                    daemon.turn('最初', event_id='first')
+            with patch.object(daemon.session.planner, 'observe', side_effect=KeyboardInterrupt):
+                with self.assertRaises(KeyboardInterrupt):
+                    daemon.turn('中断する', event_id='second')
+            cancelled = [r for r in daemon.session.fio.experiences.all() if r['kind'] == 'generation_cancelled']
+            self.assertEqual([r['turn_id'] for r in cancelled], ['second'])
+        finally:
+            daemon.close()
+
     def test_independent_sidecar_restore(self):
         self.chat.turn('星空を見た')
         fio = FIOMemory(self.path)

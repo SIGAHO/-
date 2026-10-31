@@ -69,6 +69,8 @@ class CompanionDaemon:
             with self.lock:
                 if self._closed:
                     raise RuntimeError('終了したdaemonには送信できません')
+                if self.session.fio.needs_recovery:
+                    self.session.fio.recover(self.session.core.events.events)
                 ctx = self.session.core.handle(text, correction_key=correction_key, event_id=event_id)
                 ctx["runtime"]["pc_observation"] = self.session.core.last_runtime
                 events = list(self.session.core.events.events)
