@@ -9,6 +9,7 @@ import tempfile
 import threading
 import time
 import unittest
+from test_model_isolation import ModelIsolatedCase
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from unittest.mock import Mock, patch
 
@@ -54,7 +55,7 @@ class ModelHandler(BaseHTTPRequestHandler):
                       "done": True, "done_reason": "stop"})
 
 
-class OrchestratorTests(unittest.TestCase):
+class OrchestratorTests(ModelIsolatedCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)

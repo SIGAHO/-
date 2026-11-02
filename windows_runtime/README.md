@@ -19,21 +19,22 @@ python windows_runtime/current/breaktail_orchestrator.py --data-root ./evaluatio
 ## テスト
 
 ```powershell
-python -m unittest discover -s windows_runtime/current -p 'test_*.py'
-$env:PYTHONPATH = (Resolve-Path windows_runtime/current).Path
-python -m unittest discover -s windows_runtime/current/tests
+& ./windows_runtime/current/run_tests.ps1
 ```
 
-現行280件とサブディレクトリ9件が成功しています。
+現行325件とサブディレクトリ9件が成功しています。テスト用の独立データ領域を自動作成し、本番データは使いません。
 既存Companion Coreの11件も、Windows用タイムゾーンデータ `tzdata` を作業専用領域へ追加して成功しました。
-合成回帰テストと、本物のOllamaでの20往復は別々に実施しています。
+合成回帰テストと、本物のOllamaでの元の20往復・別条件14往復は別々に実施しています。
 
 ## 文書
 
 - [調査とプライバシー](docs/INVESTIGATION_20261102.md)
-- [修正方針・残課題](docs/PLAN_20261102.md)
-- [修正前後の検証結果](docs/VALIDATION_20261102.md)
+- [修正方針・実装状況](docs/PLAN_20261102.md)
+- [初回の比較記録](docs/VALIDATION_20261102.md)
+- [実会話を続けた追加修正・最新検証](docs/FOLLOWUP_CONVERSATION_20261102.md)
 
 公開用スナップショットはコードと小さい技術辞書だけです。個人パス、会話由来の長いテスト文、環境依存の旧版復旧スクリプトは除外・置換しています。
 元の20往復の会話本文とTraceはローカル評価領域に保持し、公開していません。
-検算と人物保持は対応する明示表現に限定されます。人格・口調・短さ・創作の意味には改善余地が残ります。
+発話制約は最終段で再検査し、違反した案は最大3回修復します。助言・日本語の審査も同じローカルモデルで行い、根拠の逐語引用を照合します。出所が明確な感情の受け止めや指示の了承は、安全な短文へ復旧できます。検証した条件と対応する明示表現の範囲は最新検証文書に記載しています。
+
+最終コードの実会話再評価を継続中です。確定した結果は追加検証文書へ更新します。

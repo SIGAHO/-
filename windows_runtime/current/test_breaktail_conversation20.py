@@ -5,6 +5,7 @@ This tests code contracts; the private live Ollama replay is a separate check.
 """
 import json
 import unittest
+from test_model_isolation import ModelIsolatedCase
 from unittest.mock import patch
 import breaktail_v02 as tail
 
@@ -34,7 +35,7 @@ CASES = [
 ]
 
 
-class Conversation20Tests(unittest.TestCase):
+class Conversation20Tests(ModelIsolatedCase):
     def test_twenty_turns_through_runtime_and_json_restoration(self):
         state, history = tail.new_working_state(), []
         for turn,(text,draft) in enumerate(CASES,1):

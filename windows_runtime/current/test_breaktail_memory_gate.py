@@ -2,6 +2,7 @@ import copy
 import json
 import tempfile
 import unittest
+from test_model_isolation import ModelIsolatedCase
 from datetime import datetime
 from pathlib import Path
 from unittest.mock import patch
@@ -28,7 +29,7 @@ def memory(**fields):
     return dict(m, **fields)
 
 
-class GateTests(unittest.TestCase):
+class GateTests(ModelIsolatedCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)

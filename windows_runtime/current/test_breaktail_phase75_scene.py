@@ -1,12 +1,13 @@
 import json
 import unittest
+from test_model_isolation import ModelIsolatedCase
 from unittest.mock import patch
 
 import breaktail_v02 as tail
 import breaktail_web as web
 
 
-class ScenePersistenceTests(unittest.TestCase):
+class ScenePersistenceTests(ModelIsolatedCase):
     def setUp(self):
         self.scene = {
             "name": "騎士ごっこ",

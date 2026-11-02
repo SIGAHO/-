@@ -1,6 +1,7 @@
 import json
 import tempfile
 import unittest
+from test_model_isolation import ModelIsolatedCase
 from pathlib import Path
 from unittest.mock import patch
 
@@ -17,7 +18,7 @@ def memory(ids=None):
             'time_text': None, 'confidence': 0.7}
 
 
-class EvidenceTests(unittest.TestCase):
+class EvidenceTests(ModelIsolatedCase):
     def setUp(self):
         # Evidence tests exercise Phase4, with deterministic Phase5 admission.
         from test_breaktail_memory_gate import accepting_model

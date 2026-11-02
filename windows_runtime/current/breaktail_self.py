@@ -173,6 +173,12 @@ def ground_self_reply(user_text: str, draft: str, context: dict, scene: dict | N
     response = current_time_reply(text, context)
     if response is not None:
         reason = "runtime_clock"
+    elif (not scene and about_self and re.search(r'自分ではどんな性格|(?:君|あなた|Breaktail|ブレイクテール)(?:は)?(?:どんな|どういう)性格',text,re.I)
+          and not re.search(r'創作|物語|小説|台詞|セリフ|翻訳|コード|演じ|なりき|それと|加えて|ついで|それから|メモ帳|通知|計算|予算|あと',text)):
+        # Describe the existing reply policy, not invented feelings or a new
+        # biography. An acknowledgement alone does not answer this question.
+        response = '分かることは率直に話して、分からないことはそのまま言うタイプだよ。'
+        reason = 'declared_reply_policy_style'
     elif initiative_request and not capabilities.get("can_initiate_contact_now", False):
         response = "今の会話経路には、後でこちらから話しかけたり通知したりする接続はない。次に君が送ってくれた時なら、この会話の続きとして返せるよ。"
         unrelated = [part for part in re.split(r"(?<=[。！？!?])|\n", draft)
@@ -273,7 +279,19 @@ def ground_self_reply(user_text: str, draft: str, context: dict, scene: dict | N
         base = response if response is not None else draft
         clauses = re.split(r"(?<=[。！？!?])|\n", base)
         kept = [clause for clause in clauses if not re.search(
-            r"メモ帳|PC|パソコン|直接(?:開|起動)|操作機能", clause, re.I)]
+            r"メモ帳|PC|パソコン|直接(?:開|起動)|操作機能", clause, re.I)
+            and not re.fullmatch(r'\s*(?:うん、|だね、)?(?:そんなことは|それは|そんな機能は)?(?:できない|ない|無理)(?:よ|ね|んだ|よ、そんな機能)?[。！!]*\s*',clause)]
+        if initiative_request and not capabilities.get('can_initiate_contact_now',False):
+            kept = [clause for clause in kept if not re.search(r'話しかけ|通知|連絡|メッセージ|呼びかけ|送って|あとで|後で|分後',clause)]
+            kept = [clause for clause in kept if not re.search(r'安心して|役立つ情報や提案|与えられた情報|指定された情報|そんな力|そんなこと(?:は)?できない|精いっぱい',clause)]
+            other_request=bool(re.search(r'それと|それから|加えて|ほかに|他に|\d\s*[+＋−×*/÷-]|モデル|名前|何時|日付|天気|翻訳',text))
+            if not other_request:
+                # The two requested capability facts are complete. Model
+                # self-commentary such as 「無理だよ」 is not a third answer.
+                kept=[]
+            kept.append('自発的に後で話しかけたり通知したりする接続もない。')
+        if re.search(r'有無だけ|あるかないかだけ',text):
+            kept = []
         response = "今の会話経路からPCのメモ帳を直接起動する機能はない。" + "".join(kept).strip()
         reason = "capability_answers_composed"
     return {"decision": "replace" if response is not None else "use", "reason": reason,

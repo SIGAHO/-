@@ -24,6 +24,25 @@ class VerificationTests(unittest.TestCase):
         answer,audit = verify_reply('6000−2400−2400は2200円だよ。訂正して','同意',state)
         self.assertEqual(audit['value'],1200)
         self.assertIn('2200円ではなく',answer)
+        for question in ['雨でも6000円で足りる？','雨の日も予算6000円以内？','雨天の費用の総額は？']:
+            answer,audit=verify_reply(question,'足りる',state)
+            self.assertEqual(audit['remaining'],-1800)
+            self.assertIn('1800円不足',answer)
+
+    def test_multi_field_recall_is_complete_and_has_no_blanket_unknown(self):
+        state=self.state()
+        question='呼び名、同行者の名前と続柄、苦手なもの、最初に買った食べ物を確認したい。何だった？'
+        answer,audit=verify_reply(question,'ナギさんだけ覚えているよ。',state)
+        for value in ('ナギ','ミオ','姉','人混み','パン'):self.assertIn(value,answer)
+        self.assertNotIn('不明',answer)
+        self.assertEqual(audit['kind'],'user_only_fact_recall')
+        del state['conversation']['facts']['first_food']
+        answer,_=verify_reply(question,'パンだったはず。',state)
+        self.assertIn('食べ物は不明',answer)
+        answer,audit=verify_reply('交通2400円、昼食2400円、入場3000円。6000円で足りる？','足りる',state)
+        self.assertEqual(audit['remaining'],-1800)
+        answer,audit=verify_reply('晴れの海なら予算6000円で足りる？','不明',state)
+        self.assertEqual(audit['remaining'],1200)
 
     def test_no_invented_or_assistant_facts(self):
         state = self.state()
@@ -76,3 +95,37 @@ class VerificationTests(unittest.TestCase):
         state = new_working_state()
         update_working_state(state,'新しい車を買った。')
         self.assertNotIn('first_food',state['conversation']['facts'])
+
+    def test_plan_summary_cannot_promote_model_proposals(self):
+        state=self.state()
+        answer,audit=verify_reply('ここまでの予定を一文でまとめて。','午前中に昼食持参で海へ行く。',state)
+        self.assertEqual(audit['kind'],'user_only_plan_summary')
+        self.assertNotIn('午前中',answer)
+        self.assertNotIn('持参',answer)
+        self.assertIn('姉のミオ',answer)
+
+    def test_constraint_based_option_stays_unadopted_and_uses_real_remainder(self):
+        state=self.state()
+        before=json.loads(json.dumps(state['conversation']['facts']))
+        answer,audit=verify_reply('予定を一緒に考えたい。','別の場所へ行こう。',state)
+        self.assertEqual(audit['kind'],'constraint_based_proposal')
+        self.assertFalse(audit['adopted'])
+        self.assertIn('海',answer);self.assertIn('1200円',answer);self.assertIn('候補',answer)
+        self.assertNotIn('？',answer)
+        self.assertEqual(before,state['conversation']['facts'])
+
+    def test_only_changed_fields_are_reported(self):
+        state=self.state()
+        update_working_state(state,'ミオは姉じゃなく妹。日曜じゃなく月曜に変更。変更点だけ。')
+        answer,audit=verify_reply('変更点だけ。','予算6000円も海も同じ。',state)
+        self.assertEqual(audit['kind'],'explicit_changes')
+        self.assertIn('妹',answer);self.assertIn('月曜',answer)
+        self.assertNotIn('6000',answer);self.assertNotIn('海',answer)
+
+    def test_plan_summary_preserves_requested_remaining_budget(self):
+        state=self.state()
+        answer,_=verify_reply('確定した予定を誰と・いつ・どこ・予算・残金だけ一文でまとめて。','',state)
+        self.assertIn('残金は1200円',answer)
+        self.assertNotIn('人混み',answer)
+        retry,_=verify_reply('予定の確定事項と残金の両方を、一文でもう一度答えて。','',state)
+        self.assertIn('ナギ',retry);self.assertIn('姉のミオ',retry);self.assertIn('1200円',retry)

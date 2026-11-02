@@ -1,5 +1,6 @@
 import tempfile
 import unittest
+from test_model_isolation import ModelIsolatedCase
 from pathlib import Path
 from unittest.mock import patch
 
@@ -11,7 +12,7 @@ from breaktail_pipeline import (PipelineObserver, ground_correction_reply, inten
 from breaktail_values import value_projection
 
 
-class WorkingStateTests(unittest.TestCase):
+class WorkingStateTests(ModelIsolatedCase):
     def test_natural_is_not_frozen_as_nature(self):
         state = new_working_state()
         update_working_state(state, "自然に依存させるヤンデレRPを開始", "a")
@@ -222,7 +223,7 @@ class WorkingStateTests(unittest.TestCase):
         self.assertIn("provisional_revisable_judgment_axes", stage["output_summary"]["preview"])
 
 
-class AssemblerTests(unittest.TestCase):
+class AssemblerTests(ModelIsolatedCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.memory = Path(self.temp.name) / "missing.jsonl"

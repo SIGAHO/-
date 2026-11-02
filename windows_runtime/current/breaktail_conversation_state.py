@@ -10,7 +10,11 @@ def update_session(state, text, turn=None):
     session = state.setdefault('conversation', {'facts': {}, 'preferences': {}, 'logic': None})
     facts = session.setdefault('facts', {})
     prefs = session.setdefault('preferences', {})
+    temporary=bool(re.search(r'今(?:は|回だけ|だけ)|いまだけ|今回は|この返答',text))
+    session['last_changes']=[]
     def put(key, value):
+        if facts.get(key,{}).get('value')!=value:
+            session['last_changes'].append(key)
         facts[key] = {'value': value, 'source': 'user', 'turn': turn, 'status': 'explicit'}
     patterns = {
         'user_name': r'(?:俺|私|僕)の呼び名は([^、。\s]{1,20})',
@@ -49,17 +53,29 @@ def update_session(state, text, turn=None):
         put('rain_destination', m.group(1)); put('sun_destination', m.group(2))
     # Only explicit preferences persist. Current-task form constraints are
     # supplied separately below, so “two sentences” does not become permanent.
-    if re.search(r'敬語なし|敬語(?:を)?やめ|タメ口', text):
+    if not temporary and re.search(r'敬語なし|敬語(?:を)?やめ|タメ口', text):
         prefs['register'] = 'casual'
-    elif re.search(r'敬語で(?:話|頼|お願い)', text):
+    elif not temporary and re.search(r'敬語で(?:話|頼|お願い)', text):
         prefs['register'] = 'polite'
-    if re.search(r'アドバイスより|助言(?:は|も)?(?:不要|いらない)|休めとか.+いらない', text):
+    if not temporary and re.search(r'アドバイスより|助言(?:は|も)?(?:不要|いらない)|休めとか.+いらない', text):
         prefs['no_advice'] = True
     if re.search(r'短く雑談|次からそんな感じ', text):
         prefs['brief'] = True
+    example=re.search(r'[「『]([^」』]{1,80})[」』].{0,12}(?:軽い返し|返しが好き|感じ)',text)
+    if example:
+        prefs['tone_example']=example[1]
     if re.search(r'(?:今後|これから|次から).*(?:質問不要|質問はいらない)', text):
         prefs['no_questions'] = True
-    if re.search(r'助言して|アドバイスして|解決策を', text):
+    if not re.search(r'今は|今回は|この返答|今回だけ',text):
+        if re.search(r'質問(?:は|も)?(?:不要|いらない|しないで|なし)',text):
+            prefs['no_questions'] = True
+        if re.search(r'短く(?:話して|返して|お願い)|今後.*短く|これから.*短く',text):
+            prefs['brief'] = True
+    if not temporary and re.search(r'質問していい|質問してよい',text):
+        prefs['no_questions'] = False
+    if re.search(r'一人称(?:は|を)[「『]?(私|俺|僕|あたし)',text):
+        prefs['first_person'] = re.search(r'一人称(?:は|を)[「『]?(私|俺|僕|あたし)',text)[1]
+    if not temporary and re.search(r'助言して|アドバイスして|解決策を', text):
         prefs['no_advice'] = False
     return session
 
@@ -85,6 +101,8 @@ def session_context(state, text):
         rules.append('敬語で返す。')
     if prefs.get('brief'):
         rules.append('短い雑談は一〜二文。計算・複数質問・創作は今回の指定を優先。')
+    if prefs.get('tone_example'):
+        rules.append('ユーザーが好きな軽い返しの例（毎回コピーせず、今の題材に接続する）: '+prefs['tone_example'])
     if prefs.get('no_advice') or re.search(r'解決策も質問もいらない|助言不要', text):
         rules.append('求められない助言、休息の指示、前向きなまとめ、根拠のない将来の保証を足さない。')
     if prefs.get('no_questions') or re.search(r'質問もいらない|質問不要|質問はいらない', text):

@@ -4,6 +4,7 @@ import json
 import os
 import tempfile
 import unittest
+from test_model_isolation import ModelIsolatedCase
 from pathlib import Path
 from unittest.mock import patch
 
@@ -13,7 +14,7 @@ import breaktail_raw_conversation as raw
 import breaktail_structured_memory as structured
 
 
-class BreaktailQwenMigrationTests(unittest.TestCase):
+class BreaktailQwenMigrationTests(ModelIsolatedCase):
     def test_old_model_environment_overrides_are_ignored(self):
         with patch.dict(os.environ, {
             "BREAKTAIL_MODEL": "gemma3:12b",
