@@ -1,31 +1,39 @@
-# Breaktail: current runtime
+# Breaktail 現行Windows会話ランタイム
 
-The one supported runtime is `current/`, backed by `data/` and observed through
-`breaktail_studio/`. It uses the BASE Ollama model `qwen2.5:14b`. No Phase8
-adapter is enabled or loaded by the supported start path.
+Windowsで使われている `current/` のソースを、既存Companion Coreとは別フォルダーで管理します。
+ローカルの現行インストールへも同じ機能修正を適用済みです。
 
-## Start and stop
+## 実行
 
-From PowerShell or Explorer, run `START_ALL.cmd`. It starts the loopback-only
-services only when their ports are free, and never replaces a process already
-listening on those ports.
+Python 3.12とローカルOllamaの `qwen2.5:14b` BASEを使用します。
+このフォルダーには本番データ、重み、adapter、学習データ、ログ、Studio本体、ルートのSTART_ALLは含みません。
 
-- Web conversation: <http://127.0.0.1:8765/>
-- Studio: <http://127.0.0.1:8778/>
-- Stop only services launched by this start script: `STOP_ALL.cmd`
+```powershell
+# リポジトリのルートから、安全な独立データ領域でCLIを起動
+python windows_runtime/current/breaktail_orchestrator.py --data-root ./evaluation_data --safe-mode chat
+```
 
-`STOP_ALL.cmd` checks the saved PID and command line before it stops anything;
-it does not kill an unknown process just because it owns a port.
+`--safe-mode` は長期記憶や教師登録等を抑止します。評価領域にはRaw・Trace・セッション状態と参照用レビュー待ちメタデータが残ります。学習は実行しません。
+既存本番データをこのチェックアウトへコピーしないでください。
 
-See `project_docs/CURRENT_RUNTIME_MAP.md` for the paths, data flow, adopted
-features, isolated experiments, and smoke evidence.
+## テスト
 
-## Integrated CLI / daemon (2026-10-20)
+```powershell
+python -m unittest discover -s windows_runtime/current -p 'test_*.py'
+$env:PYTHONPATH = (Resolve-Path windows_runtime/current).Path
+python -m unittest discover -s windows_runtime/current/tests
+```
 
-`python current/breaktail_orchestrator.py chat` runs the existing conversation
-core with persistent five-turn history, Raw/Memory readback, evaluation and a
-reference-only review queue. `python current/breaktail_orchestrator.py daemon`
-adds periodic health checks and supervised worker restart. Settings, dry-run,
-safe mode, recovery and Linux instructions: `current/ORCHESTRATOR.md`.
-`current/start_cli.ps1` uses this integrated CLI. Web/Studio keep their existing
-entry points; no model training or adapter promotion is automatic.
+現行280件とサブディレクトリ9件が成功しています。
+既存Companion Coreの11件も、Windows用タイムゾーンデータ `tzdata` を作業専用領域へ追加して成功しました。
+合成回帰テストと、本物のOllamaでの20往復は別々に実施しています。
+
+## 文書
+
+- [調査とプライバシー](docs/INVESTIGATION_20261102.md)
+- [修正方針・残課題](docs/PLAN_20261102.md)
+- [修正前後の検証結果](docs/VALIDATION_20261102.md)
+
+公開用スナップショットはコードと小さい技術辞書だけです。個人パス、会話由来の長いテスト文、環境依存の旧版復旧スクリプトは除外・置換しています。
+元の20往復の会話本文とTraceはローカル評価領域に保持し、公開していません。
+検算と人物保持は対応する明示表現に限定されます。人格・口調・短さ・創作の意味には改善余地が残ります。
