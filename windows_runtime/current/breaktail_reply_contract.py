@@ -102,6 +102,7 @@ def build_contract(state, text, history=None):
             'no_questions':no_questions, 'no_advice':(prefs.get('no_advice',False) and not explicit_advice and not creative and not artifact)
               or bool(re.search(r'解決策も質問もいらない|助言(?:は|も)?(?:不要|いらない)|アドバイス(?:は|も)?(?:不要|いらない)',text)),
             'register':register, 'required_phrases':required,
+            'no_optimistic_wrapup':(prefs.get('no_optimistic_wrapup',False) or bool(re.search(r'前向き.{0,8}(?:まとめ|締め).{0,8}(?:いらない|不要|なし)',text))) and not bool(re.search(r'励まして|前向きにまとめて',text)),
             'required_questions':1 if explicit_questions and re.search(r'一つ|1つ|一個|1個',text) else None,
             'creative':creative, 'artifact':artifact,
             'propose_plan':bool(re.search(r'予定.{0,25}考えたい|予定.{0,25}考えて|プラン.{0,12}(?:考えて|作って)',text)),
@@ -153,6 +154,8 @@ def violations(reply, contract):
     prose=unquoted_prose(reply)
     count=len(sentences(reply))
     if not reply.strip(): hits.append('empty_reply')
+    if contract.get('no_optimistic_wrapup') and re.search(r'(?:明日|今後|これから|いつか|そのうち|次は).{0,35}(?:ように|願|祈)|(?:いい|良い|楽な|幸せな).{0,12}(?:一日|日).{0,12}(?:ように|願|祈)',prose):
+        hits.append('unrequested_optimistic_wrapup')
     if contract.get('event_time') and any(t!=contract['event_time'] for t in re.findall(r'今日|昨日|明日',prose)):
         hits.append('unsupported_event_time_change')
     if not contract['artifact'] and re.fullmatch(r'(?:笑|w|ｗ|[。！!、\s])+',prose):
@@ -243,6 +246,7 @@ def instruction(contract):
     if contract['max_chars']:
         rules.append(str(contract['max_chars'])+'文字以内。回答要素は落とさない。')
     if contract['no_questions']:rules.append('質問や問いかけを追加しない。')
+    if contract.get('no_optimistic_wrapup'):rules.append('前向きな締めくくりを付けない。明日の幸せ・良い一日への願い、祈り、励ましも追加しない。')
     if contract.get('event_time'):rules.append('参照している出来事の時点は「'+contract['event_time']+'」。根拠なく別の日へ変えない。')
     if contract['required_questions']:rules.append('今回はユーザーから頼まれた質問を一つだけする。')
     if contract['no_advice']:rules.append('助言、買い方や休息の指示、気をつけよう、無理しないで、大丈夫という保証を足さない。行動の推奨や許可は0個。今の具体物・感情にだけ反応し、「～だったんだね」のように受け止める。')
@@ -304,7 +308,7 @@ def remove_unrequested_sentences(reply,contract):
     dropped=[];kept=[]
     for part in parts:
         hits=violations(part,contract)
-        unwanted=[x for x in hits if x in ('unrequested_question','unrequested_advice_or_reassurance')]
+        unwanted=[x for x in hits if x in ('unrequested_question','unrequested_advice_or_reassurance','unrequested_optimistic_wrapup')]
         # A grounded computation is substantive even if the surrounding
         # sentence is awkward; it must not disappear during style cleanup.
         if unwanted and not re.search(r'\d|＝|箱[A-Z]',unquoted_prose(part)):

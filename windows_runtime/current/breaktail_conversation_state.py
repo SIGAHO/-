@@ -59,6 +59,10 @@ def update_session(state, text, turn=None):
         prefs['register'] = 'polite'
     if not temporary and re.search(r'アドバイスより|助言(?:は|も)?(?:不要|いらない)|休めとか.+いらない', text):
         prefs['no_advice'] = True
+    if not temporary and re.search(r'前向き.{0,8}(?:まとめ|締め).{0,8}(?:いらない|不要|なし)',text):
+        prefs['no_optimistic_wrapup']=True
+    if not temporary and re.search(r'励まして|前向きにまとめて',text):
+        prefs['no_optimistic_wrapup']=False
     if re.search(r'短く雑談|次からそんな感じ', text):
         prefs['brief'] = True
     example=re.search(r'[「『]([^」』]{1,80})[」』].{0,12}(?:軽い返し|返しが好き|感じ)',text)

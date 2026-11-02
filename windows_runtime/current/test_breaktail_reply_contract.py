@@ -211,3 +211,18 @@ class ReplyContractTests(ModelIsolatedCase):
             reply,complete=tail.generate_reply([],'友達に断られて、平気なふりしたけど寂しかった。解決策も質問もいらない。ひとことだけ。',working_state=self.state())
         self.assertTrue(complete)
         self.assertEqual(reply,'寂しかったんだね。')
+
+    def test_opt_out_of_positive_wrapup_persists_and_removes_only_whole_wish(self):
+        state=self.state()
+        tail.update_working_state(state,'前向きなまとめはいらない。次からそんな感じで。')
+        state=json.loads(json.dumps(state))
+        c=build_contract(state,'袋の中でパンがつぶれた。')
+        draft='パンまで残業した顔してるな。明日は楽な一日になりますように。'
+        self.assertIn('unrequested_optimistic_wrapup',violations(draft,c))
+        self.assertEqual(remove_unrequested_sentences(draft,c)[0],'パンまで残業した顔してるな。')
+        self.assertNotIn('unrequested_optimistic_wrapup',violations('「明日は楽な一日になりますように」と書いてあった。',c))
+
+    def test_requested_encouragement_overrides_wrapup_opt_out(self):
+        state=self.state()
+        tail.update_working_state(state,'前向きなまとめはいらない。')
+        self.assertFalse(build_contract(state,'今回だけ励まして。')['no_optimistic_wrapup'])
