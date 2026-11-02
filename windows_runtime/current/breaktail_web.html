@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Breaktail — Local AI</title>
+  <style>
+    :root { color-scheme: dark; --bg:#080b12; --panel:#101620; --panel2:#141d29; --line:#263244; --text:#eaf2f6; --muted:#91a4b1; --aqua:#79e3cd; --aqua2:#4db9b3; --gold:#e9be83; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:radial-gradient(circle at 16% 0%,#162638 0,transparent 38%),radial-gradient(circle at 95% 100%,#14252a 0,transparent 42%),var(--bg); color:var(--text); font:15px/1.6 "Segoe UI", "Yu Gothic UI", sans-serif; }
+    button,textarea { font:inherit; }
+    button { cursor:pointer; }
+    .shell { min-height:100vh; display:grid; grid-template-columns:290px minmax(0,1fr); }
+    aside { border-right:1px solid var(--line); background:rgba(11,17,26,.75); padding:29px 21px; display:flex; flex-direction:column; gap:29px; }
+    .brand { display:flex; gap:14px; align-items:center; }
+    .mark { width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:linear-gradient(145deg,#79e3cd,#39858f);color:#092329;font-weight:900;font-size:24px;box-shadow:0 6px 22px #50c7bd35; }
+    .brand strong { display:block; font-size:19px; letter-spacing:.03em; }
+    .brand small { display:block;color:var(--muted);font-size:11px;letter-spacing:.15em;text-transform:uppercase; }
+    .section-label { color:#7692a0; text-transform:uppercase; font-size:11px;letter-spacing:.15em;margin-bottom:12px;font-weight:700; }
+    .status-card,.side-card { background:linear-gradient(160deg,#17232f,#121a24);border:1px solid #29404b;border-radius:16px;padding:16px;box-shadow:0 12px 35px #0002; }
+    .status-line { display:flex;align-items:center;gap:9px;font-weight:700; }
+    .dot { width:8px;height:8px;border-radius:50%;background:var(--aqua);box-shadow:0 0 0 4px #79e3cd18,0 0 13px #79e3cd88; }
+    .status-card p,.side-card p { color:var(--muted);margin:7px 0 0;font-size:12px; }
+    .meta {display:flex;justify-content:space-between;color:var(--muted);font-size:13px;padding:9px 2px;border-bottom:1px solid #263440;gap:12px;}
+    .meta b {color:#d5e8e8;font-weight:600;text-align:right;}
+    .memory-list { display:grid;gap:9px;max-height:36vh;overflow:auto;scrollbar-color:#34515b transparent; }
+    .memory { background:#16212d;border:1px solid #2a3944;border-radius:11px;padding:10px 11px;color:#c7d9de;font-size:12px;line-height:1.5; }
+    .memory b { color:var(--gold);margin-right:5px; }
+    .memory-empty { color:var(--muted);font-size:12px; }
+    .side-bottom {margin-top:auto;color:#6d8491;font-size:11px;line-height:1.65;}
+    main {min-width:0;display:flex;flex-direction:column;height:100vh;}
+    header {height:76px;flex:none;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #22303d;padding:0 clamp(24px,5vw,80px);background:#0a1019aa;backdrop-filter:blur(15px);}
+    .title {font-size:17px;font-weight:750;letter-spacing:.02em;}.subtitle {font-size:12px;color:var(--muted);margin-top:1px;}
+    .header-actions {display:flex;gap:9px;align-items:center;}
+    .pill {border:1px solid #294550;color:var(--aqua);background:#102329;border-radius:999px;padding:5px 11px;font-size:11px;font-weight:700;}
+    .ghost {border:1px solid #2f4051;color:#b8cbd2;background:#14202c;border-radius:9px;padding:7px 11px;font-size:12px;}
+    .ghost:hover {border-color:#66808c;color:white;}
+    .chat {flex:1;overflow:auto;padding:36px clamp(24px,7vw,110px) 25px;scrollbar-color:#34515b transparent;}
+    .conversation {max-width:880px;margin:auto;display:grid;gap:26px;}
+    .hero {padding:8vh 0 0;}.hero .kicker {color:var(--aqua);font-size:12px;letter-spacing:.18em;text-transform:uppercase;font-weight:750;}.hero h1 {font-size:clamp(35px,5vw,57px);line-height:1.18;letter-spacing:-.04em;margin:15px 0 16px;background:linear-gradient(100deg,#f4fbfa,#9ac8ca);background-clip:text;color:transparent;}.hero p {color:var(--muted);max-width:590px;line-height:1.9;}.suggestions {display:flex;flex-wrap:wrap;gap:9px;margin-top:25px;}.suggestions button {background:#14212c;border:1px solid #314856;color:#b9d8d9;padding:9px 15px;border-radius:12px;font-size:13px;}.suggestions button:hover {background:#1c3540;}
+    .message {display:flex;gap:14px;max-width:100%;}.message.user {justify-content:flex-end;}.avatar {width:29px;height:29px;border-radius:10px;background:linear-gradient(145deg,#76d6c4,#387d88);color:#082328;font-weight:850;display:grid;place-items:center;flex:none;font-size:15px;}.bubble-wrap {max-width:min(100%,760px);}.speaker {color:#8faab3;font-size:11px;letter-spacing:.06em;font-weight:750;margin:0 0 6px 3px;}.bubble {white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.8;}.assistant .bubble {padding:3px 0;color:#e2ecee;}.user .bubble {background:#1c2b37;border:1px solid #36505b;border-radius:17px 17px 4px 17px;padding:12px 17px;color:#eff8f6;}.user .speaker {text-align:right;margin-right:3px;}.note {font-size:11px;color:var(--gold);margin-top:7px;}.thinking {color:var(--aqua);font-size:13px;padding-left:43px;animation:pulse 1.4s ease-in-out infinite;}@keyframes pulse{50%{opacity:.4}}
+    .composer-zone {flex:none;padding:18px clamp(24px,7vw,110px) 25px;background:linear-gradient(0deg,#090f18 70%,#090f1800);}.composer-wrap {max-width:880px;margin:auto;}.composer {background:#14202b;border:1px solid #36505b;border-radius:18px;box-shadow:0 14px 40px #0005;display:flex;align-items:flex-end;padding:9px 9px 9px 18px;gap:10px;}.composer:focus-within {border-color:#6bbbb1;box-shadow:0 0 0 3px #6bbbb11a,0 14px 40px #0005;}textarea {flex:1;background:none;border:0;outline:0;color:var(--text);resize:none;min-height:33px;max-height:170px;padding:4px 0;line-height:1.6;}textarea::placeholder {color:#728a99;}.send {border:0;background:linear-gradient(145deg,#80e7d1,#52bcb6);color:#08252a;width:41px;height:41px;border-radius:12px;font-size:21px;font-weight:800;display:grid;place-items:center;}.send:disabled {opacity:.45;cursor:default;}.hint {display:flex;justify-content:space-between;margin:9px 4px 0;color:#6f8793;font-size:11px;gap:8px;}.warning {color:var(--gold);}.hidden {display:none!important;}
+    @media(max-width:850px){.shell{grid-template-columns:1fr;}aside{display:none;}header{padding:0 20px;}.chat{padding:25px 20px;}.composer-zone{padding:12px 15px 18px;}.pill{display:none;}}
+  </style>
+</head>
+<body>
+<div class="shell">
+  <aside>
+    <div class="brand"><div class="mark">B</div><div><strong>Breaktail</strong><small>Local AI · v0.2</small></div></div>
+    <div><div class="section-label">接続</div><div class="status-card"><div class="status-line"><span class="dot"></span><span id="status">ローカルで稼働中</span></div><p>会話はこのPCで処理します</p></div></div>
+    <div><div class="section-label">いまの状態</div><div class="meta"><span>モデル</span><b>Qwen2.5 14B</b></div><div class="meta"><span>会話履歴</span><b>再起動後も復元</b></div><div class="meta"><span>場面</span><b id="scene">通常の会話</b></div><div class="meta"><span>長期記憶</span><b id="memory-count">読み込み中</b></div></div>
+    <div><div class="section-label">最近の記憶 <span style="color:#607882">· 未確認の解釈</span></div><div id="memory-list" class="memory-list"><div class="memory-empty">読み込み中…</div></div></div>
+    <div class="side-bottom">発言原文と返答はRaw会話ファイルに保存されます。記憶欄はモデルによる未確認の解釈です。外部検索やファイル操作には対応していません。</div>
+  </aside>
+  <main>
+    <header><div><div class="title">Breaktail と話す</div><div class="subtitle">自分のPC上で動く、まだ成長途中のAI</div></div><div class="header-actions"><a href="/review" target="_blank" rel="noopener" style="color:inherit">品質レビュー</a><span class="pill">● LOCAL ONLY</span><button class="ghost" id="clear">会話をクリア</button></div></header>
+    <div class="chat" id="chat"><div class="conversation" id="conversation"><div class="hero" id="hero"><div class="kicker">Your space, your AI</div><h1>話しかけてみよう。</h1><p>雑談も、質問も、コードも。返答の前に場面と記憶候補を判定し、その場面を反映して答える。今のBreaktailをそのまま試せる場所。</p><div class="suggestions"><button data-prompt="よお！">よお！</button><button data-prompt="今日は何について話そうか">今日は何について話そうか</button><button data-prompt="俺の話、聞いてくれる？">俺の話、聞いてくれる？</button></div></div></div></div>
+    <div class="composer-zone"><div class="composer-wrap"><div class="composer"><textarea id="input" rows="1" placeholder="Breaktail に話しかける…"></textarea><button id="send" class="send" aria-label="送信">➜</button></div><div class="hint"><span>Enter で送信 · Shift + Enter で改行 · /capabilities で操作一覧</span><span id="hint-status">記憶は解釈だけ保存</span></div></div></div>
+  </main>
+</div>
+<script>
+const token = '__BREAKTAIL_TOKEN__';
+const $ = id => document.getElementById(id);
+const chat = $('chat'), conversation = $('conversation'), input = $('input');
+let working = false;
+async function api(path, data) {
+  const options = data === undefined ? {} : {method:'POST',headers:{'Content-Type':'application/json','X-Breaktail-Token':token},body:JSON.stringify(data)};
+  const response = await fetch(path, options);
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.error || '通信に失敗しました');
+  return result;
+}
+function addMessage(role, text, complete=true) {
+  $('hero')?.remove();
+  const row = document.createElement('div'); row.className = 'message ' + role;
+  if (role === 'assistant') { const avatar=document.createElement('div'); avatar.className='avatar'; avatar.textContent='B'; row.append(avatar); }
+  const wrap=document.createElement('div'); wrap.className='bubble-wrap';
+  const speaker=document.createElement('div'); speaker.className='speaker'; speaker.textContent=role==='user'?'あなた':'Breaktail';
+  const bubble=document.createElement('div'); bubble.className='bubble'; bubble.textContent=text;
+  wrap.append(speaker,bubble);
+  if (!complete) {const note=document.createElement('div');note.className='note';note.textContent='返答は途中で切れました';wrap.append(note);}
+  row.append(wrap);conversation.append(row);chat.scrollTop=chat.scrollHeight;
+}
+function setBusy(value, label='') {working=value;$('send').disabled=value;input.disabled=value;$('hint-status').textContent=label || '記憶は解釈だけ保存';$('status').textContent=value?'応答を生成中…':'ローカルで稼働中';}
+function renderMemories(items) {
+  $('memory-count').textContent=items.length+' 件';const list=$('memory-list');list.replaceChildren();
+  if(!items.length){const e=document.createElement('div');e.className='memory-empty';e.textContent='まだ保存されていません';list.append(e);return;}
+  for(const item of items.slice(-6).reverse()){const div=document.createElement('div');div.className='memory';const b=document.createElement('b');b.textContent='#'+item.id;div.append(b,document.createTextNode(item.content));list.append(div);}
+}
+async function refresh() {const state=await api('/api/state');conversation.querySelectorAll('.message').forEach(e=>e.remove());for(const m of state.messages)addMessage(m.role,m.text,m.complete!==false);$('scene').textContent=state.scene?.name || '通常の会話';renderMemories(state.memories);if(state.pending){setBusy(true,'記憶を判定中…');await extract(state.pending.id);}}
+async function extract(turnId) {
+  try {const result=await api('/api/extract',{turn_id:turnId});$('scene').textContent=result.scene?.name || '通常の会話';if(result.warning)$('hint-status').textContent=result.warning;else if(result.memory)$('hint-status').textContent='記憶に保存: '+result.memory.content;else $('hint-status').textContent='今回は記憶に保存しませんでした';const state=await api('/api/state');renderMemories(state.memories);}
+  catch(error){$('hint-status').textContent='記憶の判定に失敗: '+error.message;}
+  finally {working=false;$('send').disabled=false;input.disabled=false;$('status').textContent='ローカルで稼働中';input.focus();}
+}
+async function send() {
+  const text=input.value.trim();if(!text||working)return;
+  input.value='';input.style.height='auto';addMessage('user',text);setBusy(true,'返答を生成中…');
+  const loading=document.createElement('div');loading.className='thinking';loading.textContent='Breaktail が考え中…';conversation.append(loading);chat.scrollTop=chat.scrollHeight;
+  try {const result=await api('/api/reply',{text});loading.remove();addMessage('assistant',result.reply,result.complete);$('hint-status').textContent='記憶を判定中…';await extract(result.turn_id);}
+  catch(error){loading.remove();$('hint-status').textContent='エラー: '+error.message;setBusy(false);input.value=text;input.focus();}
+}
+$('send').addEventListener('click',send);
+input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}});
+input.addEventListener('input',()=>{input.style.height='auto';input.style.height=Math.min(input.scrollHeight,170)+'px';});
+document.querySelectorAll('[data-prompt]').forEach(button=>button.addEventListener('click',()=>{input.value=button.dataset.prompt;input.focus();}));
+$('clear').addEventListener('click',async()=>{if(working)return;if(!confirm('この起動中の会話を消しますか？ 長期記憶は残ります。'))return;try{await api('/api/clear',{});location.reload();}catch(error){$('hint-status').textContent=error.message;}});
+refresh().catch(error=>{$('status').textContent='接続エラー';$('hint-status').textContent=error.message;});
+</script>
+</body>
+</html>
