@@ -8,6 +8,7 @@ them, the previous value is retained.
 from __future__ import annotations
 
 import re
+from breaktail_conversation_state import update_session
 
 
 def new_working_state() -> dict:
@@ -18,6 +19,7 @@ def new_working_state() -> dict:
         "corrections": [],
         "pending": [],
         "register": {"style": None, "turn": None, "source": None},
+        "conversation": {"facts": {}, "preferences": {}, "logic": None},
     }
 
 
@@ -141,6 +143,7 @@ def update_working_state(state: dict | None, user_text: str, turn: str | int | N
         state["topic"] = "ブラックジャックのコード作成と実行"
     elif re.search(r"焼き肉|焼肉", compact):
         state["topic"] = "友達との焼き肉"
+    update_session(state, text, turn)
     return state
 
 

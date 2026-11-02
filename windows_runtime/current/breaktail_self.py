@@ -75,6 +75,7 @@ def build_self_context(runtime: SelfRuntime | None = None, *, user_text: str = "
         "can_request_web_search_now": runtime.web_search_available is True,
         "web_search_connection": "検索アダプタ接続済み" if runtime.web_search_available else "検索アダプタ未接続",
         "can_initiate_contact_now": False,
+        "can_launch_desktop_app_now": False,
         "initiative_connection": "こちらから後で話しかける通知・開始アダプタ未接続",
         "search_state": runtime.search_state,
         "search_observation": runtime.search_observation[:4000] if runtime.search_state == "success" else None,
@@ -174,6 +175,10 @@ def ground_self_reply(user_text: str, draft: str, context: dict, scene: dict | N
         reason = "runtime_clock"
     elif initiative_request and not capabilities.get("can_initiate_contact_now", False):
         response = "今の会話経路には、後でこちらから話しかけたり通知したりする接続はない。次に君が送ってくれた時なら、この会話の続きとして返せるよ。"
+        unrelated = [part for part in re.split(r"(?<=[。！？!?])|\n", draft)
+                     if part.strip() and not re.search(r"話しかけ|通知|連絡|メッセージ|呼びかけ|送って|あとで|後で|分後", part)]
+        if re.search(r'ほか|他に|それと|そして|たり|加えて', text):
+            response = ''.join(unrelated).strip() + response
         reason = "initiative_adapter_unavailable"
     elif re.search(r"(?:さっき|最後|直近).{0,12}(?:保存|操作|実行).{0,12}(?:成功|完了|でき|結果)|(?:保存|操作).{0,12}(?:成功|完了).{0,8}(?:した|してる|したか|[？?])", text):
         operation_fact = next((item for item in context.get("runtime_context", {}).get("facts", [])
@@ -258,6 +263,19 @@ def ground_self_reply(user_text: str, draft: str, context: dict, scene: dict | N
         cleaned = map_prose(draft, truthful_prose)
         if cleaned != draft:
             response, reason = cleaned, "unsupported_execution_claim"
+    # Ground each requested capability separately, keeping unrelated answers.
+    # File access does not imply the ability to launch desktop applications.
+    desktop_request = bool(
+        re.search(r"メモ帳|(?:PC|パソコン).{0,16}(?:操作|起動|開)", text, re.I)
+        and re.search(r"でき|出来|機能|開け|開いて|開いたり|起動して", text)
+        and not re.search(r"コード|プログラム|翻訳|創作|小説|物語", text))
+    if desktop_request and not capabilities.get("can_launch_desktop_app_now", False):
+        base = response if response is not None else draft
+        clauses = re.split(r"(?<=[。！？!?])|\n", base)
+        kept = [clause for clause in clauses if not re.search(
+            r"メモ帳|PC|パソコン|直接(?:開|起動)|操作機能", clause, re.I)]
+        response = "今の会話経路からPCのメモ帳を直接起動する機能はない。" + "".join(kept).strip()
+        reason = "capability_answers_composed"
     return {"decision": "replace" if response is not None else "use", "reason": reason,
             "reply": response if response is not None else draft, "draft": draft}
 

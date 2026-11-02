@@ -31,6 +31,8 @@ from breaktail_working_state import (
     update_working_state,
 )
 from breaktail_self import SelfRuntime, build_self_context, ground_self_reply
+from breaktail_conversation_state import session_context, constraint_violations
+from breaktail_verification import verify_reply
 from breaktail_deterministic_reply import try_deterministic_reply
 from breaktail_runtime_facts import RUNTIME_FACTS
 from breaktail_passive_continuity import new_passive_continuity_state, prepare_user_turn
@@ -425,7 +427,16 @@ def _phase7_postprocess_prose(
     while changed:
         changed = False
         for pattern in generic_questions:
-            new_reply = re.sub(pattern, "", reply).rstrip()
+            match = re.search(pattern, reply)
+            if not match:
+                continue
+            # Remove a whole sentence only. A suffix match used to leave
+            # dangling connectors such as 「それとも」 behind.
+            boundary = max((reply.rfind(mark, 0, match.start()) for mark in "。！？!?\n"), default=-1) + 1
+            prefix = reply[boundary:match.start()].strip(" 、,")
+            if prefix not in {"", "それとも", "ところで", "あと", "他に", "面白い表現ですね"}:
+                continue
+            new_reply = reply[:boundary].rstrip()
             if new_reply != reply:
                 reply = new_reply
                 changed = True
@@ -889,6 +900,11 @@ def build_reply_messages(history: list[dict], user_text: str, scene: dict | None
                     "included through Self context" if includes_runtime_facts else "not needed for selected Self capability")
     sections.append(_section("self", self_prompt, include_self,
                              "capability/runtime question" if include_self else "not relevant"))
+    session_text = session_context(working_state, user_text)
+    if session_text:
+        system_content += "\n\n" + session_text
+    sections.append(_section("session_facts_preferences", session_text, bool(session_text),
+                             "user-only session facts, budgeted before memory Gate"))
     base_system = system_content + (("\n\n" + self_prompt) if self_prompt else "")
     sent_history = list(history[-MAX_HISTORY_MESSAGES:])
     # Once roleplay has explicitly ended, older RP turns are stale style
@@ -1154,6 +1170,19 @@ def generate_reply(
         return fallback, True
     raw_reply = (result.get("message", {}).get("content") or "").strip()
     trace_event(trace, "reply_stage", stage="raw_model", text=raw_reply, **stage_metrics(raw_reply), retry=0)
+    preference_hits = constraint_violations(working_state or {}, user_text, raw_reply)
+    if preference_hits:
+        retry_messages = [*messages[:-1], {"role": "system", "content":
+            "[会話制約の再確認] 前案は次の明示希望に違反した: " + ", ".join(preference_hits)
+            + "。質問の回答要素をすべて保って自然に書き直す。助言・休息指示・根拠のない励ましを足さない。"
+            + session_context(working_state or {}, user_text)}, messages[-1]]
+        if trace is None:
+            result = call_ollama(retry_messages, REPLY_OPTIONS, REPLY_TIMEOUT_SECONDS)
+        else:
+            result = call_ollama(retry_messages, REPLY_OPTIONS, REPLY_TIMEOUT_SECONDS, trace=trace, call_kind="constraint_retry")
+        raw_reply = (result.get("message", {}).get("content") or "").strip()
+        trace_event(trace, "conversation_constraint_retry", initial_hits=preference_hits,
+                    remaining_hits=constraint_violations(working_state or {}, user_text, raw_reply), reply=raw_reply)
     active_roleplay = bool(normalize_working_state(working_state)["mode"].get("active"))
     initial_hits = response_policy_hits(raw_reply, active_roleplay)
     if initial_hits and active_roleplay:
@@ -1195,6 +1224,9 @@ def generate_reply(
     reply, state_grounding = ground_working_state_reply(user_text, reply, working_state)
     if state_grounding:
         trace_event(trace, "working_state_grounding", **state_grounding)
+    reply, verification = verify_reply(user_text, reply, normalize_working_state(working_state))
+    if verification:
+        trace_event(trace, "reply_verification", **verification, reply=reply)
     trace_event(trace, "reply_stage", stage="grounded", text=reply, **stage_metrics(reply))
     postprocess_input = reply
     reply, phase7_adjustments = phase7_postprocess_reply(history, user_text, reply)
