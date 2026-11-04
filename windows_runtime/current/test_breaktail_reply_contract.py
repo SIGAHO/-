@@ -226,3 +226,45 @@ class ReplyContractTests(ModelIsolatedCase):
         state=self.state()
         tail.update_working_state(state,'前向きなまとめはいらない。')
         self.assertFalse(build_contract(state,'今回だけ励まして。')['no_optimistic_wrapup'])
+
+    def test_self_deprecating_object_story_is_not_unstated_distress(self):
+        c=build_contract(self.state(),'鞄のレシートがくしゃくしゃ。今週の俺みたいで笑った。')
+        self.assertTrue(c['humorous_self_comparison'])
+        self.assertIn('unsupported_distress_interpretation',violations('気分が落ち込んでるんだね。',c))
+        self.assertNotIn('unsupported_distress_interpretation',violations('レシートまで一週間を乗り切った顔してるな。',c))
+
+    def test_explicit_feeling_and_resignation_are_not_forced_into_jokes(self):
+        c=build_contract(self.state(),'鞄のレシートが今週の俺みたいで笑った。でも寂しかった。')
+        self.assertNotIn('unsupported_distress_interpretation',violations('寂しい気持ちだったんだね。',c))
+        self.assertFalse(build_contract(self.state(),'レシートが今の俺みたいで笑うしかない。')['humorous_self_comparison'])
+
+    def test_quoted_feelings_and_denials_do_not_authorize_a_diagnosis(self):
+        for denial in ('落ち込んでない','落ち込んではいない','落ち込んでるわけじゃない'):
+            c=build_contract(self.state(),'レシートが今週の俺みたいで笑った。「落ち込んでる」と言われたけど'+denial+'。')
+            self.assertIn('unsupported_distress_interpretation',violations('気分が落ち込んでるんだね。',c))
+
+    def test_wrong_mental_state_draft_is_rewritten_as_the_actual_topic(self):
+        bad={'message':{'content':'気分が落ち込んでる時に当たっちゃうよね。'},'done_reason':'stop'}
+        good={'message':{'content':json.dumps({'sentences':['レシートまで一週間を乗り切った顔してるな。']},ensure_ascii=False)},'done_reason':'stop'}
+        with patch.object(tail,'call_ollama',side_effect=[bad,good]),patch.object(tail,'log_turn'):
+            reply,complete=tail.generate_reply([],'鞄のレシートがくしゃくしゃ。今週の俺みたいで笑った。',working_state=self.state())
+        self.assertTrue(complete)
+        self.assertEqual(reply,'レシートまで一週間を乗り切った顔してるな。')
+
+    def test_style_preferences_only_do_not_invent_weather(self):
+        bad={'message':{'content':'今日も天気いいね、外に出たくなるね。'},'done_reason':'stop'}
+        with patch.object(tail,'call_ollama',return_value=bad),patch.object(tail,'log_turn'):
+            reply,complete=tail.generate_reply([],'短く雑談して。敬語なし、質問不要、助言はいらない。',working_state=self.state())
+        self.assertTrue(complete)
+        self.assertEqual(reply,'分かった、短く話すね。')
+
+    def test_style_acknowledgement_does_not_replace_an_actual_story(self):
+        self.assertFalse(build_contract(self.state(),'短く雑談して。今日はパンがつぶれてた。')['style_preferences_only'])
+        self.assertFalse(build_contract(self.state(),'敬語なし。今日の天気について話して。')['style_preferences_only'])
+
+    def test_unsolicited_only_option_remedy_is_a_complete_addon(self):
+        c=build_contract(self.state(),'スマホの電池が3％。今の俺と同じで笑う。')
+        draft='スマホも限界かよ、笑。でも充電するしかないよね。'
+        self.assertIn('unrequested_advice_or_reassurance',violations(draft,c))
+        self.assertEqual(remove_unrequested_sentences(draft,c)[0],'スマホも限界かよ、笑。')
+        self.assertNotIn('unrequested_advice_or_reassurance',violations('残金は1200円しかない。',c))

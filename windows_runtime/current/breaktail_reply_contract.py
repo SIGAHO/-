@@ -37,6 +37,9 @@ def grounded_reflection(text,contract):
     Also supports an acknowledgement or a bare request for one question.
     Other speakers, negation, hypothetical feelings and creative work decline.
     """
+    if contract.get('style_preferences_only'):
+        return {'reply':'分かった、短く話すね。' if contract['register']!='polite' else '分かりました。短くお話しします。',
+                'evidence':text,'kind':'style_preferences_only'}
     if not contract['no_advice'] or contract['creative'] or contract['artifact']:
         return None
     if contract['required_questions']:
@@ -64,6 +67,16 @@ def build_contract(state, text, history=None):
     creative = bool(re.search(r'創作|小話|物語|短編|お話',text))
     artifact = bool(re.search(r'コード|プログラム|翻訳|引用して|原文|そのまま',text))
     foreign_requested=bool(re.search(r'(?:[一-龯ぁ-んァ-ヶA-Za-z]+語|英語|中国語)で.{0,8}(?:答え|話して|返して|書いて)',text))
+    current_prose=unquoted_prose(text)
+    style_clause=r'短く(?:雑談して|話して|返して)|敬語なし(?:で頼む)?|敬語で話して|タメ口で(?:話して)?|質問(?:は|も)?(?:不要|なし|いらない|しないで)|(?:助言|アドバイス)(?:は|も)?(?:不要|いらない)|解決策(?:は|も)?不要'
+    style_preferences_only=bool(re.search(style_clause,text) and re.fullmatch(r'(?:'+style_clause+r'|[。、,！!\s])+',text.strip()))
+    humorous_self_comparison=bool(
+        re.search(r'笑った|笑う|笑える|自虐',current_prose)
+        and re.search(r'(?:俺|私|僕|自分)(?:みたい|と同じ)|(?:今日|今週|今の).{0,4}(?:俺|私|僕|自分)',current_prose)
+        and not re.search(r'笑うしか|笑えない|笑えな|笑えず|慰めて|相談に乗',current_prose)
+        and not creative and not artifact)
+    feeling_source=re.sub(r'落ち込(?:んで(?:は)?(?:い)?ない|んで(?:い)?るわけ(?:じゃ|では)ない|んだわけ(?:じゃ|では)ない)','',current_prose)
+    stated_distress=bool(re.search(r'落ち込|鬱|うつ|悲し|寂し|つら|辛い|心が壊',feeling_source))
     explicit_advice = bool(re.search(r'案を|案も|提案して|助言して|アドバイスして|解決策を|どうすれば|予定.*考え|プラン.*(?:考えて|作って)',text))
     explicit_questions = bool(re.search(r'(?:質問|聞き返し)(?:を)?(?:一つ|1つ|一個|1個)?(?:だけ)?して|質問していい|質問してよい',text))
     exact = re.search(r'([一二三四五六七八九十1-9])文(?:だけ|で|に)',text)
@@ -112,6 +125,9 @@ def build_contract(state, text, history=None):
             'permitted_latin':sorted(permitted_latin),
             'foreign_requested':foreign_requested,
             'event_time':event_time,
+            'humorous_self_comparison':humorous_self_comparison,
+            'stated_distress':stated_distress,
+            'style_preferences_only':style_preferences_only,
             'source_han':text+''.join(str(item.get('value','')) for item in state.get('conversation',{}).get('facts',{}).values()),
             'first_person':prefs.get('first_person',None if active_mode else '私')}
 
@@ -154,6 +170,9 @@ def violations(reply, contract):
     prose=unquoted_prose(reply)
     count=len(sentences(reply))
     if not reply.strip(): hits.append('empty_reply')
+    if contract.get('humorous_self_comparison') and not contract.get('stated_distress') and re.search(
+            r'(?:気分|気持ち|心).{0,14}(?:落ち込|沈ん|壊れ|病ん|つら|辛|寂|悲)|(?:君|あなた|お前).{0,14}(?:落ち込|鬱|うつ|悲し|寂し|つら|辛い)',prose):
+        hits.append('unsupported_distress_interpretation')
     if contract.get('no_optimistic_wrapup') and re.search(r'(?:明日|今後|これから|いつか|そのうち|次は).{0,35}(?:ように|願|祈)|(?:いい|良い|楽な|幸せな).{0,12}(?:一日|日).{0,12}(?:ように|願|祈)',prose):
         hits.append('unrequested_optimistic_wrapup')
     if contract.get('event_time') and any(t!=contract['event_time'] for t in re.findall(r'今日|昨日|明日',prose)):
@@ -203,6 +222,7 @@ def violations(reply, contract):
         r'(?:しなくて|しないで|なくても)いい|無理(?:は)?しな|大切に(?:して|しよう)|'
         r'(?:しちゃ|しては)(?:ダメ|だめ|いけない)|(?:休む|休息|寝る).{0,10}必要|(?:するべき|すべき)|'
         r'思え|考えろ|頑張れ|がんばれ|しなさい|したらどう|しようよ|してみて|してみよう|'
+        r'(?:する|休む|寝る|待つ)しかない|'
         r'(?:(?<!は)よう|ましょう)(?:ね|よ|か)?(?=[。！!\s]|$)|(?:て|で)(?:も)?いい(?:よ|ね|んだ|んだよ|んだね)?(?=[。！!\s]|$)|'
         r'(?:のが|のは|ことが|ことは).{0,8}(?:大事|大切)|(?:進む|休む).{0,15}(?:大事|大切)|'
         r'(?:聴いて|飲んで|散歩して|寝て)(?:ね|よ|みて)?[。！!]|'
@@ -246,10 +266,12 @@ def instruction(contract):
     if contract['max_chars']:
         rules.append(str(contract['max_chars'])+'文字以内。回答要素は落とさない。')
     if contract['no_questions']:rules.append('質問や問いかけを追加しない。')
+    if contract.get('humorous_self_comparison'):
+        rules.append('今回は物の状態を自分になぞらえた笑い話。その具体物や出来事に軽く反応し、本人が落ち込んでいるという心理分析や慰めにすり替えない。物の見た目を「くたくた」「疲れた顔」と表すような軽い擬人化はよい。別の題材の例: 「シャツがしわしわ。今週の自分みたいで笑った」→「シャツまでくたくただな」。')
     if contract.get('no_optimistic_wrapup'):rules.append('前向きな締めくくりを付けない。明日の幸せ・良い一日への願い、祈り、励ましも追加しない。')
     if contract.get('event_time'):rules.append('参照している出来事の時点は「'+contract['event_time']+'」。根拠なく別の日へ変えない。')
     if contract['required_questions']:rules.append('今回はユーザーから頼まれた質問を一つだけする。')
-    if contract['no_advice']:rules.append('助言、買い方や休息の指示、気をつけよう、無理しないで、大丈夫という保証を足さない。行動の推奨や許可は0個。今の具体物・感情にだけ反応し、「～だったんだね」のように受け止める。')
+    if contract['no_advice']:rules.append('余計な助言・提案・行動の推奨・許可・休息の指示・根拠のない将来の保証を追加しない。これを理由に定型的な共感へ書き換えない。')
     if contract['propose_plan']:
         rules.append('今回は予定を考える依頼なので、相槌だけで終わらず、条件に合う具体案を少なくとも一つ述べる。必ず「案」「候補」「提案」のいずれかを使い、未承認の案として示す。')
         if contract['plan_destination']:

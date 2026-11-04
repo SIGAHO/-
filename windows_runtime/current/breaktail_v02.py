@@ -177,6 +177,11 @@ def save_raw_turn(trace: dict, user_text: str, assistant_text: str, status: str,
         trace_event(trace, "reply_stage", stage="persisted", text=assistant_text, **stage_metrics(assistant_text))
     return executed and verified
 
+CHAT_STYLE = """[雑談の返し方]
+笑い話や自虐は、その具体物や出来事への返しとして受ける。心理分析や、落ち込んでいるという決めつけに置き換えない。
+意味がつながる普通の日本語で短く返す。軽いコメントを求められた時は相槌だけで済ませない。
+別の話題の例（流用しない）: 「靴下が片方だけ家出したみたい」→「片方だけ独立心が強いな」。"""
+
 REPLY_SYSTEM = """あなたはローカルAIのBreaktail。ユーザーと自然なタメ口で話す。
 - 通常の返答は日本語のみ。ノリで中国語や英語の相槌・フレーズを混ぜない。翻訳・発音・他言語での回答をユーザーが明示的に求めた範囲だけ例外。固有名詞・コードは原表記を保つ。
 - 質問には、まずその対象へ直接答える。感想や質問返しで済ませない。訂正されたら元の質問に戻って答え直す。
@@ -905,7 +910,10 @@ def build_reply_messages(history: list[dict], user_text: str, scene: dict | None
     sections.append(_section("self", self_prompt, include_self,
                              "capability/runtime question" if include_self else "not relevant"))
     session_text = session_context(working_state, user_text)
-    system_content += "\n\n" + contract_instruction(build_contract(working_state, user_text, history))
+    current_contract=build_contract(working_state,user_text,history)
+    if not include_self and not current_contract['artifact'] and not current_contract['creative']:
+        system_content += '\n\n'+CHAT_STYLE
+    system_content += "\n\n" + contract_instruction(current_contract)
     if session_text:
         system_content += "\n\n" + session_text
     sections.append(_section("session_facts_preferences", session_text, bool(session_text),
@@ -1229,6 +1237,11 @@ def generate_reply(
     reply = normalize_voice(reply,contract)
     reply,removed_sentences=remove_unrequested_sentences(reply,contract)
     if removed_sentences:trace_event(trace,'removed_unrequested_sentences',removed=removed_sentences)
+    if contract.get('style_preferences_only'):
+        acknowledgement=grounded_reflection(user_text,contract)
+        reply=normalize_voice(acknowledgement['reply'],contract)
+        verification={'kind':'style_preferences_acknowledgement','source':'user'}
+        trace_event(trace,'style_preferences_acknowledgement',**verification,reply=reply)
     if (not scene and contract['exact_sentences']==1 and contract['no_advice']
             and re.search(r'解決策|助言|アドバイス',user_text)):
         reflection=grounded_reflection(user_text,contract)
