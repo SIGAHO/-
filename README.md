@@ -1,5 +1,11 @@
 # Companion Core (model-less)
 
+## 現行Windows版Breaktail
+
+PC上のOllama版は [windows_runtime](windows_runtime/README.md) で管理します。
+この `src/companion_core` はモデル非接続の別実装です。こちらだけの編集は現行Windows会話経路に反映されません。
+[実会話を続けた追加修正・最新検証](windows_runtime/docs/FOLLOWUP_CONVERSATION_20261102.md)を参照してください。
+
 14BなどのLLMを接続する前に、CPU側だけで処理できる「相棒」の外部脳を実装した最小コアです。
 標準ライブラリのみで動きます。
 

@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "data_root": "../data",
+  "ollama_url": "http://127.0.0.1:11434/api/chat",
+  "model": "qwen2.5:14b",
+  "history_turns": 5,
+  "num_ctx": 8192,
+  "reply_timeout_seconds": 300,
+  "extract_timeout_seconds": 90,
+  "safe_mode": false,
+  "max_attempts": 2,
+  "retry_seconds": 5,
+  "poll_seconds": 1,
+  "health_interval_seconds": 60,
+  "health_timeout_seconds": 5,
+  "worker_timeout_seconds": 1800,
+  "restart_limit": 5,
+  "restart_backoff_seconds": 5,
+  "minimum_free_bytes": 104857600,
+  "log_max_bytes": 5242880,
+  "log_backups": 5
+}
