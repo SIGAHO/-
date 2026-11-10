@@ -6,6 +6,7 @@ to meet a length limit or rewrite protected code/quoted text.
 import json
 import re
 from breaktail_character import selected as character_selected
+from breaktail_request_intent import explicit_request
 from breaktail_code_regions import split_code_regions,map_prose
 
 
@@ -84,8 +85,9 @@ def build_contract(state, text, history=None):
         and not creative and not artifact)
     feeling_source=re.sub(r'落ち込(?:んで(?:は)?(?:い)?ない|んで(?:い)?るわけ(?:じゃ|では)ない|んだわけ(?:じゃ|では)ない)','',current_prose)
     stated_distress=bool(re.search(r'落ち込|鬱|うつ|悲し|寂し|つら|辛い|心が壊',feeling_source))
+    direct_request = explicit_request(text)
     explicit_advice = bool(re.search(r'案を|案も|提案して|助言して|アドバイスして|解決策を|どうすれば|どうしたら|おすすめ|お勧め|やり方|方法|手順|予定.*考え|プラン.*(?:考えて|作って)',text))
-    casual_sharing = not state.get('mode',{}).get('active') and not creative and not artifact and not explicit_advice and not re.search(r'[？?]|教えて|説明|なぜ|何が|何を|どこ|いつ|どう思|調べ|相談がある|手伝って|助けて',text)
+    casual_sharing = not state.get('mode',{}).get('active') and not creative and not artifact and not explicit_advice and not direct_request and not re.search(r'[？?]|教えて|説明|なぜ|何が|何を|どこ|いつ|どう思|調べ|相談がある|手伝って|助けて',text)
     relational_exchange=character_active and bool(re.search(r'他のAI|別のAI|別のチャット|友達と|友人と|嫉妬|拗ね|妬く|おやすみ|寝る|戻った|帰った|呼び捨て|口調|話し方|(?:君|お前|あたし|あなた).{0,20}(?:好き|話す|話し|嫌|どうでも)',text))
     style_adjustment=not creative and not artifact and bool(re.search(r'次から.{0,20}(?:感じ|口調|返し)|(?:今の返事|今の返答|話し方|口調).{0,50}(?:して|頼む|ほしい|ほし)',text))
     explicit_questions = bool(re.search(r'(?:質問|聞き返し)(?:を)?(?:一つ|1つ|一個|1個)?(?:だけ)?して|質問していい|質問してよい',text))
@@ -120,7 +122,7 @@ def build_contract(state, text, history=None):
         if action:actions.append({'phrase':phrase,'object':action[1],'actor':action[3]})
     event_time=None
     greeting = re.search(r'(?:^|[、。\s])([^、。\s]{1,24}?)に(?:ひとこと|一言)?(?:挨拶|あいさつ)して',text)
-    requested_response = bool(re.search(r'挨拶して|あいさつして|ツッコんで|ツッコミ|感想を|どう思う|説明して|教えて|小話を|作って|考えて',text))
+    requested_response = direct_request or bool(re.search(r'挨拶して|あいさつして|ツッコんで|ツッコミ|感想を|どう思う|説明して|教えて|小話を|作って|考えて',text))
     if not creative and not artifact:
         sources=[text]
         if re.search(r'さっき|先ほど|前の話',text):
