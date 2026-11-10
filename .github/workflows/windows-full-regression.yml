@@ -1,0 +1,38 @@
+name: Windows Breaktail complete regression
+
+on:
+  push:
+    branches:
+      - feat/windows-agent-development-20261110
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows-unit-tests:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run isolated complete test suite
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path ci-results -Force | Out-Null
+          & ./windows_runtime/current/run_tests.ps1 *> ci-results/full-tests.log
+          $code = $LASTEXITCODE
+          Get-Content ci-results/full-tests.log | Select-Object -Last 70
+          exit $code
+      - name: Preserve full test evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-breaktail-full-regression
+          path: ci-results/full-tests.log
+          retention-days: 90
+          if-no-files-found: warn
