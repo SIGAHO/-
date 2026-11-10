@@ -42,7 +42,7 @@ def update_session(state, text, turn=None):
     def uncertain_amount(match):
         suffix = text[match.end():]
         return bool(re.match(
-            r'\\s*(?:[？?]|(?:だった|でした|だ|です)?(?:っけ|よね)[？?]?'
+            r'\s*(?:[？?]|(?:だった|でした|だ|です)?(?:っけ|よね)[？?]?'
             r'|(?:だった)?かな[？?]?|ですか[？?]?|でしょうか[？?]?'
             r'|で(?:合ってる|正しい)[？?]?)',
             suffix,
