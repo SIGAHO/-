@@ -43,7 +43,10 @@ class ColloquialRequestsTests(unittest.TestCase):
         state["conversation"]["preferences"]["no_advice"] = True
         self.assertTrue(build_contract(state,"朝に時計を落とした。")["no_advice"])
         # A requested technical answer must still be considered a response.
-        self.assertTrue(build_contract(state,"これ直して")["requested_response"])
+        contract = build_contract(state, "これ直して")
+        self.assertTrue(contract["requested_response"])
+        self.assertFalse(contract["no_advice"])
+        self.assertTrue(build_contract(state, "昨日は時計を直してもらった。")["no_advice"])
 
 
 if __name__ == "__main__":
