@@ -103,17 +103,26 @@ class LocalOllama:
 
 
 class LocalChatSession:
-    def __init__(self, core: CompanionCore, model: LocalOllama, card: dict):
+    def __init__(self, core: CompanionCore, model: LocalOllama, card: dict, semantic=None):
         self.core = core
         self.model = model
         self.card = card
+        self.semantic = semantic
 
     def reply(self, text: str) -> str:
         if not text.strip():
             raise ValueError("Message cannot be empty")
         # The input event is appended by handle(), so capture history first.
         previous = list(self.core.events.events)
+        prior_memory_ids = {m.id for m in self.core.memory.items}
         context = self.core.handle(text)
+        if self.semantic is not None:
+            # The current utterance was stored by handle(); exclude its newest
+            # item so it cannot be retrieved as a previous memory.
+            prior_items = [m for m in self.core.memory.items if m.id in prior_memory_ids]
+            semantic_hits = self.semantic.retrieve(text, prior_items)
+            context["memory"] = [hit["text"] for hit in semantic_hits]
+            self.core._trace("semantic_retrieval", {"hits": semantic_hits})
         messages = [
             {"role": "system", "content": build_system_prompt(self.card, context)},
             *recent_dialogue(previous),
