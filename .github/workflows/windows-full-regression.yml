@@ -20,6 +20,9 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Verify real-model evaluator compiles
+        shell: pwsh
+        run: python -m py_compile windows_runtime/current/evaluate_live_conversation.py
       - name: Run isolated complete test suite
         shell: pwsh
         run: |
