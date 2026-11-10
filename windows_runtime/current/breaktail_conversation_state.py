@@ -36,12 +36,29 @@ def update_session(state, text, turn=None):
         'destination':r'目的地は([^、。！？?\s]{1,24})',
         'explicit_day':r'曜日は([月火水木金土日]曜)(?:日)?',
     }
+    # A proposed value inside a confirmation question is not a correction.
+    # Limit this check to wording immediately after the matched amount:
+    # "昼食が一人1200円なら残りは？" remains a conditional calculation.
+    def uncertain_amount(match):
+        suffix = text[match.end():]
+        return bool(re.match(
+            r'\\s*(?:[？?]|(?:だった|でした|だ|です)?(?:っけ|よね)[？?]?'
+            r'|(?:だった)?かな[？?]?|ですか[？?]?|でしょうか[？?]?'
+            r'|で(?:合ってる|正しい)[？?]?)',
+            suffix,
+        ))
+
+    numeric_question = False
     for key, pattern in patterns.items():
         m = re.search(pattern, text)
         if m:
+            if key in {'budget','transport','lunch_each','admission'} and uncertain_amount(m):
+                numeric_question = True
+                continue
             value = m.group(1)
             put('day' if key=='explicit_day' else key, int(value.replace(',', '')) if key in {'budget','transport','lunch_each','admission'} else value,m.start())
-    if re.search(r'二人|2人', text) and re.search(r'予算|電車|交通費|入場料', text):
+    if (re.search(r'二人|2人', text) and re.search(r'予算|電車|交通費|入場料', text)
+            and not numeric_question):
         put('people', 2)
     meeting = re.search(r'集合(?:場所)?(?:は|が)([^、。！？?]{1,30}?)(?=に[0-9]{1,2}時|[、。]|$)',text)
     if meeting and not re.search(r'どこ|どちら|何',meeting[1]):
