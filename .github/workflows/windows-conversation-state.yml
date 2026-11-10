@@ -1,0 +1,37 @@
+name: Breaktail numeric memory regression
+
+on:
+  push:
+    branches:
+      - feat/windows-agent-development-20261110
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  numeric-confirmation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: windows_runtime/current
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run deterministic numeric-state regressions
+        shell: bash
+        run: |
+          mkdir -p ci-results
+          set -o pipefail
+          python -m unittest test_breaktail_conversation_numeric_questions -v 2>&1 | tee ci-results/numeric-regressions.log
+      - name: Preserve test output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: breaktail-numeric-regressions
+          path: windows_runtime/current/ci-results/numeric-regressions.log
+          retention-days: 90
+          if-no-files-found: warn
