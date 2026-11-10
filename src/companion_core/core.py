@@ -24,6 +24,9 @@ class CompanionCore:
         self.emotion = EmotionEngine()
         self.context = ContextAssembler()
         self.trace: list[dict] = []
+        # The event log is the source of truth. Restore it on startup.
+        if self.events.events:
+            self.replay()
 
     def _trace(self, stage: str, detail: dict):
         self.trace.append({"ts": time.time(), "stage": stage, **detail})
@@ -59,8 +62,17 @@ class CompanionCore:
         self._trace("topic", {"current": topic.label if topic else None})
         self._trace("emotion", emo.to_dict())
 
-        self.memory.add(text, SourceType.USER_STATEMENT, importance=0.35)
+        # Retrieve prior memories before storing the current utterance.
+        # Otherwise it can trivially match itself and hide useful history.
         memories = self.memory.retrieve(text)
+        self._trace("memory_retrieval", {
+            "query": text,
+            "retrieved": [
+                {"id": m.id, "source": m.source.value, "text": m.text}
+                for m in memories
+            ],
+        })
+        self.memory.add(text, SourceType.USER_STATEMENT, importance=0.35)
 
         ctx = self.context.build(
             user_input=text,
@@ -86,6 +98,18 @@ class CompanionCore:
         ))
         self._trace("assistant_output", {"text": text, "state_admission": False})
 
+    def diagnostics(self) -> dict:
+        """Local-only inspection snapshot; no automatic network or upload."""
+        return {
+            "event_count": len(self.events.events),
+            "memory_count": len(self.memory.items),
+            "active_memory_count": sum(
+                1 for m in self.memory.items if m.status.value == "active"
+            ),
+            "state": self.state.snapshot(),
+            "trace_tail": self.trace[-50:],
+        }
+
     def replay(self) -> None:
         old = list(self.events.events)
         self.state = StateEngine()
@@ -99,6 +123,12 @@ class CompanionCore:
             if e.kind == "correction":
                 p = e.payload
                 self.state.correct(p["key"], p["new"], p.get("old"), Scope.SESSION)
+                # The live path stores explicit corrections in memory too.
+                self.memory.add(
+                    f"{p['key']} = {p['new']}",
+                    SourceType.USER_CORRECTION,
+                    0.9,
+                )
             elif e.kind == "user_input":
                 text = e.payload.get("text", "")
                 self.topic.update(text)

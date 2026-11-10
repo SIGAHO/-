@@ -1,5 +1,6 @@
 import sys
 import unittest
+import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parents[1] / "src"))
@@ -87,6 +88,31 @@ class CoreTests(unittest.TestCase):
         self.assertIn("memory", ctx)
         self.assertIn("emotion", ctx)
         self.assertTrue(ctx["open_loops"])
+
+
+    def test_event_log_restores_memories_and_corrections_on_restart(self):
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "events.jsonl"
+            first = CompanionCore(event_path=path)
+            first.handle("時計の脱進機を作る")
+            first.handle("違う、2026", correction_key="time.user_year")
+            first.record_assistant_output("AIが勝手に作った発言")
+            second = CompanionCore(event_path=path)
+            self.assertEqual(second.state.active["time.user_year"].value, "2026")
+            self.assertIn("時計の脱進機を作る", [m.text for m in second.memory.items])
+            self.assertIn("time.user_year = 2026", [m.text for m in second.memory.items])
+            self.assertNotIn("AIが勝手に作った発言", [m.text for m in second.memory.items])
+            self.assertEqual(second.diagnostics()["event_count"], 4)
+            second.replay()
+            self.assertEqual(second.state.active["time.user_year"].value, "2026")
+
+    def test_current_utterance_is_not_retrieved_as_old_memory(self):
+        c = CompanionCore()
+        first = c.handle("新しい独自の識別番号XYZ777")
+        self.assertNotIn("新しい独自の識別番号XYZ777", first["memory"])
+        second = c.handle("新しい独自の識別番号XYZ777")
+        self.assertIn("新しい独自の識別番号XYZ777", second["memory"])
+
 
 
 if __name__ == "__main__":
