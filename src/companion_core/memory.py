@@ -53,6 +53,10 @@ class MemoryEngine:
             if x.status != Status.ACTIVE:
                 continue
             rel = cosine_text(query, x.text)
+            # Recency and importance alone must not make unrelated text
+            # appear relevant to the current query.
+            if rel < 0.10:
+                continue
             age_days = max(0.0, now - x.created_at) / 86400
             recency = math.exp(-age_days / 30.0)
             reuse = min(1.0, math.log1p(x.mentions) / 3.0)

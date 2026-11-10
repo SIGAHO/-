@@ -52,6 +52,11 @@ class MemoryTests(unittest.TestCase):
         self.assertFalse(m.add("AI guessed fact", SourceType.ASSISTANT_GENERATED))
         self.assertEqual(m.items, [])
 
+    def test_unrelated_recent_memory_is_not_recalled(self):
+        m = MemoryEngine()
+        m.add("今日はカレーを食べた", SourceType.USER_STATEMENT, 0.8)
+        self.assertEqual(m.retrieve("時計の脱進機"), [])
+
     def test_retrieval_prefers_related(self):
         m = MemoryEngine()
         m.add("CNCで基板を削る", SourceType.USER_STATEMENT, 0.6)
