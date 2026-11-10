@@ -1,0 +1,39 @@
+name: Breaktail offline regression
+
+on:
+  push:
+    branches:
+      - main
+      - feature/local-character-chat-20261110
+      - fix/local-memory-replay-20261110
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run deterministic offline tests
+        shell: bash
+        run: |
+          mkdir -p test-results
+          set -o pipefail
+          python -m unittest discover -s tests -v 2>&1 | tee test-results/unittest.log
+      - name: Save test output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: breaktail-offline-test-results
+          path: test-results/unittest.log
+          retention-days: 90
+          if-no-files-found: warn
