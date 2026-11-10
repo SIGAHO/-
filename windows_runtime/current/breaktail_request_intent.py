@@ -17,14 +17,19 @@ _REQUEST_END = re.compile(
     r"出して|考えて|手伝って|話して|続けて|実行して|直しといて|"
     r"やって)(?:くれ(?:よ)?|ください|ほしい|欲しい|よ|ね)?"
     r"|(?:やれよ|やってくれ|頼む|お願い|教えろ|答えろ|見せろ|作れ|直せ|調べろ)"
-    r"|(?:なんで|なぜ|どうして|どうやって|どうすれば|どうしたら|"
-    r"どうなる|どう思う|何が|何を|どこが)[^。！？!?\n]{0,70}"
     r")"
     r"[。！？!?\s]*$"
+)
+
+
+_QUESTION = re.compile(
+    r"(?:^|[。！？!?]\\s*)(?:なんで|なぜ|どうして|どうやって|どうすれば|"
+    r"どうしたら|どうなる|どう思う|何が|何を|どこが)"
+    r"[^。！？!?\\n]{0,65}?(?:の|なの|か|かな|だ|いい|んだ|のか)[。！？!?\\s]*$"
 )
 
 
 def explicit_request(text: str) -> bool:
     from breaktail_reply_contract import unquoted_prose
     candidate = unquoted_prose(text).strip()
-    return bool(candidate and _REQUEST_END.search(candidate))
+    return bool(candidate and (_REQUEST_END.search(candidate) or _QUESTION.search(candidate)))
