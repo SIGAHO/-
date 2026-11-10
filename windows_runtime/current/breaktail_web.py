@@ -182,12 +182,21 @@ def _style_report_text(samples):
             "これは発言の観測であって、Breaktailが学習した結果ではありません。")
 
 
-def web_command_reply(user_text, history, scene, conversation_id, style_samples):
+def web_command_reply(user_text, history, scene, conversation_id, style_samples, working_state=None):
     """Expose the established CLI operational commands through the Web chat route.
 
     Returns None for ordinary conversation.  Command effects stay in the same
     canonical stores used by CLI; no Web-only mirror is introduced.
     """
+    if user_text.startswith('/persona '):
+        if working_state is None:
+            return '人格の切替には現在の会話状態が必要です。',scene
+        from breaktail_character import select
+        try:
+            select(working_state,user_text[len('/persona '):].strip())
+        except ValueError:
+            return '使い方: /persona atashi または /persona off',scene
+        return ('あたし版の会話人格に切り替えた。' if user_text.endswith('atashi') else '会話人格の指定を解除した。'),scene
     if user_text == "/memories":
         rows = memories()
         return ("保存済みの記憶はありません。" if not rows else "保存済みの記憶:\n" + "\n".join(
@@ -362,7 +371,7 @@ class Handler(BaseHTTPRequestHandler):
                          history_message_count=len(history))
         with LOCK:
             style_samples = list(STATE["style_samples"])
-        command = web_command_reply(user_text, history, scene, conversation_id, style_samples)
+        command = web_command_reply(user_text, history, scene, conversation_id, style_samples,working_state=working_state)
         if command is None:
             command = web_profile_commit_reply(user_text, history, scene)
         if command is not None:

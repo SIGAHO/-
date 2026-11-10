@@ -12,34 +12,54 @@ def update_session(state, text, turn=None):
     prefs = session.setdefault('preferences', {})
     temporary=bool(re.search(r'今(?:は|回だけ|だけ)|いまだけ|今回は|この返答',text))
     session['last_changes']=[]
-    def put(key, value):
+    def put(key, value, position=None):
+        if key not in {'budget','transport','lunch_each','admission','people'}:
+            start=position if position is not None else max(0,text.find(str(value)))
+            left=max(text.rfind(mark,0,start) for mark in '。、！？?\n')+1
+            ends=[text.find(mark,start) for mark in '。、！？?\n' if text.find(mark,start)>=0]
+            clause=text[left:(min(ends)+1 if ends else len(text))]
+            if (re.search(r'[？?]|だったよね|だよね|だっけ|だったっけ|ですか|でしょうか',clause)
+                    and not re.search(r'訂正|変更して|に変更|にする|にして',clause)):
+                return  # A confirmation question is not a new assertion.
         if facts.get(key,{}).get('value')!=value:
             session['last_changes'].append(key)
         facts[key] = {'value': value, 'source': 'user', 'turn': turn, 'status': 'explicit'}
     patterns = {
         'user_name': r'(?:俺|私|僕)の呼び名は([^、。\s]{1,20})',
-        'companion': r'同行者は(?:妹|姉|弟|兄|友達|友人)の([^、。\s]{1,20})',
-        'relationship': r'同行者は(妹|姉|弟|兄|友達|友人)の',
-        'day': r'(?:土曜|日曜|月曜|火曜|水曜|木曜|金曜)じゃなく([月火水木金土日]曜)(?:日)?に変更',
+        'companion': r'同行者は(?:妹|姉|弟|兄|友達|友人|同僚)の([^、。\s]{1,20})',
+        'relationship': r'同行者は(妹|姉|弟|兄|友達|友人|同僚)の',
+        'day': r'(?:[月火水木金土日]曜)(?:日)?(?:じゃなく|ではなく)([月火水木金土日]曜)(?:日)?(?:に変更|にする|にした|(?=[。、\s]|$))',
         'budget': r'予算(?:は|の)?(?:二人で|2人で)?\s*([0-9,]+)円',
-        'transport': r'(?:電車|交通費)(?:が|は)?(?:二人往復で|二人で|2人で|往復で)?\s*([0-9,]+)円',
+        'transport': r'(?:(?:二人|2人)往復の)?(?:電車代|電車|交通費)(?:が|は)?(?:二人往復で|二人で|2人で|往復で)?\s*([0-9,]+)円',
         'lunch_each': r'昼食(?:が|は)?一人\s*([0-9,]+)円',
         'admission': r'入場料(?:は|が)?(?:二人で|2人で)\s*([0-9,]+)円',
+        'destination':r'目的地は([^、。！？?\s]{1,24})',
+        'explicit_day':r'曜日は([月火水木金土日]曜)(?:日)?',
     }
     for key, pattern in patterns.items():
         m = re.search(pattern, text)
         if m:
             value = m.group(1)
-            put(key, int(value.replace(',', '')) if key in {'budget','transport','lunch_each','admission'} else value)
+            put('day' if key=='explicit_day' else key, int(value.replace(',', '')) if key in {'budget','transport','lunch_each','admission'} else value,m.start())
     if re.search(r'二人|2人', text) and re.search(r'予算|電車|交通費|入場料', text):
         put('people', 2)
+    meeting = re.search(r'集合(?:場所)?(?:は|が)([^、。！？?]{1,30}?)(?=に[0-9]{1,2}時|[、。]|$)',text)
+    if meeting and not re.search(r'どこ|どちら|何',meeting[1]):
+        location=re.split(r'じゃなく(?:て)?|ではなく',meeting[1])[-1]
+        put('meeting_place',re.sub(r'に変更$','',location))
+    changed_time=re.search(r'[0-9]{1,2}時(?:[0-9]{1,2}分)?じゃなく(?:て)?([0-9]{1,2}時(?:[0-9]{1,2}分)?)',text)
+    initial_time=re.search(r'集合[^。！？?]{0,35}?に([0-9]{1,2}時(?:[0-9]{1,2}分)?)',text)
+    if changed_time or initial_time:
+        put('meeting_time',(changed_time or initial_time)[1])
+    if re.search(r'(?:まだ)?(?:昼食の)?お?店(?:は|を)(?:まだ)?(?:決めてない|決めていない|未決定)',text):
+        put('meal_venue_status','未決定')
     initial_day = re.search(r'([月火水木金土日]曜)(?:日)?に海へ', text)
     if initial_day:
         put('day', initial_day.group(1))
         put('destination', '海')
     companion = facts.get('companion', {}).get('value')
     if companion:
-        correction = re.search(re.escape(companion)+r'は(?:妹|姉|弟|兄)じゃなく(?:て)?(妹|姉|弟|兄)', text)
+        correction = re.search(re.escape(companion)+r'は(?:妹|姉|弟|兄|友達|友人|同僚)じゃなく(?:て)?(妹|姉|弟|兄|友達|友人|同僚)', text)
         if correction:
             put('relationship', correction.group(1))
         aversion = re.search(re.escape(companion)+r'は([^、。\s]{1,20})が苦手', text)
@@ -95,6 +115,7 @@ def session_context(state, text):
               'admission':'雨天の二人分入場料','people':'人数','destination':'目的地',
               'first_food':'以前買った食べ物（予定の食事ではない）','companion_dislikes':'同行者が苦手なもの',
               'rain_destination':'雨天の目的地','sun_destination':'晴天の目的地'}
+    labels.update(meeting_place='集合場所',meeting_time='集合時刻',meal_venue_status='昼食の店の決定状態')
     for key, item in facts.items():
         lines.append(f'{labels.get(key,key)}={item["value"]}')
     prefs = session.get('preferences', {})

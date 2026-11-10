@@ -481,6 +481,13 @@ class Orchestrator:
         if not text.startswith("/"):
             return None
         snapshot = self.journal.session(conversation_id, self.core)
+        if text.startswith('/persona '):
+            from breaktail_character import select
+            name=text[len('/persona '):].strip()
+            select(snapshot['working_state'],name)
+            with self.journal.db:
+                self.journal.db.execute('INSERT OR REPLACE INTO sessions VALUES (?,?)',(conversation_id,encode(snapshot)))
+            return 'あたし版の会話人格に切り替えた。' if name=='atashi' else '会話人格の指定を解除した。'
         if text == "/debug":
             self.debug = not self.debug
             return "デバッグ表示: " + ("ON" if self.debug else "OFF")
@@ -621,16 +628,94 @@ def main(argv=None):
     review.add_argument("--target-file", type=Path, required=True)
     review.add_argument("--reviewer", required=True)
     sub.add_parser("export-training")
+    agent = sub.add_parser("agent", help="explicit workspace coding agent; separate from chat/persona")
+    agent.add_argument("--workspace", type=Path, required=True)
+    agent.add_argument("--text")
+    agent.add_argument("--conversation-id",help="opt in to labelled work format preferences from this conversation only")
+    agent.add_argument("--resume-run-id",help="resume a settled incomplete run in the same workspace")
+    agent.add_argument("--max-steps", type=int, default=16)
+    agent.add_argument("--max-seconds",type=float,default=900,help="elapsed task budget; cooperative cancellation")
+    agent.add_argument("--requirements-file",type=Path,help="operator supplied JSON completion checks; never model-authored")
+    agent.add_argument("--allow-execution", action="store_true", help="allow project Python tests with user privileges; not an OS sandbox")
+    cancel=sub.add_parser('agent-cancel',help='request cooperative cancellation of a running workspace task')
+    cancel.add_argument('--workspace',type=Path,required=True)
+    cancel.add_argument('--run-id',required=True)
+    for name in ('agent-enqueue','agent-work','agent-queue','agent-queue-cancel'):
+        queue_command=sub.add_parser(name,help='explicit workspace task queue')
+        queue_command.add_argument('--workspace',type=Path,required=True)
+        if name=='agent-enqueue':
+            queue_command.add_argument('--text',required=True)
+            queue_command.add_argument('--conversation-id',help='opt-in conversation scope; preferences re-read when work starts')
+            queue_command.add_argument('--requirements-file',type=Path)
+            queue_command.add_argument('--task-id')
+        elif name=='agent-work':
+            queue_command.add_argument('--max-steps',type=int,default=16)
+            queue_command.add_argument('--max-seconds',type=float,default=900)
+            queue_command.add_argument('--allow-execution',action='store_true')
+        else:
+            queue_command.add_argument('--task-id',required=name=='agent-queue-cancel')
+            if name=='agent-queue':queue_command.add_argument('--limit',type=int,default=100)
     args = parser.parse_args(argv)
     engine = None
     try:
         config = load_config(args.config, args.data_root, args.safe_mode)
         if args.dry_run:
+            if args.command in ('agent-enqueue','agent-work','agent-queue','agent-queue-cancel'):
+                print(encode({'dry_run':True,'command':args.command,'workspace':str(args.workspace),'writes_executed':False}))
+                return 0
+            if args.command=='agent-cancel':
+                print(encode({'dry_run':True,'command':'agent-cancel','run_id':args.run_id,'writes_executed':False}))
+                return 0
+            if args.command == "agent":
+                print(encode({"dry_run":True,"command":"agent","workspace":str(args.workspace),
+                    "execution_enabled":args.allow_execution and not config["safe_mode"],
+                    "requirements_file":str(args.requirements_file) if args.requirements_file else None,
+                    "resume_run_id":args.resume_run_id,
+                    "conversation_id":args.conversation_id,
+                    "safe_mode":config["safe_mode"],"model":config["model"],
+                    "pipeline":["workspace_read","file_edit","syntax_check","optional_tests","repair","journal_readback"],
+                    "writes_executed":False,"training_executed":False}))
+                return 0
             print(encode({"dry_run": True, "config": config, "command": args.command,
                           "pipeline": ["journal", "restore_history", "prepare_turn:MemoryGate/RuntimeFacts/Grounding/postprocess",
                                        "Raw_readback", "Memory_v2_readback", "session_commit", "structural_evaluation", "review_queue"],
                           "teacher_policy": "reviewed external/human path only; never recycle target-model outputs"}))
             return 0
+        if args.command == "agent":
+            if config["safe_mode"]:
+                raise ValueError("safe mode disables agent file writes and test execution; use a separate explicit workspace")
+            from breaktail_agent import run_agent
+            requirements=None
+            if args.requirements_file:
+                if args.requirements_file.stat().st_size>32000:
+                    raise ValueError('requirements file exceeds 32KB')
+                requirements=json.loads(args.requirements_file.read_text(encoding='utf-8-sig'))
+            result = run_agent(config,args.workspace,args.text,max_steps=args.max_steps,allow_execution=args.allow_execution,
+                               requirements=requirements,resume_run_id=args.resume_run_id,max_seconds=args.max_seconds,
+                               conversation_id=args.conversation_id)
+            print(encode(result))
+            return 0 if result["status"] == "completed" else 1
+        if args.command=='agent-cancel':
+            from breaktail_agent import Workspace,request_cancel
+            print(encode(request_cancel(Workspace(args.workspace,create_audit=False),args.run_id)))
+            return 0
+        if args.command in ('agent-enqueue','agent-work','agent-queue','agent-queue-cancel'):
+            if config['safe_mode'] and args.command in ('agent-enqueue','agent-work'):
+                raise ValueError('safe mode disables agent queue submission and execution')
+            from breaktail_agent_queue import AgentQueue
+            with AgentQueue(args.workspace) as queue:
+                if args.command=='agent-enqueue':
+                    requirements=None
+                    if args.requirements_file:
+                        if args.requirements_file.stat().st_size>32000:raise ValueError('requirements file exceeds 32KB')
+                        requirements=json.loads(args.requirements_file.read_text(encoding='utf-8-sig'))
+                    result=queue.enqueue(args.text,requirements,identity=args.task_id,model=config['model'],conversation_id=args.conversation_id)
+                elif args.command=='agent-work':
+                    result=queue.work_one(config,allow_execution=args.allow_execution,max_steps=args.max_steps,max_seconds=args.max_seconds)
+                elif args.command=='agent-queue-cancel':result=queue.cancel(args.task_id)
+                else:result=queue.get(args.task_id) if args.task_id else queue.list(args.limit)
+                print(encode(result))
+                return (0 if result is None or result['status']=='completed' else 1) if args.command=='agent-work' else 0
         if args.command == "daemon":
             return supervise(config, args.config, args.once)
         engine = Orchestrator(config)

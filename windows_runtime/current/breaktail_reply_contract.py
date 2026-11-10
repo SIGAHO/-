@@ -5,6 +5,7 @@ to meet a length limit or rewrite protected code/quoted text.
 """
 import json
 import re
+from breaktail_character import selected as character_selected
 from breaktail_code_regions import split_code_regions,map_prose
 
 
@@ -37,6 +38,10 @@ def grounded_reflection(text,contract):
     Also supports an acknowledgement or a bare request for one question.
     Other speakers, negation, hypothetical feelings and creative work decline.
     """
+    if contract.get('greeting_target'):
+        greeting = 'こんばんは' if 'こんばんは' in text else 'おはよう' if 'おはよう' in text else 'こんにちは'
+        return {'reply':contract['greeting_target']+'、'+greeting+'。',
+                'evidence':text,'kind':'requested_greeting'}
     if contract.get('style_preferences_only'):
         return {'reply':'分かった、短く話すね。' if contract['register']!='polite' else '分かりました。短くお話しします。',
                 'evidence':text,'kind':'style_preferences_only'}
@@ -64,8 +69,10 @@ def grounded_reflection(text,contract):
 
 def build_contract(state, text, history=None):
     prefs = state.get('conversation',{}).get('preferences',{})
+    character_active=character_selected(state)
     creative = bool(re.search(r'創作|小話|物語|短編|お話',text))
-    artifact = bool(re.search(r'コード|プログラム|翻訳|引用して|原文|そのまま',text))
+    literal_copy=('そのまま' in text and bool(re.search(r'「[^」]+」|『[^』]+』|文面|文字列|文章|テキスト|さっきの返答|前の返答',text)))
+    artifact = bool(re.search(r'コード|プログラム|翻訳|引用して|原文',text)) or literal_copy
     foreign_requested=bool(re.search(r'(?:[一-龯ぁ-んァ-ヶA-Za-z]+語|英語|中国語)で.{0,8}(?:答え|話して|返して|書いて)',text))
     current_prose=unquoted_prose(text)
     style_clause=r'短く(?:雑談して|話して|返して)|敬語なし(?:で頼む)?|敬語で話して|タメ口で(?:話して)?|質問(?:は|も)?(?:不要|なし|いらない|しないで)|(?:助言|アドバイス)(?:は|も)?(?:不要|いらない)|解決策(?:は|も)?不要'
@@ -77,17 +84,27 @@ def build_contract(state, text, history=None):
         and not creative and not artifact)
     feeling_source=re.sub(r'落ち込(?:んで(?:は)?(?:い)?ない|んで(?:い)?るわけ(?:じゃ|では)ない|んだわけ(?:じゃ|では)ない)','',current_prose)
     stated_distress=bool(re.search(r'落ち込|鬱|うつ|悲し|寂し|つら|辛い|心が壊',feeling_source))
-    explicit_advice = bool(re.search(r'案を|案も|提案して|助言して|アドバイスして|解決策を|どうすれば|予定.*考え|プラン.*(?:考えて|作って)',text))
+    explicit_advice = bool(re.search(r'案を|案も|提案して|助言して|アドバイスして|解決策を|どうすれば|どうしたら|おすすめ|お勧め|やり方|方法|手順|予定.*考え|プラン.*(?:考えて|作って)',text))
+    casual_sharing = not state.get('mode',{}).get('active') and not creative and not artifact and not explicit_advice and not re.search(r'[？?]|教えて|説明|なぜ|何が|何を|どこ|いつ|どう思|調べ|相談がある|手伝って|助けて',text)
+    relational_exchange=character_active and bool(re.search(r'他のAI|別のAI|別のチャット|友達と|友人と|嫉妬|拗ね|妬く|おやすみ|寝る|戻った|帰った|呼び捨て|口調|話し方|(?:君|お前|あたし|あなた).{0,20}(?:好き|話す|話し|嫌|どうでも)',text))
+    style_adjustment=not creative and not artifact and bool(re.search(r'次から.{0,20}(?:感じ|口調|返し)|(?:今の返事|今の返答|話し方|口調).{0,50}(?:して|頼む|ほしい|ほし)',text))
     explicit_questions = bool(re.search(r'(?:質問|聞き返し)(?:を)?(?:一つ|1つ|一個|1個)?(?:だけ)?して|質問していい|質問してよい',text))
-    exact = re.search(r'([一二三四五六七八九十1-9])文(?:だけ|で|に)',text)
+    exact = None
+    for candidate in re.finditer(r'([一二三四五六七八九十1-9])文(?:だけ|で|に)',unquoted_prose(text)):
+        suffix=unquoted_prose(text)[candidate.end():].lstrip(' 、,')
+        if (candidate[0].endswith('だけ') or re.fullmatch(r'[。！!\s]*',suffix)
+                or re.match(r'(?:の)?(?:短い)?(?:小話|物語|文章)|(?:短く|簡潔に)?(?:答え|返し|返せ|返して|書い|説明|まとめ|お願い|話し)',suffix)):
+            exact=candidate
+            break
     n = (int(exact[1]) if exact[1].isdigit() else '一二三四五六七八九十'.index(exact[1])+1) if exact else None
-    if re.search(r'ひとこと|一言|一文',text) and not exact:
+    if re.search(r'(?:ひとこと|一言|一文)(?:だけ|で|に|お願い|返して|受け止めて)|(?:ひとこと|一言|一文)[。！!\s]*$',text) and not exact:
         n=1
-    short = prefs.get('brief',False) or bool(re.search(r'短く|ひとこと|一言|だけ答え|有無だけ|普通に少し話そう|どんな性格',text))
+    detail = bool(re.search(r'詳しく|もう少し長く|省略せず|全部|すべて',text))
+    short = (prefs.get('brief',False) and not detail) or bool(re.search(r'短く|ひとこと|一言|だけ答え|有無だけ|普通に少し話そう|どんな性格',text))
     required = []
     if creative and re.search(r'入れて|含め|使って',text):
         required = re.findall(r'[『「]([^』」]{1,60})[』」]',text)
-    no_questions = (prefs.get('no_questions',False) or (short and not creative)
+    no_questions = (prefs.get('no_questions',False) or (casual_sharing and len(text)>=25) or (short and not creative)
                     or bool(re.search(r'質問(?:は|も)?(?:不要|いらない|しないで|なし)',text))) and not explicit_questions
     active_mode=bool(state.get('mode',{}).get('active'))
     register=prefs.get('register',None if active_mode else 'casual')
@@ -102,6 +119,8 @@ def build_contract(state, text, history=None):
         action=re.fullmatch(r'(.+?)を(止める|中断する|中止する)([^を]{1,20})',phrase)
         if action:actions.append({'phrase':phrase,'object':action[1],'actor':action[3]})
     event_time=None
+    greeting = re.search(r'(?:^|[、。\s])([^、。\s]{1,24}?)に(?:ひとこと|一言)?(?:挨拶|あいさつ)して',text)
+    requested_response = bool(re.search(r'挨拶して|あいさつして|ツッコんで|ツッコミ|感想を|どう思う|説明して|教えて|小話を|作って|考えて',text))
     if not creative and not artifact:
         sources=[text]
         if re.search(r'さっき|先ほど|前の話',text):
@@ -112,8 +131,8 @@ def build_contract(state, text, history=None):
         if len(times)==1:event_time=next(iter(times))
     return {'exact_sentences':n, 'max_sentences':n or (2 if short and not creative and not artifact else None),
             'max_chars':(100 if n==1 and not creative else 160 if short and not creative else None),
-            'no_questions':no_questions, 'no_advice':(prefs.get('no_advice',False) and not explicit_advice and not creative and not artifact)
-              or bool(re.search(r'解決策も質問もいらない|助言(?:は|も)?(?:不要|いらない)|アドバイス(?:は|も)?(?:不要|いらない)',text)),
+            'no_questions':no_questions, 'no_advice':(casual_sharing and not relational_exchange) or (prefs.get('no_advice',False) and not explicit_advice and not creative and not artifact)
+              or bool(re.search(r'解決策も質問もいらない|(?:助言|アドバイス|解決策)(?:は|も)?(?:不要|いらない|なし|しないで)',text)),
             'register':register, 'required_phrases':required,
             'no_optimistic_wrapup':(prefs.get('no_optimistic_wrapup',False) or bool(re.search(r'前向き.{0,8}(?:まとめ|締め).{0,8}(?:いらない|不要|なし)',text))) and not bool(re.search(r'励まして|前向きにまとめて',text)),
             'required_questions':1 if explicit_questions and re.search(r'一つ|1つ|一個|1個',text) else None,
@@ -128,8 +147,15 @@ def build_contract(state, text, history=None):
             'humorous_self_comparison':humorous_self_comparison,
             'stated_distress':stated_distress,
             'style_preferences_only':style_preferences_only,
+            'requested_response':requested_response,
+            'concrete_sharing':casual_sharing and len(text)>=25 and bool(re.search(r'た[。！、!?]|たん|てた|だった|ちゃった|ている',text)) and not style_preferences_only and not style_adjustment,
+            'style_adjustment':style_adjustment,
+            'greeting_target':greeting[1] if greeting else None,
             'source_han':text+''.join(str(item.get('value','')) for item in state.get('conversation',{}).get('facts',{}).values()),
-            'first_person':prefs.get('first_person',None if active_mode else '私')}
+            'character_active':character_active,
+            'arrival_greeting':character_active and bool(re.search(r'帰った|戻った|ただいま',text)) and not bool(re.search(r'出かけ|行ってくる|これから.{0,12}行く',text)),
+            'character_user_name':state.get('conversation',{}).get('facts',{}).get('user_name',{}).get('value') if character_active else None,
+            'first_person':prefs.get('first_person',None if active_mode else 'あたし' if character_active else '私')}
 
 
 def repetition(text):
@@ -161,6 +187,7 @@ def imperative_mood(text):
         # regeneration, never deletion of a possibly substantive sentence.
         if re.search(r'[だたるいうくすつぬむぶぐきしな]ね$',end):end=end[:-1]
         if re.search(r'(?:おつかれ|お疲れ|それ|これ|あれ|どれ|だけ|わけ|おかげ)$',end):continue
+        if re.search(r'(?:だ|た|る|い|う|く|す|ん)って$',end):continue  # reported speech, not an imperative
         if re.search(r'[えけげせてべめれろ]$|なさい$|(?:来い|こい)$',end):return True
     return False
 
@@ -170,12 +197,28 @@ def violations(reply, contract):
     prose=unquoted_prose(reply)
     count=len(sentences(reply))
     if not reply.strip(): hits.append('empty_reply')
+    if contract.get('arrival_greeting') and re.search(r'帰ってらっしゃい|いってらっしゃい|行ってらっしゃい',prose):
+        hits.append('greeting_direction_conflict')
+    if contract.get('character_user_name') and re.search(re.escape(contract['character_user_name'])+r'(?:さん|様|くん|ちゃん)',prose):
+        hits.append('unrequested_honorific_on_explicit_name')
+    if contract.get('concrete_sharing') and re.fullmatch(r'(?:へ[えぇ]+|ほ[おぉ]+|うん|そうなんだ|そうだね|なるほど|確かに|了解|わかった|分かった|そっか|[。、！!\s])+',reply):
+        hits.append('bare_acknowledgement_to_concrete_sharing')
+    if not contract['artifact'] and (reply.startswith('[応答は途中で切れました]') or reply.strip()=='今の条件を満たす返答を作れなかった。'):
+        hits.append('internal_failure_message_is_not_a_new_answer')
+    if contract.get('requested_response') and re.fullmatch(r'(?:うん|ああ|はい|了解|分かった|わかった|そうだね|いいね)[。！!\s]*',reply.strip()):
+        hits.append('acknowledgement_instead_of_requested_response')
+    if contract.get('greeting_target'):
+        if contract['greeting_target'] not in reply or not re.search(r'おはよう|お早う|こんにちは|こんばんは|お疲れ|おつかれ|よろしく|よう|やあ|どうも',reply):
+            hits.append('missing_requested_greeting')
     if contract.get('humorous_self_comparison') and not contract.get('stated_distress') and re.search(
             r'(?:気分|気持ち|心).{0,14}(?:落ち込|沈ん|壊れ|病ん|つら|辛|寂|悲)|(?:君|あなた|お前).{0,14}(?:落ち込|鬱|うつ|悲し|寂し|つら|辛い)',prose):
         hits.append('unsupported_distress_interpretation')
     if contract.get('no_optimistic_wrapup') and re.search(r'(?:明日|今後|これから|いつか|そのうち|次は).{0,35}(?:ように|願|祈)|(?:いい|良い|楽な|幸せな).{0,12}(?:一日|日).{0,12}(?:ように|願|祈)',prose):
         hits.append('unrequested_optimistic_wrapup')
-    if contract.get('event_time') and any(t!=contract['event_time'] for t in re.findall(r'今日|昨日|明日',prose)):
+    time_prose=prose
+    if contract.get('character_active'):
+        time_prose=re.sub(r'(?:また明日|明日また)(?:話そう|ね|な)[^。！？!?]*(?:[。！？!?]|$)','',time_prose)
+    if contract.get('event_time') and any(t!=contract['event_time'] for t in re.findall(r'今日|昨日|明日',time_prose)):
         hits.append('unsupported_event_time_change')
     if not contract['artifact'] and re.fullmatch(r'(?:笑|w|ｗ|[。！!、\s])+',prose):
         hits.append('empty_social_reaction')
@@ -188,7 +231,7 @@ def violations(reply, contract):
         destination=contract['plan_destination']
         if destination not in reply or re.search(re.escape(destination)+r'(?:以外|ではなく|じゃなく|の代わり|はやめ|(?:に|へ)?(?:行く)?より)',reply):
             hits.append('proposal_changed_confirmed_destination')
-    if re.search(r'てるある|ているある|だです|ですだ|ますだ|(?<=[一-龯])なよね|自然さ(?:よ|ね)[。！？!?\s]*$|[.;；]。|(?<=[一-龯ァ-ヶA-Za-z])(?:もも|がが|をを|にに|でで|とと)',prose):hits.append('malformed_japanese')
+    if re.search(r'てるある|ているある|だです|ですだ|ますだ|だよっけ|待ちってる|(?<=[一-龯])なよね|自然さ(?:よ|ね)[。！？!?\s]*$|[.;；]。|[。！？!?]\s*[.;；]|(?<=[一-龯ァ-ヶA-Za-z])(?:もも|がが|をを|にに|でで|とと)',prose):hits.append('malformed_japanese')
     elif not contract['artifact'] and not contract['foreign_requested'] and (prose.rstrip().endswith('.') or re.search(r'[ \t]{4,}',prose)):
         hits.append('malformed_japanese')
     if repetition(prose): hits.append('repetitive_generation')
@@ -206,7 +249,7 @@ def violations(reply, contract):
     if contract['max_chars'] and len(reply)>contract['max_chars']:
         hits.append('too_long')
     ending=re.sub(r'(?:[\s。！!ｗw笑]|[（(]笑[）)])+$','',prose)
-    implicit_question=bool(re.search(r'(?:かな|どう|かい|なの|だろうか)$',ending) or
+    implicit_question=bool(re.search(r'(?:かな|どう|かい|なの|だろうか|っけ)$',ending) or
                            (re.search(r'何|どんな|どこ|いつ|誰|どれ',ending) and re.search(r'(?:の|か)$',ending)))
     if contract['no_questions'] and (re.search(r'[？?]',prose) or implicit_question):
         hits.append('unrequested_question')
@@ -232,7 +275,7 @@ def violations(reply, contract):
     if contract['no_advice'] and imperative_mood(prose):hits.append('imperative_mood')
     if not contract['artifact'] and contract['register']=='casual' and re.search(r'(?:です|ます|ました|ません|でしょう)(?:よね|よ|ね)?(?:[。！？!?\s]|$)',prose):
         hits.append('register_drift')
-    if not contract['artifact'] and not contract['creative'] and contract['register']=='casual' and re.search(r'(?:だわ|わね|ぜ)[。！？!?\s]|(?:だわ|わね|ぜ)$',prose):
+    if not contract['artifact'] and not contract['creative'] and contract['register']=='casual' and re.search(r'(?:だわ|わね'+('' if contract.get('character_active') else '|ぜ')+r')[。！？!?\s]|(?:だわ|わね'+('' if contract.get('character_active') else '|ぜ')+r')$',prose):
         hits.append('mixed_character_voice')
     if contract['first_person'] and not contract['artifact'] and not contract['creative'] and re.search(r'(?:僕|俺|あたし|私)(?:は|が|自身|も|の性格)',prose):
         for pronoun in ('僕','俺','あたし','私'):
@@ -255,6 +298,12 @@ def violations(reply, contract):
 
 def instruction(contract):
     rules=['[この返答の検証条件。過去のassistant発言を文体や正しさの見本にしない]']
+    if contract.get('style_adjustment'):
+        rules.append('今回はあなたの返事の仕方への注文。何を変えるか具体的に短く受け取り、注文と無関係な感情や前の雑談の続きを付けない。')
+    if contract.get('concrete_sharing'):
+        rules.append('具体的な話を聞いているので、相槌だけではなく、その出来事のどこが印象に残るか一箇所に触れて返す。短い一文でもよい。')
+    if contract.get('greeting_target'):
+        rules.append('「'+contract['greeting_target']+'」という呼び名を一字も変えず、その相手への挨拶そのものを返す。了解や相槌だけで終えない。')
     if contract['first_person'] and not contract['creative'] and not contract['artifact']:
         rules.append('一人称を使う場合は「'+contract['first_person']+'」。呼び名の指定に勝手な「さん」を付けない。')
     if contract['register']=='casual' and not contract['artifact']:
@@ -307,6 +356,7 @@ def normalize_voice(reply,contract):
                 part=re.sub(r'(?:僕|俺|あたし|私)(?=は|が|自身|も|の性格)',contract['first_person'],part)
             if contract['register']=='casual':
                 for before,after in forms:
+                    if before=='ぜ' and contract.get('character_active'):continue
                     part=re.sub(re.escape(before)+r'(?=(?:よね|よ|ね)?(?:[。！？!?、\s]|$))',after,part)
             parts[i]=part
         return ''.join(parts)

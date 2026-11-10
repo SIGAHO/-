@@ -25,7 +25,13 @@ class ProfileStoreError(RuntimeError):
 
 
 def is_remember_request(text: str) -> bool:
-    return bool(_REMEMBER_REQUEST.search(text))
+    match=_REMEMBER_REQUEST.search(text)
+    if not match:
+        return False
+    # A persistence shortcut must not swallow another question in the same
+    # message. Mixed requests stay in the ordinary conversation path.
+    rest=text[match.end():]
+    return not bool(re.search(r'[？?]|教えて|答えて|説明して|確認して|どうな|どこ|いつ|何を',rest))
 
 
 def is_profile_commit_request(text: str) -> bool:

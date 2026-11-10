@@ -8,6 +8,7 @@ import ast
 import operator
 import re
 from fractions import Fraction
+from breaktail_ordering import verify_ordering
 
 
 def arithmetic(expression):
@@ -48,6 +49,37 @@ def parse_boxes(text):
 def verify_reply(text, reply, state, history=None):
     session = state.setdefault('conversation', {'facts':{}, 'preferences':{}, 'logic':None})
     facts = {key:item['value'] for key,item in session.get('facts',{}).items()}
+    money=re.findall(r'([0-9][0-9,]*)円',text)
+    if re.search(r'別の|新しい|今度は',text):session.pop('plain_subtraction',None)
+    plain_subtraction=(2<=len(money)<=8 and 'から' in text and re.search(r'引く|引いた|引いて',text)
+                       and not re.search(r'一人|二人|[0-9]人|ずつ|割引|税込|税抜|%|％|毎|なら|場合|コード|物語|同行者|続柄|集合|曜日|目的地|それと|ついで',text)
+                       and all(len(v.replace(',',''))<=12 for v in money))
+    if plain_subtraction:
+        session['plain_subtraction']={'amounts':[int(v.replace(',','')) for v in money],'source':text}
+    prior_subtraction=session.get('plain_subtraction')
+    recent_user=[m.get('content','') for m in (history or [])[-8:] if m.get('role')=='user']
+    if prior_subtraction and (plain_subtraction or (prior_subtraction['source'] in recent_user and re.search(r'残り|残金|検算|計算|合って',text) and not re.search(r'予算|一人|二人|別の|新しい',text))):
+        values=prior_subtraction['amounts']
+        value=values[0]-sum(values[1:])
+        formula='−'.join(map(str,values))+'＝'+str(value)+'円'
+        return formula+'だよ。',{'kind':'user_currency_subtraction','source':prior_subtraction['source'],'value':value}
+    ordering=verify_ordering(text,session,history)
+    if ordering:
+        return ordering
+    prior_check=bool(re.search(r'前に決め|前の内容|変更の指示ではなく|だったよね|だったっけ|だっけ',text))
+    companion=facts.get('companion')
+    nearby_companion=any(companion in m.get('content','') for m in (history or [])[-8:] if m.get('role')=='user') if companion else False
+    if prior_check and companion and (companion in text or nearby_companion or re.search(r'前の予定|さっきの予定',text)):
+        parts=[]
+        if re.search(r'同行者|続柄',text) or re.search(re.escape(companion)+r'(?:は|って)(?:兄|姉|弟|妹|友人|友達)',text):
+            parts.append('同行者は'+facts.get('relationship','続柄不明')+'の'+companion)
+        if re.search(r'曜日|行くのは|[月火水木金土日]曜',text) and 'day' in facts:
+            parts.append('曜日は'+facts['day'])
+        if re.search(r'集合|待ち合わせ',text) and 'meeting_place' in facts:
+            parts.append('集合場所は'+facts['meeting_place'])
+            if 'meeting_time' in facts:parts.append('時刻は'+facts['meeting_time'])
+        if parts:
+            return '会話で決めた内容は、'+'、'.join(parts)+'だよ。',{'kind':'prior_user_fact_confirmation','source_keys':list(facts)}
     if (re.search(r'呼び名',text) and '同行者' in text and re.search(r'何|確認|教えて|覚え',text)
             and not re.search(r'予算|曜日|残金|いつ|どこ',text)):
         # A multi-field recall must neither omit a requested item nor add an
@@ -69,8 +101,8 @@ def verify_reply(text, reply, state, history=None):
             if remaining>=0:proposal=proposal.removesuffix('行く')+f'行き、交通費と昼食後の残金{remaining}円を追加支出の上限にする'
         return proposal+'案を候補にしよう。', {
             'kind':'constraint_based_proposal','status':'proposed','adopted':False,'destination':facts['destination']}
-    if re.search(r'変更点だけ|訂正(?:した|の)?(?:点|箇所)だけ',text):
-        labels={'relationship':'同行者の続柄','day':'曜日','budget':'予算','destination':'目的地'}
+    if re.search(r'変更点だけ|変更した(?:点|内容)だけ|訂正(?:した|の)?(?:点|箇所)だけ',text):
+        labels={'relationship':'同行者の続柄','day':'曜日','budget':'予算','destination':'目的地','meeting_place':'集合場所','meeting_time':'集合時刻'}
         changed=[key for key in session.get('last_changes',[]) if key in labels]
         if changed:
             return '、'.join(labels[key]+'は'+str(facts[key])+('円' if key=='budget' else '') for key in changed)+'。',{'kind':'explicit_changes','keys':changed}
@@ -127,12 +159,18 @@ def verify_reply(text, reply, state, history=None):
         remaining = budget-transport-lunch-admission
         formula = f'{budget}−{transport}−{lunch}'+(f'−{admission}' if admission else '')+f'＝{remaining}円'
         result = formula+('で'+str(-remaining)+'円不足。' if remaining<0 else f'で残り{remaining}円。')
-        if re.search(r'続柄|曜日', text):
+        if re.search(r'同行者|続柄|曜日|目的地|集合|店', text):
             details = []
-            if re.search(r'続柄', text) and 'relationship' in facts and 'companion' in facts:
-                details.append('同行者は'+facts['relationship']+'の'+facts['companion'])
+            if re.search(r'同行者|続柄', text) and 'companion' in facts:
+                details.append('同行者は'+(facts['relationship']+'の' if 'relationship' in facts else '')+facts['companion'])
             if re.search(r'曜日', text) and 'day' in facts:
                 details.append(facts['day'])
+            if '目的地' in text:
+                details.append('目的地は'+str(facts.get('destination','不明')))
+            if '集合' in text:
+                details.append('集合は'+str(facts.get('meeting_place','場所不明'))+'、'+str(facts.get('meeting_time','時刻不明')))
+            if '店' in text:
+                details.append('昼食の店は'+str(facts.get('meal_venue_status','決定状態不明')))
             if details:
                 result = '、'.join(details)+'、'+result
         if re.search(r'何を間違え', text):
