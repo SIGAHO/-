@@ -133,7 +133,7 @@ def build_contract(state, text, history=None):
         if len(times)==1:event_time=next(iter(times))
     return {'exact_sentences':n, 'max_sentences':n or (2 if short and not creative and not artifact else None),
             'max_chars':(100 if n==1 and not creative else 160 if short and not creative else None),
-            'no_questions':no_questions, 'no_advice':(casual_sharing and not relational_exchange) or (prefs.get('no_advice',False) and not explicit_advice and not creative and not artifact)
+            'no_questions':no_questions, 'no_advice':(casual_sharing and not relational_exchange) or (prefs.get('no_advice',False) and not explicit_advice and not direct_request and not creative and not artifact)
               or bool(re.search(r'解決策も質問もいらない|(?:助言|アドバイス|解決策)(?:は|も)?(?:不要|いらない|なし|しないで)',text)),
             'register':register, 'required_phrases':required,
             'no_optimistic_wrapup':(prefs.get('no_optimistic_wrapup',False) or bool(re.search(r'前向き.{0,8}(?:まとめ|締め).{0,8}(?:いらない|不要|なし)',text))) and not bool(re.search(r'励まして|前向きにまとめて',text)),
