@@ -2,6 +2,7 @@ import json
 import tempfile
 import os
 import subprocess
+import time
 import unittest
 from pathlib import Path
 from unittest.mock import Mock, patch
@@ -144,6 +145,23 @@ class WebCommandReachabilityTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 web.undo_workspace_edit(str(root), saved["run_id"])
             self.assertEqual(source.read_text(encoding="utf-8"), "user edit")
+
+    def test_expired_preview_and_changed_backup_do_not_overwrite(self):
+        with tempfile.TemporaryDirectory(dir=Path(__file__).resolve().parents[2]) as temp_dir:
+            root = Path(temp_dir)
+            source = root / "notes.txt"
+            source.write_text("old", encoding="utf-8")
+            expired = web.prepare_workspace_replace(str(root), "notes.txt", "old", "new")
+            web.PREPARED_EDITS[expired["preview_id"]]["expires"] = time.monotonic() - 1
+            with self.assertRaises(ValueError):
+                web.commit_workspace_replace(expired["preview_id"])
+            self.assertEqual(source.read_text(encoding="utf-8"), "old")
+            preview = web.prepare_workspace_replace(str(root), "notes.txt", "old", "new")
+            saved = web.commit_workspace_replace(preview["preview_id"])
+            (root / saved["backup"]).write_text("tampered", encoding="utf-8")
+            with self.assertRaises(ValueError):
+                web.undo_workspace_edit(str(root), saved["run_id"])
+            self.assertEqual(source.read_text(encoding="utf-8"), "new")
 
     def test_undo_recovers_committed_file_after_receipt_interruption(self):
         with tempfile.TemporaryDirectory(dir=Path(__file__).resolve().parents[2]) as temp_dir:
