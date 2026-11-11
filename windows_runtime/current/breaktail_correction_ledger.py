@@ -138,6 +138,13 @@ def commit(raw_path, ledger_path, label, old_turn_id, new_turn_id, expected_old_
             raise ValueError("確認後にRawの出典が変わりました。登録しません")
         existing = [record for record in _records(ledger_path)
                     if record["conversation_id"] == checked["conversation_id"] and record["key"] == checked["key"]]
+        if existing:
+            chain = history(raw_path, ledger_path, checked["label"], existing[0]["old_turn_id"])
+            if (chain["count"] != len(existing) or
+                    not all(item["sources_available"] for item in chain["items"]) or
+                    any(before["new_turn_id"] != after["old_turn_id"]
+                        for before, after in zip(chain["items"], chain["items"][1:]))):
+                raise ValueError("既存の訂正チェーンの出典を再確認できません。追記しません")
         if existing and (existing[-1]["old_turn_id"], existing[-1]["new_turn_id"]) == (old_turn_id, new_turn_id):
             if (existing[-1].get("old_source_sha256") != checked["old"]["sha256"] or
                     existing[-1].get("new_source_sha256") != checked["new"]["sha256"] or
