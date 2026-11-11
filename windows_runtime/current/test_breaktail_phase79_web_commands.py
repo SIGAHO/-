@@ -1,4 +1,6 @@
 import tempfile
+import os
+import subprocess
 import unittest
 from pathlib import Path
 from unittest.mock import Mock, patch
@@ -67,6 +69,24 @@ class WebCommandReachabilityTests(unittest.TestCase):
         self.assertTrue(web.local_request_allowed(f"localhost:{web.PORT}", f"http://localhost:{web.PORT}"))
         self.assertFalse(web.local_request_allowed("evil.example:8765"))
         self.assertFalse(web.local_request_allowed(f"127.0.0.1:{web.PORT}", "http://evil.example"))
+
+    @unittest.skipUnless(os.name == "nt", "Windows junction test")
+    def test_web_read_rejects_junction(self):
+        with tempfile.TemporaryDirectory(dir=Path(__file__).resolve().parents[2]) as temp_dir:
+            root = Path(temp_dir)
+            outside = root.parent / (root.name + "-outside")
+            outside.mkdir()
+            try:
+                link = root / "linked"
+                completed = subprocess.run(["cmd", "/c", "mklink", "/J", str(link), str(outside)], capture_output=True)
+                self.assertEqual(completed.returncode, 0)
+                try:
+                    with self.assertRaises(ValueError):
+                        web.read_workspace(str(root), "list_files", "linked")
+                finally:
+                    link.rmdir()
+            finally:
+                outside.rmdir()
 
     def test_debug_and_style_state_survive_web_snapshot_restore(self):
         samples = [{"user": f"質問 {number}？"} for number in range(6)]
