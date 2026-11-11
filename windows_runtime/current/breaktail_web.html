@@ -171,7 +171,7 @@ $('correction-commit').addEventListener('click',async()=>{
 $('correction-history').addEventListener('click',async()=>{
   try{
     const result=await api('/api/memory/correction/history',{label:$('correction-label').value.trim(),anchor_turn_id:$('correction-old').value.trim()});
-    const lines=['この会話の話題「'+result.label+'」: '+result.count+'件','最新の出典ID: '+(result.latest_turn_id||'記録なし')];
+    const lines=['この会話の話題「'+result.label+'」: '+result.count+'件','最新の出典ID: '+(result.latest_turn_id||(result.count?'チェーン全体の出典未確認':'記録なし'))];
     for(const item of result.items)lines.push('記録ID: '+item.id+' / 登録時刻: '+item.created_at+'\n旧 '+item.old_turn_id+': '+(item.old_text||'Raw照合不可')+'\n新 '+item.new_turn_id+': '+(item.new_text||'Raw照合不可'));
     $('correction-result').textContent=lines.join('\n\n')+'\n\n本人が選んだ更新で、外部確認済みの事実ではありません。';
   }catch(error){$('correction-result').textContent='訂正履歴を読めませんでした: '+error.message;}
