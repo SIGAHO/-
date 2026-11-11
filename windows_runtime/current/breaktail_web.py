@@ -164,7 +164,8 @@ def memories():
 def read_workspace(workspace_root, tool, path):
     if tool not in ("list_files", "read_file"):
         raise ValueError("読取り専用の操作だけ利用できます")
-    if not isinstance(workspace_root, str) or not workspace_root.strip() or not Path(workspace_root).is_absolute():
+    if (not isinstance(workspace_root, str) or not workspace_root.strip() or
+            not Path(workspace_root).is_absolute() or not re.fullmatch(r"[A-Za-z]:", Path(workspace_root).drive)):
         raise ValueError("作業フォルダーの絶対パスを指定してください")
     if not isinstance(path, str) or not path.strip():
         raise ValueError("作業フォルダー内の相対パスを指定してください")
