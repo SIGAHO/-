@@ -59,12 +59,14 @@
     <div class="composer-zone"><div class="composer-wrap"><div class="composer"><textarea id="input" rows="1" placeholder="Breaktail に話しかける…"></textarea><button id="send" class="send" aria-label="送信">➜</button></div><div class="hint"><span>Enter で送信 · Shift + Enter で改行 · /capabilities で操作一覧</span><span id="hint-status">記憶は解釈だけ保存</span></div></div></div>
   </main>
 </div>
-<dialog id="workspace-dialog" style="width:min(900px,90vw);max-height:75vh;background:#101620;color:#eaf2f6;border:1px solid #263244;border-radius:12px"><button id="close-workspace" style="float:right">閉じる</button><h2>作業フォルダーの結果</h2><div id="workspace-entries" style="display:flex;flex-wrap:wrap;gap:8px;margin:12px 0"></div><pre id="workspace-result" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:40vh;overflow:auto" aria-live="polite"></pre><details><summary>文字列の変更案を確認（保存しません）</summary><p>選んだファイルで、置換前の文字列を1か所だけ指定します。</p><textarea id="preview-old" aria-label="置換前の文字列" placeholder="置換前の文字列" style="width:100%;box-sizing:border-box"></textarea><textarea id="preview-new" aria-label="置換後の文字列" placeholder="置換後の文字列" style="width:100%;box-sizing:border-box"></textarea><button id="preview-change" type="button">変更案と構文を確認</button></details></dialog>
+<dialog id="workspace-dialog" style="width:min(900px,90vw);max-height:75vh;background:#101620;color:#eaf2f6;border:1px solid #263244;border-radius:12px"><button id="close-workspace" style="float:right">閉じる</button><h2>作業フォルダーの結果</h2><div id="workspace-entries" style="display:flex;flex-wrap:wrap;gap:8px;margin:12px 0"></div><pre id="workspace-result" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:40vh;overflow:auto" aria-live="polite"></pre><details><summary>文字列の変更案を確認</summary><p>選んだファイルで、置換前の文字列を1か所だけ指定します。差分を確認した後だけ保存できます。</p><textarea id="preview-old" aria-label="置換前の文字列" placeholder="置換前の文字列" style="width:100%;box-sizing:border-box"></textarea><textarea id="preview-new" aria-label="置換後の文字列" placeholder="置換後の文字列" style="width:100%;box-sizing:border-box"></textarea><button id="preview-change" type="button">変更案と構文を確認</button><button id="save-change" type="button" disabled>確認した変更案を保存</button><p>保存した変更の取消（再起動後も作業IDを入力して利用できます）</p><input id="undo-id" aria-label="取消する作業ID" placeholder="保存時の作業ID" style="width:100%;box-sizing:border-box"><button id="undo-change" type="button" disabled>変更を取り消す</button></details></dialog>
 <script>
 const token = '__BREAKTAIL_TOKEN__';
 const $ = id => document.getElementById(id);
 const chat = $('chat'), conversation = $('conversation'), input = $('input');
 let working = false;
+let previewId = null;
+function invalidatePreview(){previewId=null;$('save-change').disabled=true;}
 async function api(path, data) {
   const options = data === undefined ? {} : {method:'POST',headers:{'Content-Type':'application/json','X-Breaktail-Token':token},body:JSON.stringify(data)};
   const response = await fetch(path, options);
@@ -104,6 +106,7 @@ async function send() {
 }
 $('send').addEventListener('click',send);
 async function workspaceRead(tool) {
+  invalidatePreview();
   if (!$('workspace-dialog').open) $('workspace-dialog').showModal();
   const result=$('workspace-result');result.textContent='読取り中…';
   const entries=$('workspace-entries');entries.replaceChildren();
@@ -129,17 +132,35 @@ async function workspaceRead(tool) {
   } catch(error) {result.textContent='読取り失敗: '+error.message;}
 }
 async function workspacePreview() {
+  invalidatePreview();
   const result=$('workspace-result');result.textContent='変更案を確認中…';
   $('workspace-entries').replaceChildren();
   try {
     const response=await api('/api/workspace/preview',{workspace:$('workspace-root').value.trim(),path:$('workspace-path').value.trim(),old:$('preview-old').value,new:$('preview-new').value});
     const syntax=response.syntax.checked?'Python構文: 確認済み':response.syntax.error?'Python構文: '+response.syntax.error+'（行 '+response.syntax.error_line+'）':'Python構文: 未確認（'+response.syntax.reason+'）';
     result.textContent='保存していません\n対象: '+response.workspace+' / '+response.path+'\n元のSHA-256: '+response.source_sha256+'\n変更案のSHA-256: '+response.candidate_sha256+'\n'+syntax+'\n\n'+response.diff+(response.diff_truncated?'\n差分は途中で省略しました':'');
+    if(response.preview_id){previewId=response.preview_id;$('save-change').disabled=false;}
   } catch(error) {result.textContent='変更案の確認に失敗: '+error.message;}
+}
+async function workspaceSave(){
+  if(!previewId||!confirm('画面の差分どおりに、このファイルを保存しますか？ 変更前の内容は作業フォルダー内にバックアップします。'))return;
+  const identity=previewId;invalidatePreview();
+  try{const response=await api('/api/workspace/commit',{preview_id:identity});$('workspace-result').textContent='保存して読み戻しました\n対象: '+response.workspace+' / '+response.path+'\n変更前のSHA-256: '+response.before_sha256+'\n変更後のSHA-256: '+response.after_sha256+'\nバックアップ: '+response.backup+'\n作業ID: '+response.run_id;$('undo-id').value=response.run_id;$('undo-change').disabled=false;}
+  catch(error){$('workspace-result').textContent='保存できませんでした: '+error.message+'\nもう一度読み直して変更案を確認してください。';}
+}
+async function workspaceUndo(){
+  const runId=$('undo-id').value.trim();
+  if(!/^[0-9a-f]{32}$/.test(runId)||!confirm('この作業IDの変更を取り消しますか？ 保存後にファイルが変わっていたら上書きせず拒否します。'))return;
+  try{const response=await api('/api/workspace/undo',{workspace:$('workspace-root').value.trim(),run_id:runId});$('workspace-result').textContent='変更を取り消して読み戻しました\n対象: '+response.workspace+' / '+response.path+'\n復元後のSHA-256: '+response.sha256+'\n作業ID: '+response.run_id;$('undo-change').disabled=true;}
+  catch(error){$('workspace-result').textContent='取消できませんでした: '+error.message;}
 }
 $('list-files').addEventListener('click',()=>workspaceRead('list_files'));
 $('read-file').addEventListener('click',()=>workspaceRead('read_file'));
 $('preview-change').addEventListener('click',workspacePreview);
+$('save-change').addEventListener('click',workspaceSave);
+$('undo-change').addEventListener('click',workspaceUndo);
+$('undo-id').addEventListener('input',()=>{$('undo-change').disabled=!/^[0-9a-f]{32}$/.test($('undo-id').value.trim());});
+for(const name of ['workspace-root','workspace-path','preview-old','preview-new'])$(name).addEventListener('input',invalidatePreview);
 $('close-workspace').addEventListener('click',()=>$('workspace-dialog').close());
 input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}});
 input.addEventListener('input',()=>{input.style.height='auto';input.style.height=Math.min(input.scrollHeight,170)+'px';});
