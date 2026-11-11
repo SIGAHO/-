@@ -41,8 +41,11 @@ def _rows(path, scope):
                     invalid += 1
                     continue
                 found.append({"id": row["id"], "content": row["content"],
-                              "created_at": row.get("created_at") if isinstance(row.get("created_at"), str) else None,
-                              "source_turn_id": None, "verification": "unverified_interpretation"})
+                              "created_at": next((row[key] for key in ("recorded_at", "created_at")
+                                                  if isinstance(row.get(key), str)), None),
+                              "source_turn_ids": [value for value in row.get("source_turn_ids", [])
+                                                  if isinstance(value, str) and value] if isinstance(row.get("source_turn_ids", []), list) else [],
+                              "verification": "unverified_interpretation"})
     found.reverse()
     return found, invalid
 
@@ -70,6 +73,17 @@ def page_records(memory_path, raw_path, scope, page=1):
             event["is_latest"] = event["turn_id"] == newest
             event["superseded_by_turn_id"] = None if event["is_latest"] else newest
         rows = list(reversed(events))
+    elif scope == "interpretations":
+        raw_rows, _ = _rows(raw_path, "raw")
+        raw_by_id = {row["turn_id"]: row for row in raw_rows}
+        for row in rows:
+            row["sources"] = []
+            for identity in row.pop("source_turn_ids"):
+                source = raw_by_id.get(identity)
+                row["sources"].append({"turn_id": identity, "raw_found": source is not None,
+                                       "timestamp": source["timestamp"] if source else None,
+                                       "speaker": "user" if source else None,
+                                       "user_text": source["messages"][0]["content"] if source else None})
     total = len(rows)
     pages = (total + PAGE_SIZE - 1) // PAGE_SIZE
     if page > max(1, pages):
