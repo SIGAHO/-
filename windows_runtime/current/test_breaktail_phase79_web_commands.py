@@ -125,6 +125,47 @@ class WebCommandReachabilityTests(unittest.TestCase):
             server.server_close()
             thread.join(timeout=3)
 
+    def test_correction_http_preview_commit_and_history_use_isolated_raw(self):
+        with tempfile.TemporaryDirectory(dir=Path(__file__).resolve().parents[2]) as directory:
+            root = Path(directory)
+            raw, ledger = root / "raw.jsonl", root / "corrections.jsonl"
+            rows = [{"conversation_id": "session-a", "turn_id": identity,
+                     "timestamp": f"2026-11-12T00:0{index}:00Z", "user_text": content,
+                     "assistant_text": "ack", "status": "complete"}
+                    for index, (identity, content) in enumerate(
+                        (("old-turn-0001", "old value"), ("new-turn-0002", "new value")))]
+            raw.write_text("".join(json.dumps(row) + "\n" for row in rows), encoding="utf-8")
+            server = web.ExclusiveHTTPServer(("127.0.0.1", 0), web.Handler)
+            thread = threading.Thread(target=server.serve_forever, daemon=True)
+            thread.start()
+            def post(action, data):
+                request = urllib.request.Request(
+                    f"http://127.0.0.1:{server.server_port}/api/memory/correction/{action}",
+                    data=json.dumps(data).encode("utf-8"), headers={"Content-Type": "application/json",
+                    "X-Breaktail-Token": web.TOKEN, "Origin": f"http://127.0.0.1:{server.server_port}"})
+                with urllib.request.urlopen(request, timeout=3) as response:
+                    return json.load(response)
+            try:
+                with patch.object(web, "PORT", server.server_port), \
+                     patch.object(web, "CORRECTION_FILE", ledger), \
+                     patch.object(web.tail.raw_conversation, "RAW_CONVERSATION_FILE", raw), \
+                     patch.object(web, "handle_review", return_value=False):
+                    request = {"label": "sample fact", "old_turn_id": "old-turn-0001",
+                               "new_turn_id": "new-turn-0002"}
+                    check = post("preview", request)
+                    self.assertFalse(ledger.exists())
+                    self.assertEqual(check["new"]["text"], "new value")
+                    receipt = post("commit", {**request, "expected_old_sha256": check["old"]["sha256"],
+                                              "expected_new_sha256": check["new"]["sha256"]})
+                    self.assertFalse(receipt["already_recorded"])
+                    report = post("history", {"label": "sample fact", "anchor_turn_id": "old-turn-0001"})
+                    self.assertEqual(report["latest_turn_id"], "new-turn-0002")
+                    self.assertEqual(len(ledger.read_text(encoding="utf-8").splitlines()), 1)
+            finally:
+                server.shutdown()
+                server.server_close()
+                thread.join(timeout=3)
+
     def test_workspace_preview_shows_diff_and_syntax_without_writing(self):
         with tempfile.TemporaryDirectory(dir=Path(__file__).resolve().parents[2]) as temp_dir:
             root = Path(temp_dir)
