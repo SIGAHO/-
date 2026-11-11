@@ -63,6 +63,19 @@ class CorrectionLedgerTests(unittest.TestCase):
             preview(self.raw, "shop location", "new-turn-0002", "old-turn-0001")
         self.assertEqual(history(self.raw, self.ledger, "shop location", "other-turn-0004")["count"], 0)
 
+    def test_changed_raw_is_not_reported_as_current_value(self):
+        checked = preview(self.raw, "shop location", "old-turn-0001", "new-turn-0002")
+        commit(self.raw, self.ledger, "shop location", "old-turn-0001", "new-turn-0002",
+               checked["old"]["sha256"], checked["new"]["sha256"])
+        rows = [json.loads(line) for line in self.raw.read_text(encoding="utf-8").splitlines()]
+        rows[1]["user_text"] = "Changed after registration."
+        self.raw.write_text("".join(json.dumps(row) + "\n" for row in rows), encoding="utf-8")
+        report = history(self.raw, self.ledger, "shop location", "old-turn-0001")
+        self.assertEqual(report["count"], 1)
+        self.assertIsNone(report["latest_turn_id"])
+        self.assertIsNone(report["latest_text"])
+        self.assertFalse(report["items"][0]["sources_available"])
+
 
 if __name__ == "__main__":
     unittest.main()
