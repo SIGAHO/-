@@ -108,7 +108,10 @@ async function loadMemoryPage(scope=memoryScope,page=memoryPage){
     for(const item of result.items){
       if(scope==='raw')lines.push('出典ID: '+item.turn_id+' / 会話ID: '+item.conversation_id+' / 時刻: '+item.timestamp+' / 状態: '+item.status+'\n'+item.messages.map(m=>(m.speaker==='user'?'あなた':'Breaktail')+': '+m.content).join('\n'));
       else if(scope==='ledger')lines.push('出典ID: '+item.turn_id+' / 会話ID: '+item.conversation_id+' / 時刻: '+item.timestamp+' / 発言者: あなた / 本人の申告（外部未検証）\n'+item.status+': '+item.detail+'\n'+(item.is_latest?'この会話内の同名項目で最新':'後の出典ID '+item.superseded_by_turn_id+' に更新'));
-      else lines.push('記憶番号: '+item.id+' / 作成時刻: '+(item.created_at||'記録なし')+' / 出典ID: 記録なし / 未確認の解釈\n'+item.content);
+      else {
+        const sources=(item.sources||[]).length?item.sources.map(source=>'出典ID: '+source.turn_id+(source.raw_found?' / Raw照合済み / 時刻: '+source.timestamp+' / 発言者: あなた\n原文: '+source.user_text:' / Raw照合不可')).join('\n'):'出典ID: 記録なし';
+        lines.push('記憶番号: '+item.id+' / 作成時刻: '+(item.created_at||'記録なし')+' / 未確認の解釈\n'+item.content+'\n'+sources);
+      }
     }
     $('memory-page-items').textContent=lines.join('\n\n')||'該当する記録はありません。';
     $('memory-prev').disabled=!result.has_previous;$('memory-next').disabled=!result.has_next;
