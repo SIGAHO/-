@@ -64,6 +64,34 @@ class WebAgentBridgeTests(unittest.TestCase):
         (self.root / "sample.py").write_text("value = 2\n", encoding="utf-8")
         changed = service.review(self.root, submitted["job_id"])
         self.assertEqual(changed["changes"][0]["status"], "external_change")
+        with self.assertRaises(ValueError):
+            service.undo(self.root, submitted["job_id"], result["changes"][0]["after_sha256"])
+
+    def test_existing_file_undo_requires_matching_hash_and_is_one_time(self):
+        source = self.root / "sample.py"
+        source.write_text("value = 'red'\n", encoding="utf-8")
+        actions = iter([{"tool": "read_file", "args": {"path": "sample.py"}},
+                        {"tool": "replace_text", "args": {"path": "sample.py", "old": "red", "new": "blue"}},
+                        {"tool": "check_python", "args": {}},
+                        {"tool": "finish", "args": {"summary": "changed"}}])
+        service = WebAgentService(config_loader=lambda: self.config,
+                                  model=lambda messages: json.dumps(next(actions)))
+        submitted = service.start(self.root, "change sample.py")
+        result = self.wait_status(service, submitted["job_id"])
+        self.assertEqual(result["status"], "completed")
+        changed_hash = result["changes"][0]["after_sha256"]
+        source.write_text("value = 'external'\n", encoding="utf-8")
+        with self.assertRaises(ValueError):
+            service.undo(self.root, submitted["job_id"], changed_hash)
+        self.assertEqual(source.read_text(encoding="utf-8"), "value = 'external'\n")
+        source.write_bytes(b"value = 'blue'\n")
+        restored = service.undo(self.root, submitted["job_id"], changed_hash)
+        self.assertTrue(restored["undone"])
+        self.assertEqual(source.read_text(encoding="utf-8"), "value = 'red'\n")
+        self.assertTrue(service.status(self.root, submitted["job_id"])["undone"])
+        self.assertTrue(service.review(self.root, submitted["job_id"])["undone"])
+        with self.assertRaises(ValueError):
+            service.undo(self.root, submitted["job_id"], changed_hash)
 
     def test_cancel_running_job_prevents_pending_write(self):
         entered, release = threading.Event(), threading.Event()
