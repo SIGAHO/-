@@ -18,6 +18,7 @@ from breaktail_paths import DATA_ROOT, ensure_data_root, store_path
 from breaktail_review_bridge import handle_review
 from breaktail_memory_manager import ProfileStoreError, load_profile
 from breaktail_style import make_style_report
+from breaktail_agent import Workspace
 
 
 HOST = "127.0.0.1"
@@ -157,6 +158,18 @@ def memories():
             except json.JSONDecodeError:
                 continue
     return found
+
+
+def read_workspace(workspace_root, tool, path):
+    if tool not in ("list_files", "read_file"):
+        raise ValueError("読取り専用の操作だけ利用できます")
+    if not isinstance(workspace_root, str) or not workspace_root.strip() or not Path(workspace_root).is_absolute():
+        raise ValueError("作業フォルダーの絶対パスを指定してください")
+    if not isinstance(path, str) or not path.strip():
+        raise ValueError("作業フォルダー内の相対パスを指定してください")
+    workspace = Workspace(workspace_root, create_audit=False)
+    observation = workspace.execute(tool, {"path": path})
+    return {"tool": tool, "workspace": str(workspace.root), "path": path, "observation": observation}
 
 
 def prepare_turn(history, user_text, scene, trace=None, working_state=None, passive_continuity=None):
@@ -340,6 +353,12 @@ class Handler(BaseHTTPRequestHandler):
 
         if self.path == "/api/reply":
             return self.reply(body)
+        if self.path == "/api/workspace/read":
+            try:
+                result = read_workspace(body.get("workspace"), body.get("tool"), body.get("path"))
+            except (ValueError, OSError, UnicodeError) as error:
+                return self.send(400, {"error": str(error)})
+            return self.send(200, result)
         if self.path == "/api/extract":
             return self.extract(body)
         if self.path == "/api/clear":
