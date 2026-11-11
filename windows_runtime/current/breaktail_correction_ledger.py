@@ -55,9 +55,9 @@ def _source_pair(raw_path, old_turn_id, new_turn_id):
         raise ValueError("同じ会話の完了した発言を古い順に指定してください")
     for row in (old, new):
         user_text = row["messages"][0]["content"]
-        if (user_text.startswith("/") or
+        if (row.get("scene_snapshot") or user_text.startswith("/") or
                 re.search(r"ロールプレイ|なりきり|ごっこ|\bRP\b", user_text, re.I)):
-            raise ValueError("コマンドやロールプレイの発言は訂正の出典にできません")
+            raise ValueError("コマンドや場面設定中の発言は訂正の出典にできません")
     return old, new
 
 
