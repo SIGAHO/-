@@ -34,6 +34,9 @@ class WebCommandReachabilityTests(unittest.TestCase):
             reply, scene = web.web_command_reply(command, [], None, "phase79-web", [])
             self.assertIn(expected, reply)
             self.assertIsNone(scene)
+        capabilities, _ = web.web_command_reply("/capabilities", [], None, "phase79-web", [])
+        self.assertIn("差分確認後の文字列置換と取消", capabilities)
+        self.assertIn("会話から自動でファイルを操作する機能はない", capabilities)
 
     def test_natural_memory_list_reads_canonical_store_without_model(self):
         with patch.object(web, "memories", return_value=[{"id": 7, "content": "確認用の記憶"}]) as read:
