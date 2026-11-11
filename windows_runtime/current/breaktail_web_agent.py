@@ -1,6 +1,9 @@
 """Explicit Web bridge for one workspace agent job at a time; no test execution."""
 import json
+import hashlib
+import os
 import re
+import secrets
 import threading
 import time
 import urllib.parse
@@ -8,6 +11,7 @@ import urllib.parse
 from breaktail_agent import Workspace
 from breaktail_agent_queue import AgentQueue
 from breaktail_agent_diff import review as review_changes
+from breaktail_file_lock import ExclusiveLock
 from breaktail_orchestrator import load_config
 
 
@@ -100,6 +104,18 @@ class WebAgentService:
         return {"workspace": root, "job_id": job["id"], "status": job["status"],
                 "cancel_requested": bool(job["cancel_requested"])}
 
+    def _undo_recorded(self, workspace, job_id, run_id):
+        if not isinstance(run_id, str) or not re.fullmatch(r"[0-9a-f]{32}", run_id):
+            return False
+        receipt = workspace.path(f".breaktail-agent/{run_id}/web-undo.json", internal=True)
+        if not receipt.is_file() or receipt.stat().st_size > 4096:
+            return False
+        try:
+            record = json.loads(receipt.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return False
+        return isinstance(record, dict) and record.get("schema") == 1 and record.get("job_id") == job_id and record.get("run_id") == run_id
+
     def review(self, root, job_id):
         root = self._root(root)
         with AgentQueue(root) as queue:
@@ -122,7 +138,58 @@ class WebAgentService:
                 raise ValueError("変更記録が重複しています")
             workspace.changes[str(target)] = change
         report = review_changes(workspace)
-        return {"workspace": root, "job_id": job_id, "run_id": job["run_id"], **report}
+        return {"workspace": root, "job_id": job_id, "run_id": job["run_id"],
+                "undone": self._undo_recorded(workspace, job_id, job["run_id"]), **report}
+
+    def undo(self, root, job_id, expected_after_sha256):
+        root = self._root(root)
+        if not isinstance(expected_after_sha256, str) or not re.fullmatch(r"[0-9a-f]{64}", expected_after_sha256):
+            raise ValueError("確認した変更後ハッシュを指定してください")
+        workspace = Workspace(root, create_audit=False)
+        with ExclusiveLock(workspace.path(".breaktail-agent/worker.lock", internal=True)):
+            report = self.review(root, job_id)
+            if report["total_tracked"] != 1 or report["files_omitted"] or len(report["changes"]) != 1:
+                raise ValueError("一件の既存ファイル変更だけ取り消せます")
+            change = report["changes"][0]
+            if (change["status"] != "modified" or change.get("integrity") != "verified" or
+                    change.get("current_sha256") != expected_after_sha256 or
+                    not isinstance(change.get("before_sha256"), str) or
+                    not re.fullmatch(r"[0-9a-f]{64}", change["before_sha256"])):
+                raise ValueError("変更内容が確認時と異なります。上書きしません")
+            with AgentQueue(root) as queue:
+                original = queue.get(job_id)["result"]["changes"][0]
+            target = workspace.path(change["path"])
+            backup = workspace.path(original["backup"], internal=True)
+            receipt = workspace.path(f".breaktail-agent/{report['run_id']}/web-undo.json", internal=True)
+            if receipt.exists():
+                raise ValueError("この変更は既に取り消されています")
+            before = backup.read_bytes()
+            if (len(before) > 64000 or hashlib.sha256(before).hexdigest() != change["before_sha256"] or
+                    hashlib.sha256(target.read_bytes()).hexdigest() != expected_after_sha256):
+                raise ValueError("ファイルまたはバックアップが変わりました。上書きしません")
+            temporary = target.with_name(target.name + "." + secrets.token_hex(8) + ".undo.tmp")
+            try:
+                with temporary.open("xb") as stream:
+                    stream.write(before)
+                    stream.flush()
+                    os.fsync(stream.fileno())
+                if hashlib.sha256(target.read_bytes()).hexdigest() != expected_after_sha256:
+                    raise ValueError("保存後にファイルが変わりました。上書きしません")
+                os.replace(temporary, target)
+            finally:
+                temporary.unlink(missing_ok=True)
+            if hashlib.sha256(target.read_bytes()).hexdigest() != change["before_sha256"]:
+                raise OSError("取消後の読み戻しに失敗しました")
+            record = {"schema": 1, "job_id": job_id, "run_id": report["run_id"],
+                      "path": change["path"], "restored_sha256": change["before_sha256"]}
+            temporary_receipt = receipt.with_name("web-undo." + secrets.token_hex(8) + ".tmp")
+            try:
+                temporary_receipt.write_text(json.dumps(record, ensure_ascii=False), encoding="utf-8")
+                os.replace(temporary_receipt, receipt)
+            finally:
+                temporary_receipt.unlink(missing_ok=True)
+            return {"undone": True, "workspace": root, "job_id": job_id,
+                    "path": change["path"], "sha256": change["before_sha256"]}
 
     def status(self, root, job_id):
         root = self._root(root)
@@ -160,10 +227,11 @@ class WebAgentService:
                         continue
         with self.lock:
             worker_error = self.worker_errors.get(root) if job["status"] == "queued" else None
+        undone = self._undo_recorded(Workspace(root, create_audit=False), job_id, job["run_id"])
         return {"workspace": root, "job_id": job["id"], "status": job["status"],
                 "run_id": job["run_id"], "cancel_requested": bool(job["cancel_requested"]),
                 "error": job["error"] or worker_error, "summary": result.get("summary"),
                 "changes": result.get("changes", []), "syntax_verified": result.get("syntax_verified"),
                 "tests_passed": result.get("tests_passed"), "execution_enabled": result.get("execution_enabled", False),
-                "acceptance": result.get("acceptance"), "events": events}
+                "acceptance": result.get("acceptance"), "events": events, "undone": undone}
 
