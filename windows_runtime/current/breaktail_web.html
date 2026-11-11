@@ -59,7 +59,7 @@
     <div class="composer-zone"><div class="composer-wrap"><div class="composer"><textarea id="input" rows="1" placeholder="Breaktail に話しかける…"></textarea><button id="send" class="send" aria-label="送信">➜</button></div><div class="hint"><span>Enter で送信 · Shift + Enter で改行 · /capabilities で操作一覧</span><span id="hint-status">記憶は解釈だけ保存</span></div></div></div>
   </main>
 </div>
-<dialog id="workspace-dialog" style="width:min(900px,90vw);max-height:75vh;background:#101620;color:#eaf2f6;border:1px solid #263244;border-radius:12px"><button id="close-workspace" style="float:right">閉じる</button><h2>作業フォルダーの読取り結果</h2><pre id="workspace-result" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:60vh;overflow:auto" aria-live="polite"></pre></dialog>
+<dialog id="workspace-dialog" style="width:min(900px,90vw);max-height:75vh;background:#101620;color:#eaf2f6;border:1px solid #263244;border-radius:12px"><button id="close-workspace" style="float:right">閉じる</button><h2>作業フォルダーの読取り結果</h2><div id="workspace-entries" style="display:flex;flex-wrap:wrap;gap:8px;margin:12px 0"></div><pre id="workspace-result" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:60vh;overflow:auto" aria-live="polite"></pre></dialog>
 <script>
 const token = '__BREAKTAIL_TOKEN__';
 const $ = id => document.getElementById(id);
@@ -104,14 +104,28 @@ async function send() {
 }
 $('send').addEventListener('click',send);
 async function workspaceRead(tool) {
-  $('workspace-dialog').showModal();
+  if (!$('workspace-dialog').open) $('workspace-dialog').showModal();
   const result=$('workspace-result');result.textContent='読取り中…';
+  const entries=$('workspace-entries');entries.replaceChildren();
   try {
     const response=await api('/api/workspace/read',{workspace:$('workspace-root').value.trim(),path:$('workspace-path').value.trim(),tool});
     const heading='実際に読んだ場所: '+response.workspace+' / '+response.path+'\n';
     result.textContent=tool==='list_files'
-      ? heading+'見つかった項目 '+response.observation.entries.length+' 件\n'+response.observation.entries.join('\n')
+      ? heading+'見つかった項目 '+response.observation.entries.length+' 件。選ぶと開きます。'
       : heading+'SHA-256: '+response.observation.sha256+'\n\n'+response.observation.content;
+    if (tool==='list_files') {
+      const current=response.path.replace(/\\/g,'/').replace(/\/$/,'');
+      if (current && current!=='.') {
+        const up=document.createElement('button');up.type='button';up.textContent='← 上のフォルダー';
+        up.addEventListener('click',()=>{$('workspace-path').value=current.split('/').slice(0,-1).join('/')||'.';workspaceRead('list_files');});entries.append(up);
+      }
+      for (const name of response.observation.entries) {
+        const folder=name.endsWith('/'),button=document.createElement('button');
+        button.type='button';button.textContent=name;
+        button.addEventListener('click',()=>{$('workspace-path').value=(current==='.'?'':current+'/')+name.replace(/\/$/,'');workspaceRead(folder?'list_files':'read_file');});
+        entries.append(button);
+      }
+    }
   } catch(error) {result.textContent='読取り失敗: '+error.message;}
 }
 $('list-files').addEventListener('click',()=>workspaceRead('list_files'));
@@ -125,3 +139,4 @@ refresh().catch(error=>{$('status').textContent='接続エラー';$('hint-status
 </script>
 </body>
 </html>
+
