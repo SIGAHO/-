@@ -70,6 +70,27 @@ class WebCommandReachabilityTests(unittest.TestCase):
         self.assertFalse(web.local_request_allowed("evil.example:8765"))
         self.assertFalse(web.local_request_allowed(f"127.0.0.1:{web.PORT}", "http://evil.example"))
 
+    def test_workspace_preview_shows_diff_and_syntax_without_writing(self):
+        with tempfile.TemporaryDirectory(dir=Path(__file__).resolve().parents[2]) as temp_dir:
+            root = Path(temp_dir)
+            source = root / "example.py"
+            original = b"def greet():\n    return 'hello'\n"
+            source.write_bytes(original)
+            result = web.preview_workspace_replace(str(root), "example.py", "hello", "goodbye")
+            self.assertIn("+    return 'goodbye'", result["diff"])
+            self.assertTrue(result["syntax"]["checked"])
+            self.assertFalse(result["written"])
+            self.assertEqual(source.read_bytes(), original)
+            self.assertFalse((root / ".breaktail-agent").exists())
+            invalid = web.preview_workspace_replace(str(root), "example.py", "return 'hello'", "return (")
+            self.assertEqual(invalid["syntax"]["source"], "replacement_candidate_not_written")
+            self.assertEqual(source.read_bytes(), original)
+            with self.assertRaises(ValueError):
+                web.preview_workspace_replace(str(root), "../example.py", "hello", "goodbye")
+            (root / "memory.db").write_text("hello", encoding="utf-8")
+            with self.assertRaises(ValueError):
+                web.preview_workspace_replace(str(root), "memory.db", "hello", "goodbye")
+
     @unittest.skipUnless(os.name == "nt", "Windows junction test")
     def test_web_read_rejects_junction(self):
         with tempfile.TemporaryDirectory(dir=Path(__file__).resolve().parents[2]) as temp_dir:
@@ -140,3 +161,4 @@ class WebCommandReachabilityTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
