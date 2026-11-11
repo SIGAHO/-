@@ -2,6 +2,7 @@
 
 import json
 import os
+import re
 import secrets
 import socket
 import tempfile
@@ -215,9 +216,12 @@ def web_command_reply(user_text, history, scene, conversation_id, style_samples,
         except ValueError:
             return '使い方: /persona atashi または /persona off',scene
         return ('あたし版の会話人格に切り替えた。' if user_text.endswith('atashi') else '会話人格の指定を解除した。'),scene
-    if user_text == "/memories":
+    if user_text == "/memories" or (re.search(r"記憶", user_text) and
+            re.search(r"すべて|全部|全件|一覧", user_text) and
+            re.search(r"見せ|表示|一覧|教え", user_text) and
+            not re.search(r"消し|削除|忘れ", user_text)):
         rows = memories()
-        return ("保存済みの記憶はありません。" if not rows else "保存済みの記憶:\n" + "\n".join(
+        return ("保存済みの解釈記憶はありません。" if not rows else f"保存済みの解釈記憶 {len(rows)} 件（Raw会話・プロフィールは別管理）:\n" + "\n".join(
             f"[{item['id']}] [未確認の解釈] {item['content']}" for item in rows)), scene
     if user_text.startswith("/forget"):
         argument = user_text[len("/forget"):].strip()
