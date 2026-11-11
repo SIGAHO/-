@@ -1,11 +1,13 @@
 """Explicit Web bridge for one workspace agent job at a time; no test execution."""
 import json
+import re
 import threading
 import time
 import urllib.parse
 
 from breaktail_agent import Workspace
 from breaktail_agent_queue import AgentQueue
+from breaktail_agent_diff import review as review_changes
 from breaktail_orchestrator import load_config
 
 
@@ -96,6 +98,30 @@ class WebAgentService:
             job = queue.cancel(job_id)
         return {"workspace": root, "job_id": job["id"], "status": job["status"],
                 "cancel_requested": bool(job["cancel_requested"])}
+
+    def review(self, root, job_id):
+        root = self._root(root)
+        with AgentQueue(root) as queue:
+            job = queue.get(job_id)
+        if job["status"] in ("queued", "running"):
+            raise ValueError("作業終了後に差分を確認してください")
+        if not isinstance(job["run_id"], str) or not re.fullmatch(r"[0-9a-f]{32}", job["run_id"]):
+            raise ValueError("実行記録がありません")
+        changes = (job["result"] or {}).get("changes")
+        if not isinstance(changes, list):
+            raise ValueError("変更記録がありません")
+        workspace = Workspace(root, create_audit=False)
+        for change in changes:
+            if (not isinstance(change, dict) or not isinstance(change.get("path"), str) or
+                    not all(isinstance(change.get(key), str) and re.fullmatch(r"[0-9a-f]{64}", change[key])
+                            for key in ("after_sha256",))):
+                raise ValueError("変更記録が不正です")
+            target = workspace.path(change["path"])
+            if str(target) in workspace.changes:
+                raise ValueError("変更記録が重複しています")
+            workspace.changes[str(target)] = change
+        report = review_changes(workspace)
+        return {"workspace": root, "job_id": job_id, "run_id": job["run_id"], **report}
 
     def status(self, root, job_id):
         root = self._root(root)
