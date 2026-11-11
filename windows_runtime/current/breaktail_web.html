@@ -51,7 +51,8 @@
     <div><div class="section-label">いまの状態</div><div class="meta"><span>モデル</span><b>Qwen2.5 14B</b></div><div class="meta"><span>会話履歴</span><b>再起動後も復元</b></div><div class="meta"><span>場面</span><b id="scene">通常の会話</b></div><div class="meta"><span>長期記憶</span><b id="memory-count">読み込み中</b></div></div>
     <div><div class="section-label">最近の記憶 <span style="color:#607882">· 未確認の解釈</span></div><div id="memory-list" class="memory-list"><div class="memory-empty">読み込み中…</div></div></div>
     <div><div class="section-label">作業フォルダーを読む</div><input id="workspace-root" aria-label="作業フォルダー" placeholder="作業フォルダーの絶対パス" style="width:100%;box-sizing:border-box"><input id="workspace-path" aria-label="相対パス" value="." placeholder="相対パス" style="width:100%;box-sizing:border-box;margin-top:6px"><div style="margin-top:6px"><button id="list-files">一覧</button><button id="read-file">ファイルを読む</button></div></div>
-    <div class="side-bottom">発言原文と返答はRaw会話ファイルに保存されます。記憶欄はモデルによる未確認の解釈です。ファイルの読取り・編集は明示操作だけで、会話から自動実行しません。</div>
+    <div><div class="section-label">作業エージェント</div><p style="font-size:12px;color:#91a4b1">指定した作業フォルダーだけで、Breaktailがファイルを調べて編集します。コードの実行は無効です。</p><textarea id="agent-task" aria-label="作業の依頼" placeholder="作業内容を入力" style="width:100%;min-height:65px"></textarea><button id="agent-start" type="button">作業を依頼</button><input id="agent-job-id" aria-label="作業キューID" placeholder="作業キューID" style="width:100%;margin-top:8px"><div><button id="agent-status" type="button">状態</button><button id="agent-cancel" type="button">停止</button><button id="agent-work" type="button">待機作業を再試行</button></div><input id="agent-run-id" aria-label="再開する作業ID" placeholder="未完了の作業ID" style="width:100%;margin-top:8px"><button id="agent-resume" type="button">未完了から再開</button></div>
+    <div class="side-bottom">発言原文と返答はRaw会話ファイルに保存されます。記憶欄はモデルによる未確認の解釈です。ファイル操作と作業エージェントは明示操作だけで、会話から自動実行しません。</div>
   </aside>
   <main>
     <header><div><div class="title">Breaktail と話す</div><div class="subtitle">自分のPC上で動く、まだ成長途中のAI</div></div><div class="header-actions"><a href="/review" target="_blank" rel="noopener" style="color:inherit">品質レビュー</a><span class="pill">● LOCAL ONLY</span><button class="ghost" id="clear">会話をクリア</button></div></header>
@@ -60,6 +61,7 @@
   </main>
 </div>
 <dialog id="workspace-dialog" style="width:min(900px,90vw);max-height:75vh;background:#101620;color:#eaf2f6;border:1px solid #263244;border-radius:12px"><button id="close-workspace" style="float:right">閉じる</button><h2>作業フォルダーの結果</h2><div id="workspace-entries" style="display:flex;flex-wrap:wrap;gap:8px;margin:12px 0"></div><pre id="workspace-result" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:40vh;overflow:auto" aria-live="polite"></pre><details><summary>文字列の変更案を確認</summary><p>選んだファイルで、置換前の文字列を1か所だけ指定します。差分を確認した後だけ保存できます。</p><textarea id="preview-old" aria-label="置換前の文字列" placeholder="置換前の文字列" style="width:100%;box-sizing:border-box"></textarea><textarea id="preview-new" aria-label="置換後の文字列" placeholder="置換後の文字列" style="width:100%;box-sizing:border-box"></textarea><button id="preview-change" type="button">変更案と構文を確認</button><button id="save-change" type="button" disabled>確認した変更案を保存</button><p>保存した変更の取消（再起動後も作業IDを入力して利用できます）</p><input id="undo-id" aria-label="取消する作業ID" placeholder="保存時の作業ID" style="width:100%;box-sizing:border-box"><button id="undo-change" type="button" disabled>変更を取り消す</button><div id="edit-confirm" hidden style="margin-top:12px;padding:12px;border:1px solid #607882;border-radius:8px"><p id="edit-confirm-text"></p><button id="edit-confirm-yes" type="button">はい、実行する</button><button id="edit-confirm-no" type="button">やめる</button></div></details></dialog>
+<dialog id="agent-dialog" style="width:min(900px,90vw);max-height:75vh;background:#101620;color:#eaf2f6;border:1px solid #263244;border-radius:12px"><button id="agent-close" type="button" style="float:right">閉じる</button><h2>作業エージェント</h2><div id="agent-confirm" hidden><pre id="agent-confirm-text" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre><button id="agent-confirm-yes" type="button">この作業を開始</button><button id="agent-confirm-no" type="button">やめる</button></div><pre id="agent-result" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:55vh;overflow:auto" aria-live="polite"></pre></dialog>
 <script>
 const token = '__BREAKTAIL_TOKEN__';
 const $ = id => document.getElementById(id);
@@ -175,6 +177,58 @@ $('edit-confirm-no').addEventListener('click',hideEditConfirmation);
 $('undo-id').addEventListener('input',()=>{hideEditConfirmation();$('undo-change').disabled=!/^[0-9a-f]{32}$/.test($('undo-id').value.trim());});
 for(const name of ['workspace-root','workspace-path','preview-old','preview-new'])$(name).addEventListener('input',invalidatePreview);
 $('close-workspace').addEventListener('click',()=>{hideEditConfirmation();$('workspace-dialog').close();});
+let pendingAgentAction=null,agentPollTimer=null;
+function openAgentDialog(){if(!$('agent-dialog').open)$('agent-dialog').showModal();}
+function stopAgentPolling(){if(agentPollTimer){clearTimeout(agentPollTimer);agentPollTimer=null;}}
+function agentPrepare(kind){
+  stopAgentPolling();openAgentDialog();
+  const workspace=$('workspace-root').value.trim();
+  const task=$('agent-task').value.trim(),runId=$('agent-run-id').value.trim();
+  pendingAgentAction={kind,workspace,task,runId};
+  $('agent-confirm-text').textContent='作業フォルダー: '+workspace+'\n'+(kind==='start'?'依頼: '+task:'再開する作業ID: '+runId)+'\n最大8手・4分。ファイル編集は可能、コードとテストの実行は無効です。';
+  $('agent-confirm').hidden=false;$('agent-result').textContent='内容を確認して開始してください。';
+}
+function renderAgentStatus(state){
+  const lines=['状態: '+state.status,'作業キューID: '+state.job_id,'実行ID: '+(state.run_id||'まだありません'),
+    'コード実行: 無効','構文検査: '+(state.syntax_verified==null?'未確定':state.syntax_verified?'確認済み':'未合格')];
+  if(state.summary)lines.push('結果: '+state.summary);
+  if(state.error)lines.push('エラー: '+state.error);
+  if(state.cancel_requested)lines.push('停止を要求しました。途中の変更は残ります。');
+  for(const change of state.changes||[])lines.push('変更: '+change.path+' / 保存後SHA-256: '+change.after_sha256);
+  for(const event of state.events||[])lines.push('道具: '+(event.tool||'モデル')+(event.error?' / 失敗: '+event.error:'')+(event.detail?' / '+event.detail:'')+(event.observation?'\n観測: '+JSON.stringify(event.observation).slice(0,1800):''));
+  $('agent-result').textContent=lines.join('\n\n');
+}
+async function agentRefresh(){
+  stopAgentPolling();openAgentDialog();$('agent-confirm').hidden=true;
+  try{
+    const state=await api('/api/agent/status',{workspace:$('workspace-root').value.trim(),job_id:$('agent-job-id').value.trim()});
+    renderAgentStatus(state);if(state.run_id)$('agent-run-id').value=state.run_id;
+    if(state.status==='queued'||state.status==='running')agentPollTimer=setTimeout(agentRefresh,2000);
+  }catch(error){$('agent-result').textContent='状態を確認できませんでした: '+error.message;}
+}
+async function agentSubmit(){
+  const request=pendingAgentAction;pendingAgentAction=null;$('agent-confirm').hidden=true;
+  if(!request)return;
+  $('agent-result').textContent='作業を登録中…';
+  try{
+    const path=request.kind==='start'?'/api/agent/start':'/api/agent/resume';
+    const data=request.kind==='start'?{workspace:request.workspace,task:request.task}:{workspace:request.workspace,run_id:request.runId};
+    const result=await api(path,data);$('agent-job-id').value=result.job_id;await agentRefresh();
+  }catch(error){$('agent-result').textContent='開始できませんでした: '+error.message;}
+}
+async function agentControl(path){
+  stopAgentPolling();openAgentDialog();$('agent-confirm').hidden=true;
+  try{await api(path,{workspace:$('workspace-root').value.trim(),job_id:$('agent-job-id').value.trim()});await agentRefresh();}
+  catch(error){$('agent-result').textContent='操作できませんでした: '+error.message;}
+}
+$('agent-start').addEventListener('click',()=>agentPrepare('start'));
+$('agent-resume').addEventListener('click',()=>agentPrepare('resume'));
+$('agent-confirm-yes').addEventListener('click',agentSubmit);
+$('agent-confirm-no').addEventListener('click',()=>{$('agent-confirm').hidden=true;pendingAgentAction=null;});
+$('agent-status').addEventListener('click',agentRefresh);
+$('agent-cancel').addEventListener('click',()=>agentControl('/api/agent/cancel'));
+$('agent-work').addEventListener('click',()=>agentControl('/api/agent/work'));
+$('agent-close').addEventListener('click',()=>{stopAgentPolling();$('agent-dialog').close();});
 input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}});
 input.addEventListener('input',()=>{input.style.height='auto';input.style.height=Math.min(input.scrollHeight,170)+'px';});
 document.querySelectorAll('[data-prompt]').forEach(button=>button.addEventListener('click',()=>{input.value=button.dataset.prompt;input.focus();}));
