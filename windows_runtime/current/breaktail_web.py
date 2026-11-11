@@ -8,6 +8,7 @@ import os
 import re
 import secrets
 import socket
+import sqlite3
 import tempfile
 import threading
 import time
@@ -26,6 +27,7 @@ from breaktail_style import make_style_report
 from breaktail_agent import Workspace
 from breaktail_agent_edit_preview import ReplacementSyntaxError, preview as preview_replacement
 from breaktail_file_lock import ExclusiveLock
+from breaktail_web_agent import WebAgentService
 
 
 HOST = "127.0.0.1"
@@ -40,6 +42,7 @@ STATE = {"history": [], "messages": [], "scene": None, "pending": None, "busy": 
          "working_state": tail.new_working_state(), "passive_continuity": new_passive_continuity_state()}
 EDIT_LOCK = threading.Lock()
 PREPARED_EDITS = {}
+AGENT_SERVICE = WebAgentService()
 
 
 def save_state_snapshot() -> None:
@@ -413,8 +416,8 @@ def web_command_reply(user_text, history, scene, conversation_id, style_samples,
         return ("できる: テキスト会話、コードの提案、直近16往復の参照、解釈記憶の保存・検索・Memory Gateでの採用と /forget での削除。\n"
                 "/memories で記憶を表示。会話では出典Rawを解決でき、Gateを通過した候補だけ14Bへ渡す。\n"
                 "確定したBreaktail自身の20項目プロフィールは /profile で確認でき、再起動後も会話に渡す。\n"
-                "Web画面の明示操作では、指定した作業フォルダーの一覧・テキスト読取り・差分確認後の文字列置換と取消ができる。会話から自動でファイルを操作する機能はない。\n"
-                "できない: 外部検索、Webからの作業エージェント実行と再開、裏での作業、前セッションの会話の参照。"), scene
+                "Web画面の明示操作では、指定した作業フォルダーの一覧・テキスト読取り・差分確認後の文字列置換と取消、作業エージェントの実行・停止・未完了からの再開ができる。会話から自動でファイルを操作する機能はない。\n"
+                "できない: 外部検索、Web作業でのコードやテストの実行、裏での作業、前セッションの会話の参照。"), scene
     if user_text == "/debug":
         with LOCK:
             STATE["debug"] = not STATE["debug"]
@@ -556,6 +559,23 @@ class Handler(BaseHTTPRequestHandler):
             try:
                 result = undo_workspace_edit(body.get("workspace"), body.get("run_id"))
             except (ValueError, OSError, UnicodeError, TimeoutError, json.JSONDecodeError) as error:
+                return self.send(409, {"error": str(error)})
+            return self.send(200, result)
+        if self.path in ("/api/agent/start", "/api/agent/resume", "/api/agent/status",
+                         "/api/agent/cancel", "/api/agent/work"):
+            try:
+                workspace = str(open_workspace(body.get("workspace")).root)
+                if self.path == "/api/agent/start":
+                    result = AGENT_SERVICE.start(workspace, body.get("task"))
+                elif self.path == "/api/agent/resume":
+                    result = AGENT_SERVICE.resume(workspace, body.get("run_id"))
+                elif self.path == "/api/agent/status":
+                    result = AGENT_SERVICE.status(workspace, body.get("job_id"))
+                elif self.path == "/api/agent/cancel":
+                    result = AGENT_SERVICE.cancel(workspace, body.get("job_id"))
+                else:
+                    result = AGENT_SERVICE.work_queued(workspace, body.get("job_id"))
+            except (ValueError, OSError, TimeoutError, sqlite3.Error) as error:
                 return self.send(409, {"error": str(error)})
             return self.send(200, result)
         if self.path == "/api/extract":
