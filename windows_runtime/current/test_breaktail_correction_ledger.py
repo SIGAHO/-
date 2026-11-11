@@ -125,6 +125,20 @@ class CorrectionLedgerTests(unittest.TestCase):
             preview(self.raw, "shop location", "old-turn-0001", "new-turn-0002")
         self.assertFalse(self.ledger.exists())
 
+    def test_next_link_rejects_changed_earlier_raw_source(self):
+        first = preview(self.raw, "shop location", "old-turn-0001", "new-turn-0002")
+        commit(self.raw, self.ledger, "shop location", "old-turn-0001", "new-turn-0002",
+               first["old"]["sha256"], first["new"]["sha256"])
+        rows = [json.loads(line) for line in self.raw.read_text(encoding="utf-8").splitlines()]
+        rows[0]["user_text"] = "Changed after the first link."
+        self.raw.write_text("".join(json.dumps(row) + "\n" for row in rows), encoding="utf-8")
+        second = preview(self.raw, "shop location", "new-turn-0002", "next-turn-0003")
+        before = self.ledger.read_bytes()
+        with self.assertRaisesRegex(ValueError, "チェーンの出典を再確認できません"):
+            commit(self.raw, self.ledger, "shop location", "new-turn-0002", "next-turn-0003",
+                   second["old"]["sha256"], second["new"]["sha256"])
+        self.assertEqual(self.ledger.read_bytes(), before)
+
 
 if __name__ == "__main__":
     unittest.main()
