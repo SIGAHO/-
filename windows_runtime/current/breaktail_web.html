@@ -51,7 +51,7 @@
     <div><div class="section-label">いまの状態</div><div class="meta"><span>モデル</span><b>Qwen2.5 14B</b></div><div class="meta"><span>会話履歴</span><b>再起動後も復元</b></div><div class="meta"><span>場面</span><b id="scene">通常の会話</b></div><div class="meta"><span>長期記憶</span><b id="memory-count">読み込み中</b></div></div>
     <div><div class="section-label">最近の記憶 <span style="color:#607882">· 未確認の解釈</span></div><div id="memory-list" class="memory-list"><div class="memory-empty">読み込み中…</div></div></div>
     <div><div class="section-label">作業フォルダーを読む</div><input id="workspace-root" aria-label="作業フォルダー" placeholder="作業フォルダーの絶対パス" style="width:100%;box-sizing:border-box"><input id="workspace-path" aria-label="相対パス" value="." placeholder="相対パス" style="width:100%;box-sizing:border-box;margin-top:6px"><div style="margin-top:6px"><button id="list-files">一覧</button><button id="read-file">ファイルを読む</button></div></div>
-    <div><div class="section-label">作業エージェント</div><p style="font-size:12px;color:#91a4b1">指定した作業フォルダーだけで、Breaktailがファイルを調べて編集します。コードの実行は無効です。</p><textarea id="agent-task" aria-label="作業の依頼" placeholder="作業内容を入力" style="width:100%;min-height:65px"></textarea><button id="agent-start" type="button">作業を依頼</button><input id="agent-job-id" aria-label="作業キューID" placeholder="作業キューID" style="width:100%;margin-top:8px"><div><button id="agent-status" type="button">状態</button><button id="agent-cancel" type="button">停止</button><button id="agent-work" type="button">待機作業を再試行</button></div><input id="agent-run-id" aria-label="再開する作業ID" placeholder="未完了の作業ID" style="width:100%;margin-top:8px"><button id="agent-resume" type="button">未完了から再開</button></div>
+    <div><div class="section-label">作業エージェント</div><p style="font-size:12px;color:#91a4b1">指定した作業フォルダーだけで、Breaktailがファイルを調べて編集します。コードの実行は無効です。</p><textarea id="agent-task" aria-label="作業の依頼" placeholder="作業内容を入力" style="width:100%;min-height:65px"></textarea><button id="agent-start" type="button">作業を依頼</button><input id="agent-job-id" aria-label="作業キューID" placeholder="作業キューID" style="width:100%;margin-top:8px"><div><button id="agent-status" type="button">状態</button><button id="agent-review" type="button">差分を見る</button><button id="agent-cancel" type="button">停止</button><button id="agent-work" type="button">待機作業を再試行</button></div><input id="agent-run-id" aria-label="再開する作業ID" placeholder="未完了の作業ID" style="width:100%;margin-top:8px"><button id="agent-resume" type="button">未完了から再開</button></div>
     <div class="side-bottom">発言原文と返答はRaw会話ファイルに保存されます。記憶欄はモデルによる未確認の解釈です。ファイル操作と作業エージェントは明示操作だけで、会話から自動実行しません。</div>
   </aside>
   <main>
@@ -221,11 +221,21 @@ async function agentControl(path){
   try{await api(path,{workspace:$('workspace-root').value.trim(),job_id:$('agent-job-id').value.trim()});await agentRefresh();}
   catch(error){$('agent-result').textContent='操作できませんでした: '+error.message;}
 }
+async function agentReview(){
+  stopAgentPolling();openAgentDialog();$('agent-confirm').hidden=true;
+  try{
+    const report=await api('/api/agent/review',{workspace:$('workspace-root').value.trim(),job_id:$('agent-job-id').value.trim()});
+    const lines=['追跡された変更: '+report.total_tracked+'件','表示省略: '+report.files_omitted+'件','差分表示のための読取り確認。構文・テスト合格は別です。'];
+    for(const change of report.changes)lines.push('対象: '+change.path+' / 状態: '+change.status+' / 整合性: '+(change.integrity||'未確認')+'\n'+(change.diff||change.diff_unavailable||''));
+    $('agent-result').textContent=lines.join('\n\n');
+  }catch(error){$('agent-result').textContent='差分を確認できませんでした: '+error.message;}
+}
 $('agent-start').addEventListener('click',()=>agentPrepare('start'));
 $('agent-resume').addEventListener('click',()=>agentPrepare('resume'));
 $('agent-confirm-yes').addEventListener('click',agentSubmit);
 $('agent-confirm-no').addEventListener('click',()=>{$('agent-confirm').hidden=true;pendingAgentAction=null;});
 $('agent-status').addEventListener('click',agentRefresh);
+$('agent-review').addEventListener('click',agentReview);
 $('agent-cancel').addEventListener('click',()=>agentControl('/api/agent/cancel'));
 $('agent-work').addEventListener('click',()=>agentControl('/api/agent/work'));
 $('agent-close').addEventListener('click',()=>{stopAgentPolling();$('agent-dialog').close();});
