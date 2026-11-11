@@ -1019,12 +1019,25 @@ def build_reply_messages(history: list[dict], user_text: str, scene: dict | None
     correction_priority = bool(hub_preflight and (hub_preflight[1].get('correction') or
                                                    hub_preflight[1].get('correction_unresolved')))
     if correction_priority:
+        correction = hub_preflight[1].get('correction')
+        def exclusion_reason(memory):
+            if not correction:
+                return 'correction_source_unresolved'
+            ids = memory.get('source_turn_ids')
+            ids = {value for value in ids if isinstance(value, str)} if isinstance(ids, list) else set()
+            if correction['old_turn_id'] in ids:
+                return 'superseded_by_explicit_correction'
+            if correction['new_turn_id'] in ids:
+                return 'redundant_with_explicit_correction_source'
+            if not ids:
+                return 'source_unknown_during_correction'
+            return 'narrow_correction_answer_no_memory_needed'
+        omitted = [{'memory_id': m.get('id'), 'reason': exclusion_reason(m)} for m in candidates]
         trace_event(trace, "memory_gate", used_ids=[], ignored_ids=[m.get('id') for m in candidates],
-                    decisions=[{"memory_id": m.get('id'), "decision": "ignore",
-                                "reasons": ["explicit_correction_source_priority"]} for m in candidates])
+                    decisions=[{"memory_id": item['memory_id'], "decision": "ignore",
+                                "reasons": [item['reason']]} for item in omitted])
         evidence = build_memory_evidence([], limits=limits)
-        evidence['omitted'].extend({'memory_id': m.get('id'), 'reason': 'explicit_correction_source_priority'}
-                                   for m in candidates)
+        evidence['omitted'].extend(omitted)
     else:
         try:
             admitted, resolved = gate_memories(candidates, user_text, recent_user_context, scene,
