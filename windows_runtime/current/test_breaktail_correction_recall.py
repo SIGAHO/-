@@ -124,6 +124,31 @@ class CorrectionRecallTests(unittest.TestCase):
         _, meta = hub.build_hub(self.raw, query, "session-a", correction_path=self.ledger)
         self.assertIsNone(meta["correction"])
 
+    def test_corrupt_raw_abstains_instead_of_using_old_interpretation(self):
+        self.add("turn-old-0001", "望遠鏡修理の窓口は東支店。")
+        self.add("turn-new-0002", "望遠鏡修理の窓口は西支店。")
+        self.link("望遠鏡修理の窓口", "turn-old-0001", "turn-new-0002")
+        with self.raw.open("a", encoding="utf-8") as stream:
+            stream.write("{corrupt}\n")
+        query = "望遠鏡修理の窓口は今どっち？"
+        _, meta = hub.build_hub(self.raw, query, "session-a", correction_path=self.ledger)
+        self.assertEqual(meta["reason"], "source_unavailable")
+        self.assertTrue(meta["correction_unresolved"])
+        with patch.object(tail.raw_conversation, "RAW_CONVERSATION_FILE", self.raw), \
+             patch.object(tail, "DATA_ROOT", self.root), \
+             patch.object(tail, "MEMORY_FILE", self.root / "memory.jsonl"), \
+             patch.object(tail, "retrieve_memory_candidates", return_value=[
+                 {"id": 17, "content": "望遠鏡修理の窓口は東支店。"}]), \
+             patch.object(tail, "load_profile", return_value=None), \
+             patch.object(tail, "call_ollama") as model, \
+             patch.object(tail, "trace_event"), \
+             patch.object(tail, "log_turn"):
+            reply, complete = tail.generate_reply([], query,
+                                                   trace={"conversation_id": "session-a", "turn_id": "current-turn"})
+        self.assertTrue(complete)
+        model.assert_not_called()
+        self.assertIn("断定できない", reply)
+
     def test_reply_builder_receives_only_verified_update(self):
         self.add("turn-old-0001", "望遠鏡修理の窓口は東支店。")
         self.add("turn-new-0002", "望遠鏡修理の窓口は西支店。")
