@@ -208,6 +208,11 @@ def match_for_question(raw_path, ledger_path, query, conversation_id, source_row
     if len(keys) != 1:
         return None
     latest = records[-1]
+    # A question about a child attribute (e.g. "window's price") is not a
+    # question about the corrected topic itself.
+    suffix = normalized(query).split(latest["key"], 1)[1]
+    if suffix.startswith("の"):
+        return None
     if len(query) > len(latest["label"]) + 35:
         return None
     chain = history(raw_path, ledger_path, latest["label"], records[0]["old_turn_id"])
