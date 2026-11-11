@@ -110,7 +110,15 @@ def build_hub(path, query, conversation_id, *, history_ids=(), current_turn_id=N
         rows, scan = source_rows(path, conversation_id, journal_path)
         meta.update(scan)
     except (OSError, ValueError, UnicodeError, sqlite3.Error) as error:
-        return '', {**meta, 'error': type(error).__name__, 'reason': 'source_unavailable'}
+        unresolved = False
+        if correction_path:
+            try:
+                from breaktail_correction_ledger import matching_topic_exists, _question_shape
+                unresolved = matching_topic_exists(correction_path, query, conversation_id)
+            except (OSError, ValueError, UnicodeError):
+                unresolved = bool(_question_shape(query))
+        return '', {**meta, 'error': type(error).__name__, 'reason': 'source_unavailable',
+                    'correction_unresolved': unresolved}
     rows = [r for r in rows if r['turn_id'] != current_turn_id]
     correction = None
     if correction_path:
