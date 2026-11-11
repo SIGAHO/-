@@ -52,6 +52,12 @@ class WebCommandReachabilityTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             web.read_workspace(str(Path(web.__file__).resolve().parent.parent), "list_files", ".")
 
+    def test_web_rejects_nonlocal_host_and_origin(self):
+        self.assertTrue(web.local_request_allowed(f"127.0.0.1:{web.PORT}"))
+        self.assertTrue(web.local_request_allowed(f"localhost:{web.PORT}", f"http://localhost:{web.PORT}"))
+        self.assertFalse(web.local_request_allowed("evil.example:8765"))
+        self.assertFalse(web.local_request_allowed(f"127.0.0.1:{web.PORT}", "http://evil.example"))
+
     def test_debug_and_style_state_survive_web_snapshot_restore(self):
         samples = [{"user": f"質問 {number}？"} for number in range(6)]
         with web.LOCK:
