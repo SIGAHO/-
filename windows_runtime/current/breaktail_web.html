@@ -114,7 +114,8 @@ async function loadMemoryPage(scope=memoryScope,page=memoryPage){
         const source=document.createElement('div');
         source.textContent='出典ID: '+item.turn_id+' / 会話ID: '+item.conversation_id+' / 時刻: '+item.timestamp+' / 状態: '+item.status+'\n'+item.messages.map(m=>(m.speaker==='user'?'あなた':'Breaktail')+': '+m.content).join('\n');
         block.append(source);
-        if(item.status==='complete'){
+        const userText=item.messages[0]?.content||'';
+        if(item.status==='complete'&&!item.scene_snapshot&&!userText.startsWith('/')&&!/ロールプレイ|なりきり|ごっこ|\bRP\b/i.test(userText)){
           for(const [field,label] of [['correction-old','訂正前に選ぶ'],['correction-new','訂正後に選ぶ']]){
             const button=document.createElement('button');button.type='button';button.textContent=label;
             button.style.margin='8px 8px 0 0';button.addEventListener('click',()=>{
