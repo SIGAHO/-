@@ -105,7 +105,12 @@ def build_hub(path, query, conversation_id, *, history_ids=(), current_turn_id=N
     meta = {'scope': 'current_conversation', 'persistence': 'raw_read_only',
             'source_turn_ids': [], 'open_items': [], 'scan_limited': False}
     if not isinstance(conversation_id, str) or not conversation_id:
-        return '', {**meta, 'reason': 'no_conversation_identity'}
+        unresolved = False
+        if correction_path and Path(correction_path).exists():
+            from breaktail_correction_ledger import _question_shape
+            unresolved = bool(_question_shape(query))
+        return '', {**meta, 'reason': 'no_conversation_identity',
+                    'correction_unresolved': unresolved}
     try:
         rows, scan = source_rows(path, conversation_id, journal_path)
         meta.update(scan)
