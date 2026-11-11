@@ -68,6 +68,20 @@ class CorrectionRecallTests(unittest.TestCase):
         self.assertIsNone(meta["correction"])
         self.assertTrue(meta["correction_unresolved"])
 
+    def test_chained_updates_select_only_the_last_link(self):
+        self.add("turn-old-0001", "望遠鏡修理の窓口は東支店。")
+        self.add("turn-mid-0002", "望遠鏡修理の窓口は西支店。")
+        self.add("turn-new-0003", "望遠鏡修理の窓口は北支店。")
+        self.link("望遠鏡修理の窓口", "turn-old-0001", "turn-mid-0002")
+        self.link("望遠鏡修理の窓口", "turn-mid-0002", "turn-new-0003")
+        query = "望遠鏡修理の窓口は今どっち？"
+        _, meta = hub.build_hub(self.raw, query, "session-a", correction_path=self.ledger)
+        self.assertEqual(meta["correction"]["old_turn_id"], "turn-mid-0002")
+        self.assertEqual(meta["correction"]["new_turn_id"], "turn-new-0003")
+        reply, proof = hub.ground_correction_answer(query, "東支店だよ。", meta)
+        self.assertIn("北支店", reply)
+        self.assertEqual(proof["new_turn_id"], "turn-new-0003")
+
     def test_two_matched_topics_and_other_session_decline(self):
         self.add("turn-old-0001", "望遠鏡修理の窓口は東支店。")
         self.add("turn-new-0002", "望遠鏡修理の窓口は西支店。")
