@@ -28,6 +28,7 @@ from breaktail_agent import Workspace
 from breaktail_agent_edit_preview import ReplacementSyntaxError, preview as preview_replacement
 from breaktail_file_lock import ExclusiveLock
 from breaktail_web_agent import WebAgentService
+from breaktail_memory_pages import page_records
 
 
 HOST = "127.0.0.1"
@@ -536,6 +537,13 @@ class Handler(BaseHTTPRequestHandler):
 
         if self.path == "/api/reply":
             return self.reply(body)
+        if self.path == "/api/memory/page":
+            try:
+                result = page_records(tail.MEMORY_FILE, tail.raw_conversation.RAW_CONVERSATION_FILE,
+                                      body.get("scope"), body.get("page", 1))
+            except (ValueError, OSError, UnicodeError) as error:
+                return self.send(400, {"error": str(error)})
+            return self.send(200, result)
         if self.path == "/api/workspace/read":
             try:
                 result = read_workspace(body.get("workspace"), body.get("tool"), body.get("path"))
