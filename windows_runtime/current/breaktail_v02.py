@@ -1134,12 +1134,14 @@ def build_reply_messages(history: list[dict], user_text: str, scene: dict | None
             messages = candidate
         else:
             hub_prompt = ''
-            hub_meta = {**hub_meta, 'reason': 'reply_context_budget', 'source_turn_ids': []}
+            hub_meta = {**hub_meta, 'reason': 'reply_context_budget', 'source_turn_ids': [],
+                        'correction_unresolved': bool(hub_meta.get('correction')) or hub_meta.get('correction_unresolved', False)}
     sections.append(_section('raw_memory_hub', hub_prompt, bool(hub_prompt), hub_meta['reason']))
     if hub_audit is not None:
         hub_audit.update(prompt=hub_prompt, ledger=hub_meta.get('ledger',[]) if hub_prompt else [],
                          sources=hub_meta.get('sources',[]) if hub_prompt else [],enabled=hub_enabled and not active_mode,
                          correction=hub_meta.get('correction') if hub_prompt else None,
+                         correction_unresolved=hub_meta.get('correction_unresolved', False) if hub_enabled and not active_mode else False,
                          outbound_contact_available=self_context['capabilities'].get('can_contact_other_people_now'))
     trace_event(trace, 'raw_memory_hub', **hub_meta, injected=bool(hub_prompt))
     if character_text:
