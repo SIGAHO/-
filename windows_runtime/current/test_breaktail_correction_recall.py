@@ -141,7 +141,9 @@ class CorrectionRecallTests(unittest.TestCase):
     def test_roleplay_source_is_not_recalled_as_fact(self):
         self.add("turn-old-0001", "望遠鏡修理の窓口は東支店。")
         self.add("turn-new-0002", "ロールプレイで望遠鏡修理の窓口は西支店。")
-        self.link("望遠鏡修理の窓口", "turn-old-0001", "turn-new-0002")
+        with self.assertRaisesRegex(ValueError, "出典にできません"):
+            preview(self.raw, "望遠鏡修理の窓口", "turn-old-0001", "turn-new-0002")
+        self.assertFalse(self.ledger.exists())
         query = "望遠鏡修理の窓口は今どっち？"
         _, meta = hub.build_hub(self.raw, query, "session-a", correction_path=self.ledger)
         self.assertIsNone(meta["correction"])
