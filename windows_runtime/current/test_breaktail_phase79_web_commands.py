@@ -2,7 +2,10 @@ import json
 import tempfile
 import os
 import subprocess
+import threading
 import time
+import urllib.error
+import urllib.request
 import unittest
 from pathlib import Path
 from unittest.mock import Mock, patch
@@ -37,6 +40,7 @@ class WebCommandReachabilityTests(unittest.TestCase):
             self.assertIsNone(scene)
         capabilities, _ = web.web_command_reply("/capabilities", [], None, "phase79-web", [])
         self.assertIn("差分確認後の文字列置換と取消", capabilities)
+        self.assertIn("作業エージェントの実行・停止・未完了からの再開", capabilities)
         self.assertIn("会話から自動でファイルを操作する機能はない", capabilities)
 
     def test_natural_memory_list_reads_canonical_store_without_model(self):
@@ -74,6 +78,33 @@ class WebCommandReachabilityTests(unittest.TestCase):
         self.assertTrue(web.local_request_allowed(f"localhost:{web.PORT}", f"http://localhost:{web.PORT}"))
         self.assertFalse(web.local_request_allowed("evil.example:8765"))
         self.assertFalse(web.local_request_allowed(f"127.0.0.1:{web.PORT}", "http://evil.example"))
+
+    def test_agent_start_http_route_requires_local_origin_and_token(self):
+        service = Mock()
+        service.start.return_value = {"job_id": "a" * 32, "status": "queued"}
+        server = web.ExclusiveHTTPServer(("127.0.0.1", 0), web.Handler)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        root = str(Path(__file__).resolve().parents[2])
+        payload = json.dumps({"workspace": root, "task": "inspect"}).encode("utf-8")
+        url = f"http://127.0.0.1:{server.server_port}/api/agent/start"
+        try:
+            with patch.object(web, "PORT", server.server_port), patch.object(web, "AGENT_SERVICE", service), \
+                 patch.object(web, "handle_review", return_value=False):
+                for headers in ({}, {"X-Breaktail-Token": web.TOKEN, "Origin": "http://evil.example"}):
+                    request = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json", **headers})
+                    with self.assertRaises(urllib.error.HTTPError) as error:
+                        urllib.request.urlopen(request, timeout=3)
+                    self.assertEqual(error.exception.code, 403)
+                request = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json",
+                    "X-Breaktail-Token": web.TOKEN, "Origin": f"http://127.0.0.1:{server.server_port}"})
+                with urllib.request.urlopen(request, timeout=3) as response:
+                    self.assertEqual(json.load(response)["status"], "queued")
+            service.start.assert_called_once_with(str(Path(root).resolve()), "inspect")
+        finally:
+            server.shutdown()
+            server.server_close()
+            thread.join(timeout=3)
 
     def test_workspace_preview_shows_diff_and_syntax_without_writing(self):
         with tempfile.TemporaryDirectory(dir=Path(__file__).resolve().parents[2]) as temp_dir:
