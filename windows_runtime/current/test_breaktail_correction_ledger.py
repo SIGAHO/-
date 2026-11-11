@@ -117,6 +117,14 @@ class CorrectionLedgerTests(unittest.TestCase):
         finally:
             self.raw.write_bytes(original)
 
+    def test_scene_snapshot_cannot_become_a_correction_source(self):
+        rows = [json.loads(line) for line in self.raw.read_text(encoding="utf-8").splitlines()]
+        rows[1]["scene_snapshot"] = {"name": "fictional shop"}
+        self.raw.write_text("".join(json.dumps(row) + "\n" for row in rows), encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "出典にできません"):
+            preview(self.raw, "shop location", "old-turn-0001", "new-turn-0002")
+        self.assertFalse(self.ledger.exists())
+
 
 if __name__ == "__main__":
     unittest.main()
