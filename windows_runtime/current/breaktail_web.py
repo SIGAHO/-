@@ -562,7 +562,7 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send(409, {"error": str(error)})
             return self.send(200, result)
         if self.path in ("/api/agent/start", "/api/agent/resume", "/api/agent/status",
-                         "/api/agent/cancel", "/api/agent/work"):
+                         "/api/agent/cancel", "/api/agent/work", "/api/agent/review"):
             try:
                 workspace = str(open_workspace(body.get("workspace")).root)
                 if self.path == "/api/agent/start":
@@ -573,6 +573,8 @@ class Handler(BaseHTTPRequestHandler):
                     result = AGENT_SERVICE.status(workspace, body.get("job_id"))
                 elif self.path == "/api/agent/cancel":
                     result = AGENT_SERVICE.cancel(workspace, body.get("job_id"))
+                elif self.path == "/api/agent/review":
+                    result = AGENT_SERVICE.review(workspace, body.get("job_id"))
                 else:
                     result = AGENT_SERVICE.work_queued(workspace, body.get("job_id"))
             except (ValueError, OSError, TimeoutError, sqlite3.Error) as error:
