@@ -23,11 +23,12 @@ class WebAgentService:
         return str(Workspace(root, create_audit=False).root)
 
     def _config(self):
-        config = self.config_loader()
+        config = dict(self.config_loader())
         if config.get("safe_mode"):
             raise ValueError("安全モードでは作業エージェントを実行できません")
         if urllib.parse.urlparse(config.get("ollama_url", "")).hostname not in ("127.0.0.1", "localhost"):
             raise ValueError("Web作業エージェントはローカルのOllamaだけ利用できます")
+        config["num_ctx"] = min(config.get("num_ctx", 8192), 4096)
         return config
 
     def _start_worker(self, root, config):
