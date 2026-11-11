@@ -206,10 +206,12 @@ class CorrectionRecallTests(unittest.TestCase):
         old_memory = {"id": 17, "content": "望遠鏡修理の窓口は東支店。",
                       "source_turn_ids": ["turn-old-0001"]}
         unlinked_memory = {"id": 18, "content": "望遠鏡修理の窓口は東支店。"}
+        unrelated_memory = {"id": 19, "content": "別の展示会の営業時間。",
+                            "source_turn_ids": ["other-turn-0009"]}
         audit = {}
         with patch.object(tail.raw_conversation, "RAW_CONVERSATION_FILE", self.raw), \
              patch.object(tail, "DATA_ROOT", self.root), \
-             patch.object(tail, "retrieve_memory_candidates", return_value=[old_memory, unlinked_memory]), \
+             patch.object(tail, "retrieve_memory_candidates", return_value=[old_memory, unlinked_memory, unrelated_memory]), \
              patch.object(tail, "gate_memories") as gate, \
              patch.object(tail, "trace_event") as trace_log:
             messages = tail.build_reply_messages([], "望遠鏡修理の窓口は今どっち？", None,
@@ -220,9 +222,10 @@ class CorrectionRecallTests(unittest.TestCase):
         self.assertEqual(audit["correction"]["new_turn_id"], "turn-new-0002")
         decisions = [call.kwargs["decisions"] for call in trace_log.call_args_list
                      if len(call.args) > 1 and call.args[1] == "memory_gate"]
-        self.assertEqual([item["memory_id"] for item in decisions[0]], [17, 18])
-        self.assertTrue(all(item["reasons"] == ["explicit_correction_source_priority"]
-                            for item in decisions[0]))
+        self.assertEqual([item["memory_id"] for item in decisions[0]], [17, 18, 19])
+        self.assertEqual([item["reasons"][0] for item in decisions[0]],
+                         ["superseded_by_explicit_correction", "source_unknown_during_correction",
+                          "narrow_correction_answer_no_memory_needed"])
 
     def test_full_reply_path_uses_verified_source_without_model(self):
         self.add("turn-old-0001", "望遠鏡修理の窓口は東支店。")
