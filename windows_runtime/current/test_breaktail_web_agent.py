@@ -38,6 +38,8 @@ class WebAgentBridgeTests(unittest.TestCase):
         self.assertEqual(result["summary"], "note created")
         self.assertTrue(result["run_id"])
         self.assertTrue(result["events"])
+        self.assertEqual(result["events"][0]["path"], "note.txt")
+        self.assertTrue(result["events"][0]["observation"]["written"])
 
     def test_cancel_running_job_prevents_pending_write(self):
         entered, release = threading.Event(), threading.Event()
