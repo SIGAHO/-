@@ -183,9 +183,12 @@ def matching_topic_exists(ledger_path, query, conversation_id):
     """Whether a narrow question has a recorded topic, even if its proof fails."""
     if not _question_shape(query):
         return False
+    normalized_query = normalized(query)
     return any(record["conversation_id"] == conversation_id and
-               record["key"] in normalized(query) and
-               len(query) <= len(record["label"]) + 35
+               len(query) <= len(record["label"]) + 35 and
+               (record["key"] in normalized_query or
+                (len(record["key"]) >= 6 and record["key"][:3] in normalized_query
+                 and record["key"][-2:] in normalized_query))
                for record in _records(ledger_path))
 
 
