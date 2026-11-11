@@ -149,6 +149,18 @@ class CorrectionRecallTests(unittest.TestCase):
         model.assert_not_called()
         self.assertIn("断定できない", reply)
 
+    def test_missing_conversation_identity_abstains_when_corrections_exist(self):
+        self.add("turn-old-0001", "望遠鏡修理の窓口は東支店。")
+        self.add("turn-new-0002", "望遠鏡修理の窓口は西支店。")
+        self.link("望遠鏡修理の窓口", "turn-old-0001", "turn-new-0002")
+        query = "望遠鏡修理の窓口は今どっち？"
+        _, meta = hub.build_hub(self.raw, query, None, correction_path=self.ledger)
+        self.assertEqual(meta["reason"], "no_conversation_identity")
+        self.assertTrue(meta["correction_unresolved"])
+        reply, proof = hub.ground_correction_answer(query, "西支店だよ。", meta)
+        self.assertIn("断定できない", reply)
+        self.assertEqual(proof["kind"], "correction_source_abstention")
+
     def test_reply_builder_receives_only_verified_update(self):
         self.add("turn-old-0001", "望遠鏡修理の窓口は東支店。")
         self.add("turn-new-0002", "望遠鏡修理の窓口は西支店。")
