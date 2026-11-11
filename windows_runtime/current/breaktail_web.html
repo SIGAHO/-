@@ -50,7 +50,7 @@
     <div><div class="section-label">接続</div><div class="status-card"><div class="status-line"><span class="dot"></span><span id="status">ローカルで稼働中</span></div><p>会話はこのPCで処理します</p></div></div>
     <div><div class="section-label">いまの状態</div><div class="meta"><span>モデル</span><b>Qwen2.5 14B</b></div><div class="meta"><span>会話履歴</span><b>再起動後も復元</b></div><div class="meta"><span>場面</span><b id="scene">通常の会話</b></div><div class="meta"><span>長期記憶</span><b id="memory-count">読み込み中</b></div></div>
     <div><div class="section-label">最近の記憶 <span style="color:#607882">· 未確認の解釈</span></div><div id="memory-list" class="memory-list"><div class="memory-empty">読み込み中…</div></div></div>
-    <div><div class="section-label">作業フォルダーを読む</div><input id="workspace-root" aria-label="作業フォルダー" placeholder="作業フォルダーの絶対パス" style="width:100%;box-sizing:border-box"><input id="workspace-path" aria-label="相対パス" value="." placeholder="相対パス" style="width:100%;box-sizing:border-box;margin-top:6px"><div style="margin-top:6px"><button id="list-files">一覧</button><button id="read-file">ファイルを読む</button></div><pre id="workspace-result" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:240px;overflow:auto" aria-live="polite"></pre></div>
+    <div><div class="section-label">作業フォルダーを読む</div><input id="workspace-root" aria-label="作業フォルダー" placeholder="作業フォルダーの絶対パス" style="width:100%;box-sizing:border-box"><input id="workspace-path" aria-label="相対パス" value="." placeholder="相対パス" style="width:100%;box-sizing:border-box;margin-top:6px"><div style="margin-top:6px"><button id="list-files">一覧</button><button id="read-file">ファイルを読む</button></div></div>
     <div class="side-bottom">発言原文と返答はRaw会話ファイルに保存されます。記憶欄はモデルによる未確認の解釈です。ファイル読取りは上の明示操作だけで、会話から自動実行しません。</div>
   </aside>
   <main>
@@ -59,6 +59,7 @@
     <div class="composer-zone"><div class="composer-wrap"><div class="composer"><textarea id="input" rows="1" placeholder="Breaktail に話しかける…"></textarea><button id="send" class="send" aria-label="送信">➜</button></div><div class="hint"><span>Enter で送信 · Shift + Enter で改行 · /capabilities で操作一覧</span><span id="hint-status">記憶は解釈だけ保存</span></div></div></div>
   </main>
 </div>
+<dialog id="workspace-dialog" style="width:min(900px,90vw);max-height:75vh;background:#101620;color:#eaf2f6;border:1px solid #263244;border-radius:12px"><button id="close-workspace" style="float:right">閉じる</button><h2>作業フォルダーの読取り結果</h2><pre id="workspace-result" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:60vh;overflow:auto" aria-live="polite"></pre></dialog>
 <script>
 const token = '__BREAKTAIL_TOKEN__';
 const $ = id => document.getElementById(id);
@@ -103,6 +104,7 @@ async function send() {
 }
 $('send').addEventListener('click',send);
 async function workspaceRead(tool) {
+  $('workspace-dialog').showModal();
   const result=$('workspace-result');result.textContent='読取り中…';
   try {
     const response=await api('/api/workspace/read',{workspace:$('workspace-root').value.trim(),path:$('workspace-path').value.trim(),tool});
@@ -114,6 +116,7 @@ async function workspaceRead(tool) {
 }
 $('list-files').addEventListener('click',()=>workspaceRead('list_files'));
 $('read-file').addEventListener('click',()=>workspaceRead('read_file'));
+$('close-workspace').addEventListener('click',()=>$('workspace-dialog').close());
 input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}});
 input.addEventListener('input',()=>{input.style.height='auto';input.style.height=Math.min(input.scrollHeight,170)+'px';});
 document.querySelectorAll('[data-prompt]').forEach(button=>button.addEventListener('click',()=>{input.value=button.dataset.prompt;input.focus();}));
