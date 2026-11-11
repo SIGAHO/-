@@ -76,6 +76,34 @@ class CorrectionLedgerTests(unittest.TestCase):
         self.assertIsNone(report["latest_text"])
         self.assertFalse(report["items"][0]["sources_available"])
 
+    def test_idempotent_retry_rejects_tampered_existing_record(self):
+        checked = preview(self.raw, "shop location", "old-turn-0001", "new-turn-0002")
+        commit(self.raw, self.ledger, "shop location", "old-turn-0001", "new-turn-0002",
+               checked["old"]["sha256"], checked["new"]["sha256"])
+        record = json.loads(self.ledger.read_text(encoding="utf-8"))
+        record["new_source_sha256"] = "0" * 64
+        self.ledger.write_text(json.dumps(record) + "\n", encoding="utf-8")
+        before = self.ledger.read_bytes()
+        with self.assertRaisesRegex(ValueError, "再確認できません"):
+            commit(self.raw, self.ledger, "shop location", "old-turn-0001", "new-turn-0002",
+                   checked["old"]["sha256"], checked["new"]["sha256"])
+        self.assertEqual(self.ledger.read_bytes(), before)
+
+    def test_corrupt_topic_key_fails_closed(self):
+        checked = preview(self.raw, "shop location", "old-turn-0001", "new-turn-0002")
+        commit(self.raw, self.ledger, "shop location", "old-turn-0001", "new-turn-0002",
+               checked["old"]["sha256"], checked["new"]["sha256"])
+        record = json.loads(self.ledger.read_text(encoding="utf-8"))
+        record["key"] = "different topic"
+        self.ledger.write_text(json.dumps(record) + "\n", encoding="utf-8")
+        before = self.ledger.read_bytes()
+        with self.assertRaisesRegex(ValueError, "破損"):
+            history(self.raw, self.ledger, "shop location", "old-turn-0001")
+        with self.assertRaisesRegex(ValueError, "破損"):
+            commit(self.raw, self.ledger, "shop location", "old-turn-0001", "new-turn-0002",
+                   checked["old"]["sha256"], checked["new"]["sha256"])
+        self.assertEqual(self.ledger.read_bytes(), before)
+
 
 if __name__ == "__main__":
     unittest.main()
