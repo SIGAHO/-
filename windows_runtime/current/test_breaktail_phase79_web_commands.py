@@ -32,6 +32,26 @@ class WebCommandReachabilityTests(unittest.TestCase):
             self.assertIn(expected, reply)
             self.assertIsNone(scene)
 
+    def test_read_workspace_uses_agent_path_guard_without_audit_write(self):
+        with tempfile.TemporaryDirectory(dir=Path(__file__).resolve().parents[2]) as temp_dir:
+            root = Path(temp_dir)
+            (root / "example.txt").write_text("observed", encoding="utf-8")
+            listing = web.read_workspace(str(root), "list_files", ".")
+            reading = web.read_workspace(str(root), "read_file", "example.txt")
+            self.assertIn("example.txt", listing["observation"]["entries"])
+            self.assertEqual(reading["observation"]["content"], "observed")
+            self.assertFalse((root / ".breaktail-agent").exists())
+            for tool, path in (("write_file", "example.txt"), ("read_file", "../example.txt")):
+                with self.assertRaises(ValueError):
+                    web.read_workspace(str(root), tool, path)
+            with self.assertRaises(ValueError):
+                web.read_workspace(".", "list_files", ".")
+            (root / "large.txt").write_text("x" * 64001, encoding="utf-8")
+            with self.assertRaises(ValueError):
+                web.read_workspace(str(root), "read_file", "large.txt")
+        with self.assertRaises(ValueError):
+            web.read_workspace(str(Path(web.__file__).resolve().parent.parent), "list_files", ".")
+
     def test_debug_and_style_state_survive_web_snapshot_restore(self):
         samples = [{"user": f"質問 {number}？"} for number in range(6)]
         with web.LOCK:
