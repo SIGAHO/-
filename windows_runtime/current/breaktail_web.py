@@ -172,6 +172,11 @@ def read_workspace(workspace_root, tool, path):
     return {"tool": tool, "workspace": str(workspace.root), "path": path, "observation": observation}
 
 
+def local_request_allowed(host, origin=None):
+    allowed_hosts = {f"127.0.0.1:{PORT}", f"localhost:{PORT}"}
+    return host in allowed_hosts and (not origin or origin in {f"http://{name}" for name in allowed_hosts})
+
+
 def prepare_turn(history, user_text, scene, trace=None, working_state=None, passive_continuity=None):
     """Use the same core turn pipeline as CLI."""
     with LOCK:
@@ -307,6 +312,8 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(content)
 
     def do_GET(self):
+        if not local_request_allowed(self.headers.get("Host")):
+            return self.send(403, {"error": "ローカル画面からのみ利用できます"})
         if handle_review(self):
             return
         if self.path == "/":
@@ -335,6 +342,8 @@ class Handler(BaseHTTPRequestHandler):
         self.send(404, {"error": "見つかりません"})
 
     def do_POST(self):
+        if not local_request_allowed(self.headers.get("Host"), self.headers.get("Origin")):
+            return self.send(403, {"error": "ローカル画面からのみ利用できます"})
         if handle_review(self):
             return
         if self.headers.get("X-Breaktail-Token") != TOKEN:
