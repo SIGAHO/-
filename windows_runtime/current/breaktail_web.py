@@ -416,7 +416,7 @@ def web_command_reply(user_text, history, scene, conversation_id, style_samples,
         return ("できる: テキスト会話、コードの提案、直近16往復の参照、解釈記憶の保存・検索・Memory Gateでの採用と /forget での削除。\n"
                 "/memories で記憶を表示。会話では出典Rawを解決でき、Gateを通過した候補だけ14Bへ渡す。\n"
                 "確定したBreaktail自身の20項目プロフィールは /profile で確認でき、再起動後も会話に渡す。\n"
-                "Web画面の明示操作では、指定した作業フォルダーの一覧・テキスト読取り・差分確認後の文字列置換と取消、作業エージェントの実行・停止・未完了からの再開・実行後の差分確認ができる。会話から自動でファイルを操作する機能はない。\n"
+                "Web画面の明示操作では、指定した作業フォルダーの一覧・テキスト読取り・差分確認後の文字列置換と取消、作業エージェントの実行・停止・未完了からの再開・実行後の差分確認・既存ファイル１件の編集取消ができる。会話から自動でファイルを操作する機能はない。\n"
                 "できない: 外部検索、Web作業でのコードやテストの実行、裏での作業、前セッションの会話の参照。"), scene
     if user_text == "/debug":
         with LOCK:
@@ -562,7 +562,7 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send(409, {"error": str(error)})
             return self.send(200, result)
         if self.path in ("/api/agent/start", "/api/agent/resume", "/api/agent/status",
-                         "/api/agent/cancel", "/api/agent/work", "/api/agent/review"):
+                         "/api/agent/cancel", "/api/agent/work", "/api/agent/review", "/api/agent/undo"):
             try:
                 workspace = str(open_workspace(body.get("workspace")).root)
                 if self.path == "/api/agent/start":
@@ -575,6 +575,8 @@ class Handler(BaseHTTPRequestHandler):
                     result = AGENT_SERVICE.cancel(workspace, body.get("job_id"))
                 elif self.path == "/api/agent/review":
                     result = AGENT_SERVICE.review(workspace, body.get("job_id"))
+                elif self.path == "/api/agent/undo":
+                    result = AGENT_SERVICE.undo(workspace, body.get("job_id"), body.get("expected_after_sha256"))
                 else:
                     result = AGENT_SERVICE.work_queued(workspace, body.get("job_id"))
             except (ValueError, OSError, TimeoutError, sqlite3.Error) as error:
