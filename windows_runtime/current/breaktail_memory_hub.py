@@ -115,10 +115,13 @@ def build_hub(path, query, conversation_id, *, history_ids=(), current_turn_id=N
     correction = None
     if correction_path:
         try:
-            from breaktail_correction_ledger import match_for_question
+            from breaktail_correction_ledger import match_for_question, matching_topic_exists, _question_shape
             correction = match_for_question(path, correction_path, query, conversation_id, rows)
+            meta['correction_unresolved'] = (correction is None and
+                                             matching_topic_exists(correction_path, query, conversation_id))
         except (OSError, ValueError, UnicodeError) as error:
-            return '', {**meta, 'error': type(error).__name__, 'reason': 'correction_unavailable'}
+            return '', {**meta, 'error': type(error).__name__, 'reason': 'correction_unavailable',
+                        'correction_unresolved': bool(_question_shape(query))}
     ledger = {}
     for row in rows:
         event = ledger_event(row['user_text'])
@@ -183,6 +186,7 @@ def build_hub(path, query, conversation_id, *, history_ids=(), current_turn_id=N
     meta['source_turn_ids'] = [q['turn_id'] for q in quotes]
     meta['sources'] = quotes
     meta['correction'] = correction if correction and correction['new_turn_id'] in included else None
+    meta['correction_unresolved'] = meta.get('correction_unresolved', False) or bool(correction and not meta['correction'])
     meta['open_items'] = [ev['label'] for ev,row in open_rows if row['turn_id'] in included]
     meta['open_items_omitted'] = len(open_rows)-len(meta['open_items'])
     meta['ledger'] = [{**ev, 'turn_id':row['turn_id'], 'user_text':row['user_text']}
@@ -204,6 +208,9 @@ def build_hub(path, query, conversation_id, *, history_ids=(), current_turn_id=N
 
 def ground_correction_answer(query, draft, audit):
     """Quote one linked update for a narrow current-state question only."""
+    if audit.get('correction_unresolved'):
+        return '訂正の出典を一つに確かめられないから、今の値は断定できないよ。', {
+            'kind': 'correction_source_abstention', 'external_verification': False}
     item = audit.get('correction')
     if not item or item.get('source') != 'explicit_user_selection' or item.get('external_verification') is not False:
         return draft, None
