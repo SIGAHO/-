@@ -54,6 +54,8 @@ class WebCommandReachabilityTests(unittest.TestCase):
                     web.read_workspace(str(root), tool, path)
             with self.assertRaises(ValueError):
                 web.read_workspace(".", "list_files", ".")
+            with self.assertRaises(ValueError):
+                web.read_workspace(r"\\\\example.invalid\\share", "list_files", ".")
             (root / "large.txt").write_text("x" * 64001, encoding="utf-8")
             with self.assertRaises(ValueError):
                 web.read_workspace(str(root), "read_file", "large.txt")
