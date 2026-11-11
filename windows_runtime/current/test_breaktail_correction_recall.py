@@ -138,6 +138,31 @@ class CorrectionRecallTests(unittest.TestCase):
         self.assertIn("西支店", messages[0]["content"])
         self.assertEqual(audit["correction"]["new_turn_id"], "turn-new-0002")
 
+    def test_old_interpretation_is_excluded_before_prompt_and_reason_is_logged(self):
+        self.add("turn-old-0001", "望遠鏡修理の窓口は東支店。")
+        self.add("turn-new-0002", "望遠鏡修理の窓口は西支店。")
+        self.link("望遠鏡修理の窓口", "turn-old-0001", "turn-new-0002")
+        old_memory = {"id": 17, "content": "望遠鏡修理の窓口は東支店。",
+                      "source_turn_ids": ["turn-old-0001"]}
+        unlinked_memory = {"id": 18, "content": "望遠鏡修理の窓口は東支店。"}
+        audit = {}
+        with patch.object(tail.raw_conversation, "RAW_CONVERSATION_FILE", self.raw), \
+             patch.object(tail, "DATA_ROOT", self.root), \
+             patch.object(tail, "retrieve_memory_candidates", return_value=[old_memory, unlinked_memory]), \
+             patch.object(tail, "gate_memories") as gate, \
+             patch.object(tail, "trace_event") as trace_log:
+            messages = tail.build_reply_messages([], "望遠鏡修理の窓口は今どっち？", None,
+                                                 trace={"conversation_id": "session-a", "turn_id": "current-turn"},
+                                                 hub_audit=audit)
+        gate.assert_not_called()
+        self.assertNotIn("Saved memory candidate", messages[0]["content"])
+        self.assertEqual(audit["correction"]["new_turn_id"], "turn-new-0002")
+        decisions = [call.kwargs["decisions"] for call in trace_log.call_args_list
+                     if len(call.args) > 1 and call.args[1] == "memory_gate"]
+        self.assertEqual([item["memory_id"] for item in decisions[0]], [17, 18])
+        self.assertTrue(all(item["reasons"] == ["explicit_correction_source_priority"]
+                            for item in decisions[0]))
+
     def test_full_reply_path_replaces_stale_model_draft(self):
         self.add("turn-old-0001", "望遠鏡修理の窓口は東支店。")
         self.add("turn-new-0002", "望遠鏡修理の窓口は西支店。")
