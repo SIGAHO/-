@@ -248,7 +248,8 @@ def web_command_reply(user_text, history, scene, conversation_id, style_samples,
         return ("できる: テキスト会話、コードの提案、直近16往復の参照、解釈記憶の保存・検索・Memory Gateでの採用と /forget での削除。\n"
                 "/memories で記憶を表示。会話では出典Rawを解決でき、Gateを通過した候補だけ14Bへ渡す。\n"
                 "確定したBreaktail自身の20項目プロフィールは /profile で確認でき、再起動後も会話に渡す。\n"
-                "できない: 外部検索、任意のファイル操作、裏での作業、前セッションの会話の参照。"), scene
+                "Web画面の明示操作では、指定した作業フォルダーの一覧とテキストファイルを読める。会話から自動でファイルを操作する機能はない。\n"
+                "できない: 外部検索、Webからのファイル編集、裏での作業、前セッションの会話の参照。"), scene
     if user_text == "/debug":
         with LOCK:
             STATE["debug"] = not STATE["debug"]
@@ -518,3 +519,4 @@ if __name__ == "__main__":
     finally:
         save_state_snapshot()
         server.server_close()
+
