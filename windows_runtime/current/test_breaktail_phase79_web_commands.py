@@ -32,6 +32,14 @@ class WebCommandReachabilityTests(unittest.TestCase):
             self.assertIn(expected, reply)
             self.assertIsNone(scene)
 
+    def test_natural_memory_list_reads_canonical_store_without_model(self):
+        with patch.object(web, "memories", return_value=[{"id": 7, "content": "確認用の記憶"}]) as read:
+            reply, scene = web.web_command_reply("じゃあ今までの記憶すべて一覧", [], None, "phase79-web", [])
+        read.assert_called_once_with()
+        self.assertIn("解釈記憶 1 件", reply)
+        self.assertIn("[7] [未確認の解釈] 確認用の記憶", reply)
+        self.assertIsNone(scene)
+
     def test_read_workspace_uses_agent_path_guard_without_audit_write(self):
         with tempfile.TemporaryDirectory(dir=Path(__file__).resolve().parents[2]) as temp_dir:
             root = Path(temp_dir)
