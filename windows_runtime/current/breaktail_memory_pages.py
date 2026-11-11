@@ -34,6 +34,7 @@ def _rows(path, scope):
                     continue
                 found.append({"conversation_id": row["conversation_id"], "turn_id": row["turn_id"],
                               "timestamp": row["timestamp"], "status": row["status"],
+                              "scene_snapshot": bool(row.get("scene_snapshot")),
                               "messages": [{"speaker": "user", "content": row["user_text"]},
                                            {"speaker": "assistant", "content": row["assistant_text"]}]})
             else:
