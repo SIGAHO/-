@@ -106,7 +106,10 @@ async function workspaceRead(tool) {
   const result=$('workspace-result');result.textContent='読取り中…';
   try {
     const response=await api('/api/workspace/read',{workspace:$('workspace-root').value.trim(),path:$('workspace-path').value.trim(),tool});
-    result.textContent=JSON.stringify(response,null,2);
+    const heading='実際に読んだ場所: '+response.workspace+' / '+response.path+'\n';
+    result.textContent=tool==='list_files'
+      ? heading+'見つかった項目 '+response.observation.entries.length+' 件\n'+response.observation.entries.join('\n')
+      : heading+'SHA-256: '+response.observation.sha256+'\n\n'+response.observation.content;
   } catch(error) {result.textContent='読取り失敗: '+error.message;}
 }
 $('list-files').addEventListener('click',()=>workspaceRead('list_files'));
