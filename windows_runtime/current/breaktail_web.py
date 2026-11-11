@@ -29,6 +29,7 @@ from breaktail_agent_edit_preview import ReplacementSyntaxError, preview as prev
 from breaktail_file_lock import ExclusiveLock
 from breaktail_web_agent import WebAgentService
 from breaktail_memory_pages import page_records
+from breaktail_correction_ledger import preview as preview_correction, commit as commit_correction, history as correction_history
 
 
 HOST = "127.0.0.1"
@@ -36,6 +37,7 @@ PORT = int(os.environ.get("BREAKTAIL_WEB_PORT", "8765"))
 RESTORE_FROM = os.environ.get("BREAKTAIL_WEB_RESTORE_FROM")
 STATE_FILE = store_path("state", "web_state.json", "BREAKTAIL_WEB_STATE_FILE")
 PAGE = Path(__file__).with_name("breaktail_web.html")
+CORRECTION_FILE = store_path("memory", "breaktail_corrections.jsonl")
 TOKEN = secrets.token_urlsafe(32)
 LOCK = threading.Lock()
 STATE = {"history": [], "messages": [], "scene": None, "pending": None, "busy": False,
@@ -543,6 +545,22 @@ class Handler(BaseHTTPRequestHandler):
                                       body.get("scope"), body.get("page", 1))
             except (ValueError, OSError, UnicodeError) as error:
                 return self.send(400, {"error": str(error)})
+            return self.send(200, result)
+        if self.path in ("/api/memory/correction/preview", "/api/memory/correction/commit",
+                         "/api/memory/correction/history"):
+            try:
+                if self.path.endswith("/preview"):
+                    result = preview_correction(tail.raw_conversation.RAW_CONVERSATION_FILE,
+                                                body.get("label"), body.get("old_turn_id"), body.get("new_turn_id"))
+                elif self.path.endswith("/commit"):
+                    result = commit_correction(tail.raw_conversation.RAW_CONVERSATION_FILE, CORRECTION_FILE,
+                                               body.get("label"), body.get("old_turn_id"), body.get("new_turn_id"),
+                                               body.get("expected_old_sha256"), body.get("expected_new_sha256"))
+                else:
+                    result = correction_history(tail.raw_conversation.RAW_CONVERSATION_FILE, CORRECTION_FILE,
+                                                body.get("label"), body.get("anchor_turn_id"))
+            except (ValueError, OSError, TimeoutError, UnicodeError) as error:
+                return self.send(409, {"error": str(error)})
             return self.send(200, result)
         if self.path == "/api/workspace/read":
             try:
