@@ -104,6 +104,19 @@ class CorrectionLedgerTests(unittest.TestCase):
                    checked["old"]["sha256"], checked["new"]["sha256"])
         self.assertEqual(self.ledger.read_bytes(), before)
 
+    def test_roleplay_and_command_cannot_become_durable_corrections(self):
+        original = self.raw.read_bytes()
+        try:
+            for text in ("ごっこで店は西だよ。", "/set shop west"):
+                rows = [json.loads(line) for line in original.decode("utf-8").splitlines()]
+                rows[1]["user_text"] = text
+                self.raw.write_text("".join(json.dumps(row) + "\n" for row in rows), encoding="utf-8")
+                with self.subTest(text=text), self.assertRaisesRegex(ValueError, "出典にできません"):
+                    preview(self.raw, "shop location", "old-turn-0001", "new-turn-0002")
+                self.assertFalse(self.ledger.exists())
+        finally:
+            self.raw.write_bytes(original)
+
 
 if __name__ == "__main__":
     unittest.main()
