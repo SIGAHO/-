@@ -147,15 +147,30 @@ def commit(raw_path, ledger_path, label, old_turn_id, new_turn_id, expected_old_
         return {"record": record, "already_recorded": False}
 
 
+def _question_shape(query):
+    return (isinstance(query, str) and len(query) <= 160 and not re.search(r'[\n「」『』]', query)
+            and re.search(r"訂正|最新|今は|現在|どっち|どれ", query)
+            and re.search(r"[？?]|教え|何|どっち|どれ|どう|どこ", query)
+            and not re.search(r'[。、;；]|それと|ついで|加えて|他にも', query))
+
+
+def matching_topic_exists(ledger_path, query, conversation_id):
+    """Whether a narrow question has a recorded topic, even if its proof fails."""
+    if not _question_shape(query):
+        return False
+    return any(record["conversation_id"] == conversation_id and
+               record["key"] in normalized(query) and
+               len(query) <= len(record["label"]) + 35
+               for record in _records(ledger_path))
+
+
 def match_for_question(raw_path, ledger_path, query, conversation_id, source_rows):
     """Return one exact, intact correction chain for a narrow current-state question.
 
     The caller supplies its already filtered Raw rows. Missing/truncated sources,
     altered Raw, another matching topic, or a later unlinked correction all decline.
     """
-    if not (isinstance(query, str) and len(query) <= 160 and not re.search(r'[\n「」『』]', query)
-            and re.search(r"訂正|最新|今は|現在|どっち|どれ", query)
-            and re.search(r"[？?]|教え|何|どっち|どれ|どう|どこ", query)):
+    if not _question_shape(query):
         return None
     records = [r for r in _records(ledger_path)
                if r["conversation_id"] == conversation_id and r["key"] in normalized(query)]
@@ -165,8 +180,7 @@ def match_for_question(raw_path, ledger_path, query, conversation_id, source_row
     if len(keys) != 1:
         return None
     latest = records[-1]
-    if (len(query) > len(latest["label"]) + 35 or
-            re.search(r'[。、;；]|それと|ついで|加えて|他にも', query)):
+    if len(query) > len(latest["label"]) + 35:
         return None
     chain = history(raw_path, ledger_path, latest["label"], records[0]["old_turn_id"])
     if (chain["conversation_id"] != conversation_id or len(chain["items"]) != len(records)
