@@ -57,12 +57,16 @@ class CorrectionRecallTests(unittest.TestCase):
         self.add("turn-later-003", "訂正：望遠鏡修理の窓口は現在まだ不明。")
         _, meta = hub.build_hub(self.raw, query, "session-a", correction_path=self.ledger)
         self.assertIsNone(meta["correction"])
-        self.assertEqual(hub.ground_correction_answer(query, "保留", meta), ("保留", None))
+        self.assertTrue(meta["correction_unresolved"])
+        reply, proof = hub.ground_correction_answer(query, "東支店だよ。", meta)
+        self.assertIn("断定できない", reply)
+        self.assertEqual(proof["kind"], "correction_source_abstention")
         self.rows.pop()
         self.rows[1]["user_text"] = "望遠鏡修理の窓口は別の場所。"
         self.raw.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in self.rows), encoding="utf-8")
         _, meta = hub.build_hub(self.raw, query, "session-a", correction_path=self.ledger)
         self.assertIsNone(meta["correction"])
+        self.assertTrue(meta["correction_unresolved"])
 
     def test_two_matched_topics_and_other_session_decline(self):
         self.add("turn-old-0001", "望遠鏡修理の窓口は東支店。")
@@ -72,6 +76,7 @@ class CorrectionRecallTests(unittest.TestCase):
         query = "望遠鏡修理の窓口は今どっち？"
         _, meta = hub.build_hub(self.raw, query, "session-a", correction_path=self.ledger)
         self.assertIsNone(meta["correction"])
+        self.assertTrue(meta["correction_unresolved"])
         _, other = hub.build_hub(self.raw, query, "session-b", correction_path=self.ledger)
         self.assertIsNone(other["correction"])
 
@@ -86,6 +91,7 @@ class CorrectionRecallTests(unittest.TestCase):
         _, meta = hub.build_hub(self.raw, "望遠鏡修理の窓口は今どっち？", "session-a",
                                 correction_path=self.ledger, max_chars=1)
         self.assertIsNone(meta["correction"])
+        self.assertTrue(meta["correction_unresolved"])
 
     def test_current_turn_is_not_recalled_as_fact(self):
         self.add("turn-old-0001", "望遠鏡修理の窓口は東支店。")
@@ -136,6 +142,27 @@ class CorrectionRecallTests(unittest.TestCase):
         self.assertTrue(complete)
         self.assertIn("西支店", reply)
         self.assertIn("外部で確認した事実ではない", reply)
+
+    def test_full_reply_path_abstains_when_recorded_source_changes(self):
+        self.add("turn-old-0001", "望遠鏡修理の窓口は東支店。")
+        self.add("turn-new-0002", "望遠鏡修理の窓口は西支店。")
+        self.link("望遠鏡修理の窓口", "turn-old-0001", "turn-new-0002")
+        self.rows[1]["user_text"] = "望遠鏡修理の窓口は北支店。"
+        self.raw.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in self.rows), encoding="utf-8")
+        draft = {"message": {"content": "今も東支店だよ。"}, "done_reason": "stop"}
+        with patch.object(tail.raw_conversation, "RAW_CONVERSATION_FILE", self.raw), \
+             patch.object(tail, "DATA_ROOT", self.root), \
+             patch.object(tail, "MEMORY_FILE", self.root / "memory.jsonl"), \
+             patch.object(tail, "retrieve_memory_candidates", return_value=[]), \
+             patch.object(tail, "load_profile", return_value=None), \
+             patch.object(tail, "call_ollama", return_value=draft), \
+             patch.object(tail, "trace_event"), \
+             patch.object(tail, "log_turn"):
+            reply, complete = tail.generate_reply([], "望遠鏡修理の窓口は今どっち？",
+                                                   trace={"conversation_id": "session-a", "turn_id": "current-turn"})
+        self.assertTrue(complete)
+        self.assertIn("断定できない", reply)
+        self.assertNotIn("東支店だよ", reply)
 
 
 if __name__ == "__main__":
