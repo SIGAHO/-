@@ -1,3 +1,4 @@
+import json
 import tempfile
 import os
 import subprocess
@@ -90,6 +91,81 @@ class WebCommandReachabilityTests(unittest.TestCase):
             (root / "memory.db").write_text("hello", encoding="utf-8")
             with self.assertRaises(ValueError):
                 web.preview_workspace_replace(str(root), "memory.db", "hello", "goodbye")
+
+    def test_preview_commit_is_one_time_and_keeps_verified_backup(self):
+        with tempfile.TemporaryDirectory(dir=Path(__file__).resolve().parents[2]) as temp_dir:
+            root = Path(temp_dir)
+            source = root / "example.py"
+            original = b"def greet():\n    return 'hello'\n"
+            source.write_bytes(original)
+            preview = web.prepare_workspace_replace(str(root), "example.py", "hello", "goodbye")
+            self.assertFalse(preview["written"])
+            self.assertEqual(source.read_bytes(), original)
+            saved = web.commit_workspace_replace(preview["preview_id"])
+            self.assertTrue(saved["written"])
+            self.assertEqual(source.read_text(encoding="utf-8"), "def greet():\n    return 'goodbye'\n")
+            self.assertEqual((root / saved["backup"]).read_bytes(), original)
+            receipt = (root / ".breaktail-agent" / saved["run_id"] / "web-edit.json").read_text(encoding="utf-8")
+            self.assertIn('"status": "applied"', receipt)
+            with self.assertRaises(ValueError):
+                web.commit_workspace_replace(preview["preview_id"])
+            web.PREPARED_EDITS.clear()  # Undo uses the durable receipt, even after restart.
+            undone = web.undo_workspace_edit(str(root), saved["run_id"])
+            self.assertTrue(undone["undone"])
+            self.assertEqual(source.read_bytes(), original)
+            with self.assertRaises(ValueError):
+                web.undo_workspace_edit(str(root), saved["run_id"])
+
+    def test_commit_refuses_external_change_and_invalid_syntax(self):
+        with tempfile.TemporaryDirectory(dir=Path(__file__).resolve().parents[2]) as temp_dir:
+            root = Path(temp_dir)
+            source = root / "example.py"
+            source.write_text("value = 'old'\n", encoding="utf-8")
+            preview = web.prepare_workspace_replace(str(root), "example.py", "old", "new")
+            source.write_text("value = 'external'\n", encoding="utf-8")
+            with self.assertRaises(ValueError):
+                web.commit_workspace_replace(preview["preview_id"])
+            self.assertEqual(source.read_text(encoding="utf-8"), "value = 'external'\n")
+            invalid = web.prepare_workspace_replace(str(root), "example.py", "'external'", "(")
+            self.assertNotIn("preview_id", invalid)
+            self.assertEqual(source.read_text(encoding="utf-8"), "value = 'external'\n")
+
+    def test_undo_refuses_user_change_after_save(self):
+        with tempfile.TemporaryDirectory(dir=Path(__file__).resolve().parents[2]) as temp_dir:
+            root = Path(temp_dir)
+            source = root / "notes.txt"
+            source.write_text("old", encoding="utf-8")
+            preview = web.prepare_workspace_replace(str(root), "notes.txt", "old", "new")
+            saved = web.commit_workspace_replace(preview["preview_id"])
+            source.write_text("user edit", encoding="utf-8")
+            with self.assertRaises(ValueError):
+                web.undo_workspace_edit(str(root), saved["run_id"])
+            self.assertEqual(source.read_text(encoding="utf-8"), "user edit")
+
+    def test_undo_recovers_committed_file_after_receipt_interruption(self):
+        with tempfile.TemporaryDirectory(dir=Path(__file__).resolve().parents[2]) as temp_dir:
+            root = Path(temp_dir)
+            source = root / "notes.txt"
+            source.write_text("old", encoding="utf-8")
+            prepared = web.prepare_workspace_replace(str(root), "notes.txt", "old", "new")
+            saved = web.commit_workspace_replace(prepared["preview_id"])
+            record = root / ".breaktail-agent" / saved["run_id"] / "web-edit.json"
+            receipt = json.loads(record.read_text(encoding="utf-8"))
+            receipt["status"] = "prepared"
+            del receipt["backup"]
+            record.write_text(json.dumps(receipt), encoding="utf-8")
+            self.assertTrue(web.undo_workspace_edit(str(root), saved["run_id"])["undone"])
+            self.assertEqual(source.read_text(encoding="utf-8"), "old")
+
+    def test_web_edit_rejects_bom_and_invalid_python_candidate(self):
+        with tempfile.TemporaryDirectory(dir=Path(__file__).resolve().parents[2]) as temp_dir:
+            root = Path(temp_dir)
+            (root / "bom.py").write_bytes(b"\xef\xbb\xbfvalue = 1\n")
+            with self.assertRaises(ValueError):
+                web.prepare_workspace_replace(str(root), "bom.py", "1", "2")
+            (root / "broken.py").write_text("value = (\n", encoding="utf-8")
+            result = web.prepare_workspace_replace(str(root), "broken.py", "value", "other")
+            self.assertNotIn("preview_id", result)
 
     @unittest.skipUnless(os.name == "nt", "Windows junction test")
     def test_web_read_rejects_junction(self):
