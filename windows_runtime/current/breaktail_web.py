@@ -1,5 +1,6 @@
 """Local browser UI. RAM holds live state; reply inputs/outputs are also logged to disk."""
 
+import ast
 import difflib
 import hashlib
 import json
@@ -9,6 +10,7 @@ import secrets
 import socket
 import tempfile
 import threading
+import time
 import urllib.parse
 import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -23,6 +25,7 @@ from breaktail_memory_manager import ProfileStoreError, load_profile
 from breaktail_style import make_style_report
 from breaktail_agent import Workspace
 from breaktail_agent_edit_preview import ReplacementSyntaxError, preview as preview_replacement
+from breaktail_file_lock import ExclusiveLock
 
 
 HOST = "127.0.0.1"
@@ -35,6 +38,8 @@ LOCK = threading.Lock()
 STATE = {"history": [], "messages": [], "scene": None, "pending": None, "busy": False,
          "conversation_id": secrets.token_urlsafe(16), "style_samples": [], "debug": False,
          "working_state": tail.new_working_state(), "passive_continuity": new_passive_continuity_state()}
+EDIT_LOCK = threading.Lock()
+PREPARED_EDITS = {}
 
 
 def save_state_snapshot() -> None:
@@ -192,6 +197,9 @@ def preview_workspace_replace(workspace_root, path, old, new):
     if target.suffix.lower() in {".exe", ".dll", ".sys", ".key", ".pfx", ".pem", ".sqlite", ".db"}:
         raise ValueError("この種類のファイルは編集できません")
     observed = workspace.read(path)
+    with target.open("rb") as stream:
+        if stream.read(3) == b"\xef\xbb\xbf":
+            raise ValueError("UTF-8 BOM付きファイルの編集はこの画面では未対応です")
     before = observed["content"]
     if before.count(old) != 1:
         raise ValueError("置換前の文字列はファイル中にちょうど1回必要です")
@@ -202,6 +210,16 @@ def preview_workspace_replace(workspace_root, path, old, new):
         syntax = preview_replacement(path, before, candidate, observed["sha256"])
     except ReplacementSyntaxError as error:
         syntax = error.observation
+    if target.suffix.lower() == ".py" and syntax.get("reason") == "original_syntax_invalid":
+        try:
+            ast.parse(candidate, filename=path)
+        except SyntaxError as error:
+            syntax = {"checked": False, "source": "replacement_candidate_not_written",
+                      "error": type(error).__name__, "error_line": error.lineno,
+                      "written": False, "execution_performed": False}
+        else:
+            syntax = {"checked": True, "kind": "candidate_syntax_only",
+                      "execution_performed": False}
     patch = "".join(difflib.unified_diff(before.splitlines(keepends=True),
                                           candidate.splitlines(keepends=True),
                                           fromfile="before/" + path, tofile="preview/" + path))
@@ -209,6 +227,116 @@ def preview_workspace_replace(workspace_root, path, old, new):
             "candidate_sha256": hashlib.sha256(candidate.encode("utf-8")).hexdigest(),
             "diff": patch[:8000], "diff_truncated": len(patch) > 8000,
             "syntax": syntax, "written": False}
+
+
+def prepare_workspace_replace(workspace_root, path, old, new):
+    result = preview_workspace_replace(workspace_root, path, old, new)
+    if result["syntax"].get("source") == "replacement_candidate_not_written":
+        return result
+    if result["source_sha256"] == result["candidate_sha256"]:
+        raise ValueError("変更内容がありません")
+    if result["diff_truncated"]:
+        raise ValueError("差分が長すぎるため、この画面からは保存できません")
+    identity = secrets.token_urlsafe(32)
+    with EDIT_LOCK:
+        now = time.monotonic()
+        for key in list(PREPARED_EDITS):
+            if PREPARED_EDITS[key]["expires"] < now:
+                del PREPARED_EDITS[key]
+        if len(PREPARED_EDITS) >= 32:
+            del PREPARED_EDITS[next(iter(PREPARED_EDITS))]
+        PREPARED_EDITS[identity] = {"workspace": result["workspace"], "path": path,
+                                    "old": old, "new": new,
+                                    "source_sha256": result["source_sha256"],
+                                    "candidate_sha256": result["candidate_sha256"],
+                                    "expires": now + 600}
+    return {**result, "preview_id": identity}
+
+
+def commit_workspace_replace(preview_id):
+    if not isinstance(preview_id, str):
+        raise ValueError("変更案を先に確認してください")
+    with EDIT_LOCK:
+        prepared = PREPARED_EDITS.pop(preview_id, None)
+    if prepared is None or prepared["expires"] < time.monotonic():
+        raise ValueError("変更案の期限が切れました。もう一度確認してください")
+    guard = open_workspace(prepared["workspace"])
+    with ExclusiveLock(guard.path(".breaktail-agent/worker.lock", internal=True)):
+        workspace = Workspace(prepared["workspace"])
+        observed = workspace.read(prepared["path"])
+        if observed["sha256"] != prepared["source_sha256"]:
+            raise ValueError("確認後にファイルが変わりました。読み直してください")
+        candidate = observed["content"].replace(prepared["old"], prepared["new"], 1)
+        if (observed["content"].count(prepared["old"]) != 1 or
+                hashlib.sha256(candidate.encode("utf-8")).hexdigest() != prepared["candidate_sha256"]):
+            raise ValueError("確認した変更案と現在の内容が一致しません")
+        receipt = {"schema": 1, "workspace": str(workspace.root), "path": prepared["path"],
+                   "source_sha256": observed["sha256"],
+                   "candidate_sha256": prepared["candidate_sha256"], "status": "prepared"}
+        record = workspace.audit_dir / "web-edit.json"
+        record.write_text(json.dumps(receipt, ensure_ascii=False), encoding="utf-8")
+        result = workspace.execute("replace_text", {"path": prepared["path"],
+                                                     "old": prepared["old"], "new": prepared["new"]})
+        if not result.get("written") or result["sha256"] != prepared["candidate_sha256"]:
+            raise OSError("変更後のファイルを確認できませんでした")
+        receipt["status"] = "applied"
+        receipt["backup"] = workspace.changes[str(workspace.path(prepared["path"]))]["backup"]
+        temp_record = record.with_suffix(".json.tmp")
+        temp_record.write_text(json.dumps(receipt, ensure_ascii=False), encoding="utf-8")
+        os.replace(temp_record, record)
+        return {"written": True, "workspace": str(workspace.root), "path": prepared["path"],
+                "before_sha256": observed["sha256"], "after_sha256": result["sha256"],
+                "run_id": workspace.run_id, "backup": receipt["backup"]}
+
+
+def undo_workspace_edit(workspace_root, run_id):
+    if not isinstance(run_id, str) or not re.fullmatch(r"[0-9a-f]{32}", run_id):
+        raise ValueError("有効な作業IDを指定してください")
+    guard = open_workspace(workspace_root)
+    with ExclusiveLock(guard.path(".breaktail-agent/worker.lock", internal=True)):
+        record = guard.path(f".breaktail-agent/{run_id}/web-edit.json", internal=True)
+        if not record.is_file() or record.stat().st_size > 4096:
+            raise ValueError("変更記録が見つかりません")
+        receipt = json.loads(record.read_text(encoding="utf-8"))
+        expected_backup = Path(".breaktail-agent") / run_id / "before-0"
+        if (not isinstance(receipt, dict) or receipt.get("schema") != 1 or
+                receipt.get("workspace") != str(guard.root) or receipt.get("status") not in ("prepared", "applied") or
+                not all(isinstance(receipt.get(key), str) and re.fullmatch(r"[0-9a-f]{64}", receipt[key])
+                        for key in ("source_sha256", "candidate_sha256")) or
+                (receipt.get("status") == "applied" and
+                 (not isinstance(receipt.get("backup"), str) or
+                  Path(receipt["backup"]).parts != expected_backup.parts)) or
+                (receipt.get("status") == "prepared" and receipt.get("backup") is not None)):
+            raise ValueError("変更記録を確認できません")
+        target = guard.path(receipt.get("path"))
+        backup = guard.path(str(expected_backup), internal=True)
+        if not target.is_file() or not backup.is_file() or backup.stat().st_size > 64000:
+            raise ValueError("対象またはバックアップが見つかりません")
+        original = backup.read_bytes()
+        current = target.read_bytes()
+        if (hashlib.sha256(original).hexdigest() != receipt["source_sha256"] or
+                hashlib.sha256(current).hexdigest() != receipt["candidate_sha256"]):
+            raise ValueError("保存後にファイルまたはバックアップが変わりました。上書きしません")
+        temporary = target.with_name(target.name + "." + secrets.token_hex(8) + ".undo.tmp")
+        try:
+            with temporary.open("xb") as stream:
+                stream.write(original)
+                stream.flush()
+                os.fsync(stream.fileno())
+            os.replace(temporary, target)
+        finally:
+            temporary.unlink(missing_ok=True)
+        if hashlib.sha256(target.read_bytes()).hexdigest() != receipt["source_sha256"]:
+            raise OSError("取消後の読み戻しに失敗しました")
+        receipt["status"] = "undone"
+        temporary_record = record.with_name("web-edit." + secrets.token_hex(8) + ".tmp")
+        try:
+            temporary_record.write_text(json.dumps(receipt, ensure_ascii=False), encoding="utf-8")
+            os.replace(temporary_record, record)
+        finally:
+            temporary_record.unlink(missing_ok=True)
+        return {"undone": True, "workspace": str(guard.root), "path": receipt["path"],
+                "sha256": receipt["source_sha256"], "run_id": run_id}
 
 
 def local_request_allowed(host, origin=None):
@@ -413,10 +541,22 @@ class Handler(BaseHTTPRequestHandler):
             return self.send(200, result)
         if self.path == "/api/workspace/preview":
             try:
-                result = preview_workspace_replace(body.get("workspace"), body.get("path"),
+                result = prepare_workspace_replace(body.get("workspace"), body.get("path"),
                                                    body.get("old"), body.get("new"))
             except (ValueError, OSError, UnicodeError) as error:
                 return self.send(400, {"error": str(error)})
+            return self.send(200, result)
+        if self.path == "/api/workspace/commit":
+            try:
+                result = commit_workspace_replace(body.get("preview_id"))
+            except (ValueError, OSError, UnicodeError, TimeoutError) as error:
+                return self.send(409, {"error": str(error)})
+            return self.send(200, result)
+        if self.path == "/api/workspace/undo":
+            try:
+                result = undo_workspace_edit(body.get("workspace"), body.get("run_id"))
+            except (ValueError, OSError, UnicodeError, TimeoutError, json.JSONDecodeError) as error:
+                return self.send(409, {"error": str(error)})
             return self.send(200, result)
         if self.path == "/api/extract":
             return self.extract(body)
