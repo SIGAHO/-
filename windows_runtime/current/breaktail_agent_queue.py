@@ -10,6 +10,7 @@ from breaktail_agent import Workspace,run_agent,request_cancel
 from breaktail_agent_requirements import normalize
 from breaktail_file_lock import ExclusiveLock
 from breaktail_agent_control import RunControl
+from breaktail_agent_resume import load as load_resume
 from breaktail_agent_preferences import validate_conversation_id
 
 
@@ -52,12 +53,15 @@ class AgentQueue:
         return [dict(row) for row in self.db.execute(
             'SELECT id,status,run_id,cancel_requested,error FROM jobs ORDER BY seq DESC LIMIT ?',(limit,))]
 
-    def enqueue(self,task,requirements=None,*,identity=None,model=None,conversation_id=None):
+    def enqueue(self,task,requirements=None,*,identity=None,model=None,conversation_id=None,resume_run_id=None):
         if not isinstance(task,str) or not task.strip() or len(task)>16000:raise ValueError('task must be 1..16000 characters')
+        if resume_run_id is not None and (requirements is not None or conversation_id is not None):
+            raise ValueError('resumed task keeps its original requirements and conversation scope')
         identity=identity or uuid.uuid4().hex
         if not isinstance(identity,str) or not re.fullmatch(r'[0-9a-f]{32}',identity):raise ValueError('queue task id must be 32 lowercase hexadecimal characters')
         requirements=normalize(self.workspace,requirements)
         payload_value={'task':task,'requirements':requirements,'model':model}
+        if resume_run_id is not None:payload_value['resume_run_id']=resume_run_id
         if conversation_id is not None:payload_value['conversation_id']=validate_conversation_id(conversation_id)
         payload=json.dumps(payload_value,ensure_ascii=False,sort_keys=True,allow_nan=False)
         with self.db:
@@ -65,6 +69,10 @@ class AgentQueue:
             saved=self.db.execute('SELECT payload FROM jobs WHERE id=?',(identity,)).fetchone()[0]
             if saved!=payload:raise ValueError('queue task id belongs to a different request')
         return self.get(identity)
+
+    def enqueue_resume(self,run_id,*,identity=None,model=None):
+        checkpoint=load_resume(self.workspace,run_id,model)
+        return self.enqueue(checkpoint['task'],identity=identity,model=model,resume_run_id=run_id)
 
     def cancel(self,identity):
         try:
@@ -114,7 +122,9 @@ class AgentQueue:
                     request_cancel(self.workspace,run_id)
             try:
                 if job['payload']['model']!=config.get('model'):raise ValueError('queued model differs from worker model')
-                result=run_agent(config,self.root,job['payload']['task'],requirements=job['payload']['requirements'],
+                resume_run_id=job['payload'].get('resume_run_id')
+                result=run_agent(config,self.root,None if resume_run_id else job['payload']['task'],
+                    requirements=None if resume_run_id else job['payload']['requirements'],resume_run_id=resume_run_id,
                     allow_execution=allow_execution,max_steps=max_steps,max_seconds=max_seconds,model=model,on_started=started,
                     conversation_id=job['payload'].get('conversation_id'))
                 with self.db:self.db.execute('UPDATE jobs SET status=?,result=? WHERE id=?',
@@ -122,3 +132,4 @@ class AgentQueue:
             except Exception as error:
                 with self.db:self.db.execute("UPDATE jobs SET status='failed',error=? WHERE id=?",(type(error).__name__+': '+str(error)[:500],identity))
             return self.get(identity)
+
