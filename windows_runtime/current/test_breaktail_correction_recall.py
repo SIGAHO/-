@@ -105,6 +105,21 @@ class CorrectionRecallTests(unittest.TestCase):
         _, other = hub.build_hub(self.raw, query, "session-b", correction_path=self.ledger)
         self.assertIsNone(other["correction"])
 
+    def test_rephrased_topic_abstains_without_claiming_similar_other_subject(self):
+        self.add("turn-old-0001", "望遠鏡修理の窓口は東支店。")
+        self.add("turn-new-0002", "望遠鏡修理の窓口は西支店。")
+        self.link("望遠鏡修理の窓口", "turn-old-0001", "turn-new-0002")
+        _, paraphrase = hub.build_hub(self.raw, "望遠鏡の修理窓口は今どっち？", "session-a",
+                                      correction_path=self.ledger)
+        self.assertIsNone(paraphrase["correction"])
+        self.assertTrue(paraphrase["correction_unresolved"])
+        reply, _ = hub.ground_correction_answer("望遠鏡の修理窓口は今どっち？", "東支店だよ。", paraphrase)
+        self.assertIn("断定できない", reply)
+        _, other = hub.build_hub(self.raw, "望遠鏡修理の料金は今どう？", "session-a",
+                                 correction_path=self.ledger)
+        self.assertIsNone(other["correction"])
+        self.assertFalse(other.get("correction_unresolved", False))
+
     def test_question_scope_and_quote_budget_decline(self):
         self.add("turn-old-0001", "望遠鏡修理の窓口は東支店。")
         self.add("turn-new-0002", "望遠鏡修理の窓口は西支店。")
