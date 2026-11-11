@@ -24,6 +24,7 @@ import uuid
 from breaktail_memory_evidence import build_memory_evidence, evidence_limits
 from breaktail_memory_gate import gate_memories
 from breaktail_memory_hub import build_hub, ground_ledger_status, ground_source_recall, ground_correction_answer
+from breaktail_correction_ledger import _question_shape as correction_question_shape
 from breaktail_code_regions import map_prose, split_code_regions
 from breaktail_working_state import (
     confirmed_facts,
@@ -995,6 +996,15 @@ def build_reply_messages(history: list[dict], user_text: str, scene: dict | None
                 sent_history.pop(0)
     history_ids = {m['turn_id'] for m in sent_history
                    if m.get('role') == 'user' and isinstance(m.get('turn_id'), str) and m['turn_id']}
+    hub_enabled = os.environ.get('BREAKTAIL_RAW_HUB', '1') != '0'
+    hub_preflight = None
+    if hub_enabled and not active_mode and correction_question_shape(user_text):
+        hub_preflight = build_hub(
+            raw_conversation.RAW_CONVERSATION_FILE, user_text,
+            trace.get('conversation_id') if trace else None,
+            history_ids=history_ids, current_turn_id=trace.get('turn_id') if trace else None,
+            journal_path=DATA_ROOT / 'state' / 'orchestrator.sqlite3',
+            correction_path=DATA_ROOT / 'memory' / 'breaktail_corrections.jsonl')
     recent_user_context = "\n".join(
         item.get("content", "")
         for item in sent_history[-8:]
@@ -1006,17 +1016,27 @@ def build_reply_messages(history: list[dict], user_text: str, scene: dict | None
     trace_component(trace, "memory", "invoked_used" if candidates else "invoked_empty",
                     "lexical candidates found" if candidates else "no matching candidates",
                     candidate_count=len(candidates))
-    try:
-        admitted, resolved = gate_memories(candidates, user_text, recent_user_context, scene,
-                                          call_ollama, trace_event, trace, limits, current_history_turn_ids=history_ids)
-        evidence = build_memory_evidence(admitted, limits=limits, resolved_sources=resolved,
-                                         current_history_turn_ids=history_ids)
-    except Exception as error:
-        # A failed Gate never falls back to ungated summaries or Raw.
+    correction_priority = bool(hub_preflight and (hub_preflight[1].get('correction') or
+                                                   hub_preflight[1].get('correction_unresolved')))
+    if correction_priority:
         trace_event(trace, "memory_gate", used_ids=[], ignored_ids=[m.get('id') for m in candidates],
                     decisions=[{"memory_id": m.get('id'), "decision": "ignore",
-                                "reasons": ["gate_pipeline_error:" + type(error).__name__]} for m in candidates])
+                                "reasons": ["explicit_correction_source_priority"]} for m in candidates])
         evidence = build_memory_evidence([], limits=limits)
+        evidence['omitted'].extend({'memory_id': m.get('id'), 'reason': 'explicit_correction_source_priority'}
+                                   for m in candidates)
+    else:
+        try:
+            admitted, resolved = gate_memories(candidates, user_text, recent_user_context, scene,
+                                              call_ollama, trace_event, trace, limits, current_history_turn_ids=history_ids)
+            evidence = build_memory_evidence(admitted, limits=limits, resolved_sources=resolved,
+                                             current_history_turn_ids=history_ids)
+        except Exception as error:
+            # A failed Gate never falls back to ungated summaries or Raw.
+            trace_event(trace, "memory_gate", used_ids=[], ignored_ids=[m.get('id') for m in candidates],
+                        decisions=[{"memory_id": m.get('id'), "decision": "ignore",
+                                    "reasons": ["gate_pipeline_error:" + type(error).__name__]} for m in candidates])
+            evidence = build_memory_evidence([], limits=limits)
     trace_component(trace, "gate", "invoked_used" if evidence["memories"] else "invoked_empty",
                     "admitted memory evidence" if evidence["memories"] else "no memory admitted",
                     admitted_count=len(evidence["memories"]))
@@ -1118,10 +1138,9 @@ def build_reply_messages(history: list[dict], user_text: str, scene: dict | None
         messages.append({"role": "user", "content": user_text})
     # FIO-inspired direct-source recall is independent from summary Memory Gate.
     # It is scoped, read-only and optional; current history wins the token budget.
-    hub_enabled = os.environ.get('BREAKTAIL_RAW_HUB', '1') != '0'
     hub_prompt, hub_meta = ('', {'reason': 'roleplay_active' if active_mode else 'disabled', 'source_turn_ids': []})
     if not active_mode and hub_enabled:
-        hub_prompt, hub_meta = build_hub(
+        hub_prompt, hub_meta = hub_preflight if hub_preflight is not None else build_hub(
             raw_conversation.RAW_CONVERSATION_FILE, user_text,
             trace.get('conversation_id') if trace else None,
             history_ids=history_ids, current_turn_id=trace.get('turn_id') if trace else None,
