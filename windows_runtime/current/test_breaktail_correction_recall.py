@@ -165,13 +165,16 @@ class CorrectionRecallTests(unittest.TestCase):
                  {"id": 17, "content": "望遠鏡修理の窓口は東支店。"}]), \
              patch.object(tail, "load_profile", return_value=None), \
              patch.object(tail, "call_ollama") as model, \
-             patch.object(tail, "trace_event"), \
+             patch.object(tail, "trace_event") as trace_log, \
              patch.object(tail, "log_turn"):
             reply, complete = tail.generate_reply([], query,
                                                    trace={"conversation_id": "session-a", "turn_id": "current-turn"})
         self.assertTrue(complete)
         model.assert_not_called()
         self.assertIn("断定できない", reply)
+        decisions = [call.kwargs["decisions"] for call in trace_log.call_args_list
+                     if len(call.args) > 1 and call.args[1] == "memory_gate"]
+        self.assertEqual(decisions[0][0]["reasons"], ["correction_source_unresolved"])
 
     def test_missing_conversation_identity_abstains_when_corrections_exist(self):
         self.add("turn-old-0001", "望遠鏡修理の窓口は東支店。")
