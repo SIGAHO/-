@@ -59,14 +59,16 @@
     <div class="composer-zone"><div class="composer-wrap"><div class="composer"><textarea id="input" rows="1" placeholder="Breaktail に話しかける…"></textarea><button id="send" class="send" aria-label="送信">➜</button></div><div class="hint"><span>Enter で送信 · Shift + Enter で改行 · /capabilities で操作一覧</span><span id="hint-status">記憶は解釈だけ保存</span></div></div></div>
   </main>
 </div>
-<dialog id="workspace-dialog" style="width:min(900px,90vw);max-height:75vh;background:#101620;color:#eaf2f6;border:1px solid #263244;border-radius:12px"><button id="close-workspace" style="float:right">閉じる</button><h2>作業フォルダーの結果</h2><div id="workspace-entries" style="display:flex;flex-wrap:wrap;gap:8px;margin:12px 0"></div><pre id="workspace-result" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:40vh;overflow:auto" aria-live="polite"></pre><details><summary>文字列の変更案を確認</summary><p>選んだファイルで、置換前の文字列を1か所だけ指定します。差分を確認した後だけ保存できます。</p><textarea id="preview-old" aria-label="置換前の文字列" placeholder="置換前の文字列" style="width:100%;box-sizing:border-box"></textarea><textarea id="preview-new" aria-label="置換後の文字列" placeholder="置換後の文字列" style="width:100%;box-sizing:border-box"></textarea><button id="preview-change" type="button">変更案と構文を確認</button><button id="save-change" type="button" disabled>確認した変更案を保存</button><p>保存した変更の取消（再起動後も作業IDを入力して利用できます）</p><input id="undo-id" aria-label="取消する作業ID" placeholder="保存時の作業ID" style="width:100%;box-sizing:border-box"><button id="undo-change" type="button" disabled>変更を取り消す</button></details></dialog>
+<dialog id="workspace-dialog" style="width:min(900px,90vw);max-height:75vh;background:#101620;color:#eaf2f6;border:1px solid #263244;border-radius:12px"><button id="close-workspace" style="float:right">閉じる</button><h2>作業フォルダーの結果</h2><div id="workspace-entries" style="display:flex;flex-wrap:wrap;gap:8px;margin:12px 0"></div><pre id="workspace-result" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:40vh;overflow:auto" aria-live="polite"></pre><details><summary>文字列の変更案を確認</summary><p>選んだファイルで、置換前の文字列を1か所だけ指定します。差分を確認した後だけ保存できます。</p><textarea id="preview-old" aria-label="置換前の文字列" placeholder="置換前の文字列" style="width:100%;box-sizing:border-box"></textarea><textarea id="preview-new" aria-label="置換後の文字列" placeholder="置換後の文字列" style="width:100%;box-sizing:border-box"></textarea><button id="preview-change" type="button">変更案と構文を確認</button><button id="save-change" type="button" disabled>確認した変更案を保存</button><p>保存した変更の取消（再起動後も作業IDを入力して利用できます）</p><input id="undo-id" aria-label="取消する作業ID" placeholder="保存時の作業ID" style="width:100%;box-sizing:border-box"><button id="undo-change" type="button" disabled>変更を取り消す</button><div id="edit-confirm" hidden style="margin-top:12px;padding:12px;border:1px solid #607882;border-radius:8px"><p id="edit-confirm-text"></p><button id="edit-confirm-yes" type="button">はい、実行する</button><button id="edit-confirm-no" type="button">やめる</button></div></details></dialog>
 <script>
 const token = '__BREAKTAIL_TOKEN__';
 const $ = id => document.getElementById(id);
 const chat = $('chat'), conversation = $('conversation'), input = $('input');
 let working = false;
 let previewId = null;
-function invalidatePreview(){previewId=null;$('save-change').disabled=true;}
+let pendingEditAction = null;
+function hideEditConfirmation(){pendingEditAction=null;$('edit-confirm').hidden=true;}
+function invalidatePreview(){previewId=null;$('save-change').disabled=true;hideEditConfirmation();}
 async function api(path, data) {
   const options = data === undefined ? {} : {method:'POST',headers:{'Content-Type':'application/json','X-Breaktail-Token':token},body:JSON.stringify(data)};
   const response = await fetch(path, options);
@@ -143,14 +145,23 @@ async function workspacePreview() {
   } catch(error) {result.textContent='変更案の確認に失敗: '+error.message;}
 }
 async function workspaceSave(){
-  if(!previewId||!confirm('画面の差分どおりに、このファイルを保存しますか？ 変更前の内容は作業フォルダー内にバックアップします。'))return;
+  if(!previewId)return;
+  pendingEditAction='save';$('edit-confirm-text').textContent='画面の差分どおりに保存します。変更前の内容は作業フォルダー内にバックアップします。';$('edit-confirm').hidden=false;
+}
+async function workspaceSaveConfirmed(){
+  if(!previewId)return;
   const identity=previewId;invalidatePreview();
   try{const response=await api('/api/workspace/commit',{preview_id:identity});$('workspace-result').textContent='保存して読み戻しました\n対象: '+response.workspace+' / '+response.path+'\n変更前のSHA-256: '+response.before_sha256+'\n変更後のSHA-256: '+response.after_sha256+'\nバックアップ: '+response.backup+'\n作業ID: '+response.run_id;$('undo-id').value=response.run_id;$('undo-change').disabled=false;}
   catch(error){$('workspace-result').textContent='保存できませんでした: '+error.message+'\nもう一度読み直して変更案を確認してください。';}
 }
 async function workspaceUndo(){
   const runId=$('undo-id').value.trim();
-  if(!/^[0-9a-f]{32}$/.test(runId)||!confirm('この作業IDの変更を取り消しますか？ 保存後にファイルが変わっていたら上書きせず拒否します。'))return;
+  if(!/^[0-9a-f]{32}$/.test(runId))return;
+  pendingEditAction='undo';$('edit-confirm-text').textContent='作業ID '+runId+' の変更を取り消します。保存後にファイルが変わっていたら上書きせず拒否します。';$('edit-confirm').hidden=false;
+}
+async function workspaceUndoConfirmed(){
+  const runId=$('undo-id').value.trim();
+  if(!/^[0-9a-f]{32}$/.test(runId))return;
   try{const response=await api('/api/workspace/undo',{workspace:$('workspace-root').value.trim(),run_id:runId});$('workspace-result').textContent='変更を取り消して読み戻しました\n対象: '+response.workspace+' / '+response.path+'\n復元後のSHA-256: '+response.sha256+'\n作業ID: '+response.run_id;$('undo-change').disabled=true;}
   catch(error){$('workspace-result').textContent='取消できませんでした: '+error.message;}
 }
@@ -159,9 +170,11 @@ $('read-file').addEventListener('click',()=>workspaceRead('read_file'));
 $('preview-change').addEventListener('click',workspacePreview);
 $('save-change').addEventListener('click',workspaceSave);
 $('undo-change').addEventListener('click',workspaceUndo);
-$('undo-id').addEventListener('input',()=>{$('undo-change').disabled=!/^[0-9a-f]{32}$/.test($('undo-id').value.trim());});
+$('edit-confirm-yes').addEventListener('click',()=>{const action=pendingEditAction;hideEditConfirmation();if(action==='save')workspaceSaveConfirmed();else if(action==='undo')workspaceUndoConfirmed();});
+$('edit-confirm-no').addEventListener('click',hideEditConfirmation);
+$('undo-id').addEventListener('input',()=>{hideEditConfirmation();$('undo-change').disabled=!/^[0-9a-f]{32}$/.test($('undo-id').value.trim());});
 for(const name of ['workspace-root','workspace-path','preview-old','preview-new'])$(name).addEventListener('input',invalidatePreview);
-$('close-workspace').addEventListener('click',()=>$('workspace-dialog').close());
+$('close-workspace').addEventListener('click',()=>{hideEditConfirmation();$('workspace-dialog').close();});
 input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}});
 input.addEventListener('input',()=>{input.style.height='auto';input.style.height=Math.min(input.scrollHeight,170)+'px';});
 document.querySelectorAll('[data-prompt]').forEach(button=>button.addEventListener('click',()=>{input.value=button.dataset.prompt;input.focus();}));
