@@ -107,6 +107,17 @@ class CorrectionRecallTests(unittest.TestCase):
         self.assertIsNone(meta["correction"])
         self.assertTrue(meta["correction_unresolved"])
 
+    def test_limited_raw_scan_abstains_instead_of_guessing_old_value(self):
+        self.add("turn-old-0001", "望遠鏡修理の窓口は東支店。")
+        self.add("turn-new-0002", "望遠鏡修理の窓口は西支店。")
+        self.link("望遠鏡修理の窓口", "turn-old-0001", "turn-new-0002")
+        with patch.object(hub, "MAX_ROWS", 1):
+            _, meta = hub.build_hub(self.raw, "望遠鏡修理の窓口は今どっち？", "session-a",
+                                    correction_path=self.ledger)
+        self.assertTrue(meta["scan_limited"])
+        self.assertIsNone(meta["correction"])
+        self.assertTrue(meta["correction_unresolved"])
+
     def test_current_turn_is_not_recalled_as_fact(self):
         self.add("turn-old-0001", "望遠鏡修理の窓口は東支店。")
         self.add("turn-new-0002", "望遠鏡修理の窓口は西支店。")
