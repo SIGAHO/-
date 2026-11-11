@@ -101,7 +101,7 @@ def source_rows(path, conversation_id, journal_path=None):
 
 
 def build_hub(path, query, conversation_id, *, history_ids=(), current_turn_id=None,
-              journal_path=None, max_chars=MAX_CONTEXT_CHARS):
+              journal_path=None, correction_path=None, max_chars=MAX_CONTEXT_CHARS):
     meta = {'scope': 'current_conversation', 'persistence': 'raw_read_only',
             'source_turn_ids': [], 'open_items': [], 'scan_limited': False}
     if not isinstance(conversation_id, str) or not conversation_id:
@@ -112,6 +112,13 @@ def build_hub(path, query, conversation_id, *, history_ids=(), current_turn_id=N
     except (OSError, ValueError, UnicodeError, sqlite3.Error) as error:
         return '', {**meta, 'error': type(error).__name__, 'reason': 'source_unavailable'}
     rows = [r for r in rows if r['turn_id'] != current_turn_id]
+    correction = None
+    if correction_path:
+        try:
+            from breaktail_correction_ledger import match_for_question
+            correction = match_for_question(path, correction_path, query, conversation_id, rows)
+        except (OSError, ValueError, UnicodeError) as error:
+            return '', {**meta, 'error': type(error).__name__, 'reason': 'correction_unavailable'}
     ledger = {}
     for row in rows:
         event = ledger_event(row['user_text'])
@@ -125,6 +132,12 @@ def build_hub(path, query, conversation_id, *, history_ids=(), current_turn_id=N
     open_rows = [(ev, row) for ev, row in ledger.values() if ev['open']]
     # Old unresolved items survive unrelated talk; no due time is inferred.
     selected = [(row, 'explicit_open_item', ev['status']) for ev, row in open_rows[-3:]]
+    if correction:
+        source = next(r for r in rows if r['turn_id'] == correction['new_turn_id'])
+        selected.append((source, 'explicit_correction_latest', None))
+        if re.search(r'経緯|時系列|最初|変更|訂正', query):
+            old_source = next(r for r in rows if r['turn_id'] == correction['old_turn_id'])
+            selected.append((old_source, 'explicit_correction_previous', None))
     status_query = bool(re.search(r'未確認|未完了|保留', query))
     for ev, row in ledger.values():
         if status_query and ev['key'] in normalized(query):
@@ -135,6 +148,8 @@ def build_hub(path, query, conversation_id, *, history_ids=(), current_turn_id=N
         ranked = []
         for index, row in enumerate(rows):
             if row['turn_id'] in excluded:
+                continue
+            if correction and row['turn_id'] == correction['old_turn_id'] and not re.search(r'経緯|時系列|最初|変更|訂正', query):
                 continue
             event = ledger_event(row['user_text'])
             if event and event['key'] in ledger and ledger[event['key']][1]['turn_id'] != row['turn_id']:
@@ -149,7 +164,7 @@ def build_hub(path, query, conversation_id, *, history_ids=(), current_turn_id=N
     quotes = []
     for row, reason, status in selected:
         turn = row['turn_id']
-        if turn in included or (turn in excluded and reason not in ('explicit_open_item','latest_ledger_status')):
+        if turn in included or (turn in excluded and reason not in ('explicit_open_item','latest_ledger_status','explicit_correction_latest','explicit_correction_previous')):
             continue
         if len(row['user_text']) > MAX_QUOTE_CHARS:
             continue  # Never cut a quotation into a different assertion.
@@ -167,6 +182,7 @@ def build_hub(path, query, conversation_id, *, history_ids=(), current_turn_id=N
     quotes.sort(key=lambda q: positions[q['turn_id']])
     meta['source_turn_ids'] = [q['turn_id'] for q in quotes]
     meta['sources'] = quotes
+    meta['correction'] = correction if correction and correction['new_turn_id'] in included else None
     meta['open_items'] = [ev['label'] for ev,row in open_rows if row['turn_id'] in included]
     meta['open_items_omitted'] = len(open_rows)-len(meta['open_items'])
     meta['ledger'] = [{**ev, 'turn_id':row['turn_id'], 'user_text':row['user_text']}
@@ -184,6 +200,23 @@ def build_hub(path, query, conversation_id, *, history_ids=(), current_turn_id=N
         'ここにない内容が過去の全会話に無かったとは断定しない。\n'
     )
     return instruction + json.dumps(quotes, ensure_ascii=False), {**meta, 'reason': 'source_verified'}
+
+
+def ground_correction_answer(query, draft, audit):
+    """Quote one linked update for a narrow current-state question only."""
+    item = audit.get('correction')
+    if not item or item.get('source') != 'explicit_user_selection' or item.get('external_verification') is not False:
+        return draft, None
+    if not (item['label'] and normalized(item['label']) in normalized(query)):
+        return draft, None
+    if not any(s.get('turn_id') == item['new_turn_id'] and s.get('user_text') == item['new_text']
+               for s in audit.get('sources', [])):
+        return draft, None
+    reply = (f'「{item["label"]}」について、以前は「{item["old_text"]}」と話し、'
+             f'その後「{item["new_text"]}」に訂正した記録があるよ。'
+             'これはあなたの発言の記録で、外部で確認した事実ではないよ。')
+    return reply, {'kind': 'explicit_correction_source', 'old_turn_id': item['old_turn_id'],
+                   'new_turn_id': item['new_turn_id'], 'external_verification': False}
 
 
 def ground_ledger_status(query, draft, audit):
@@ -240,3 +273,4 @@ def ground_source_recall(query,draft,audit):
     source=sources[0]
     return '前に「'+source['user_text']+'」と話してたよ。',{
         'kind':'exact_user_source_recall','source_turn_id':source['turn_id'],'source':'user_statement'}
+
