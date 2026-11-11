@@ -83,6 +83,7 @@ class WebCommandReachabilityTests(unittest.TestCase):
         service = Mock()
         service.start.return_value = {"job_id": "a" * 32, "status": "queued"}
         service.review.return_value = {"job_id": "a" * 32, "total_tracked": 0, "changes": []}
+        service.undo.return_value = {"job_id": "a" * 32, "undone": True}
         server = web.ExclusiveHTTPServer(("127.0.0.1", 0), web.Handler)
         thread = threading.Thread(target=server.serve_forever, daemon=True)
         thread.start()
@@ -108,8 +109,17 @@ class WebCommandReachabilityTests(unittest.TestCase):
                              "Origin": f"http://127.0.0.1:{server.server_port}"})
                 with urllib.request.urlopen(review_request, timeout=3) as response:
                     self.assertEqual(json.load(response)["total_tracked"], 0)
+                undo_request = urllib.request.Request(
+                    f"http://127.0.0.1:{server.server_port}/api/agent/undo",
+                    data=json.dumps({"workspace": root, "job_id": "a" * 32,
+                                     "expected_after_sha256": "b" * 64}).encode("utf-8"),
+                    headers={"Content-Type": "application/json", "X-Breaktail-Token": web.TOKEN,
+                             "Origin": f"http://127.0.0.1:{server.server_port}"})
+                with urllib.request.urlopen(undo_request, timeout=3) as response:
+                    self.assertTrue(json.load(response)["undone"])
             service.start.assert_called_once_with(str(Path(root).resolve()), "inspect")
             service.review.assert_called_once_with(str(Path(root).resolve()), "a" * 32)
+            service.undo.assert_called_once_with(str(Path(root).resolve()), "a" * 32, "b" * 64)
         finally:
             server.shutdown()
             server.server_close()
