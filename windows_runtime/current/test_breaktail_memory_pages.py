@@ -44,6 +44,29 @@ class MemoryPageTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     page_records(memory, root / "absent.jsonl", "raw", value)
 
+    def test_explicit_status_history_keeps_old_and_new_user_evidence(self):
+        with tempfile.TemporaryDirectory(dir=Path(__file__).resolve().parents[2]) as directory:
+            root = Path(directory)
+            raw = root / "raw.jsonl"
+            statements = [("session-a", "one", "未確認：望遠鏡修理"),
+                          ("session-a", "two", "確認済み：望遠鏡修理"),
+                          ("session-b", "three", "未確認：望遠鏡修理"),
+                          ("session-a", "four", "「確認済み：薬局への質問」")]
+            rows = [{"conversation_id": session, "turn_id": turn, "timestamp": f"2026-11-11T00:0{index}:00Z",
+                     "user_text": text, "assistant_text": "ack", "status": "complete"}
+                    for index, (session, turn, text) in enumerate(statements)]
+            raw.write_text("".join(json.dumps(row, ensure_ascii=False) + "\n" for row in rows), encoding="utf-8")
+            page = page_records(root / "absent.jsonl", raw, "ledger", 1)
+            self.assertEqual(page["total"], 3)
+            old = next(item for item in page["items"] if item["turn_id"] == "one")
+            new = next(item for item in page["items"] if item["turn_id"] == "two")
+            other_session = next(item for item in page["items"] if item["turn_id"] == "three")
+            self.assertFalse(old["is_latest"])
+            self.assertEqual(old["superseded_by_turn_id"], "two")
+            self.assertTrue(new["is_latest"])
+            self.assertTrue(other_session["is_latest"])
+            self.assertFalse(new["externally_verified"])
+
 
 if __name__ == "__main__":
     unittest.main()
