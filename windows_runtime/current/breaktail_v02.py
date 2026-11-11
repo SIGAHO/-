@@ -23,7 +23,7 @@ import urllib.request
 import uuid
 from breaktail_memory_evidence import build_memory_evidence, evidence_limits
 from breaktail_memory_gate import gate_memories
-from breaktail_memory_hub import build_hub, ground_ledger_status, ground_source_recall
+from breaktail_memory_hub import build_hub, ground_ledger_status, ground_source_recall, ground_correction_answer
 from breaktail_code_regions import map_prose, split_code_regions
 from breaktail_working_state import (
     confirmed_facts,
@@ -1125,7 +1125,8 @@ def build_reply_messages(history: list[dict], user_text: str, scene: dict | None
             raw_conversation.RAW_CONVERSATION_FILE, user_text,
             trace.get('conversation_id') if trace else None,
             history_ids=history_ids, current_turn_id=trace.get('turn_id') if trace else None,
-            journal_path=DATA_ROOT / 'state' / 'orchestrator.sqlite3')
+            journal_path=DATA_ROOT / 'state' / 'orchestrator.sqlite3',
+            correction_path=DATA_ROOT / 'memory' / 'breaktail_corrections.jsonl')
     if hub_prompt:
         candidate = [dict(m) for m in messages]
         candidate[0]['content'] += '\n\n' + hub_prompt
@@ -1138,6 +1139,7 @@ def build_reply_messages(history: list[dict], user_text: str, scene: dict | None
     if hub_audit is not None:
         hub_audit.update(prompt=hub_prompt, ledger=hub_meta.get('ledger',[]) if hub_prompt else [],
                          sources=hub_meta.get('sources',[]) if hub_prompt else [],enabled=hub_enabled and not active_mode,
+                         correction=hub_meta.get('correction') if hub_prompt else None,
                          outbound_contact_available=self_context['capabilities'].get('can_contact_other_people_now'))
     trace_event(trace, 'raw_memory_hub', **hub_meta, injected=bool(hub_prompt))
     if character_text:
@@ -1306,6 +1308,10 @@ def generate_reply(
     if source_verification:
         verification=source_verification
         trace_event(trace,'raw_source_recall_grounding',**source_verification)
+    reply, correction_verification = ground_correction_answer(user_text, reply, hub_audit)
+    if correction_verification:
+        verification = correction_verification
+        trace_event(trace, 'raw_correction_grounding', **correction_verification)
     if verification:
         trace_event(trace, "reply_verification", **verification, reply=reply)
     trace_event(trace, "reply_stage", stage="grounded", text=reply, **stage_metrics(reply))
@@ -1377,6 +1383,10 @@ def generate_reply(
         if source_verification:
             verification=source_verification
             trace_event(trace,'raw_source_recall_grounding',**source_verification)
+        candidate, correction_verification = ground_correction_answer(user_text, candidate, hub_audit)
+        if correction_verification:
+            verification = correction_verification
+            trace_event(trace, 'raw_correction_grounding', **correction_verification)
         candidate, adjustments = phase7_postprocess_reply(history,user_text,candidate)
         candidate = normalize_voice(candidate,contract)
         candidate,removed_sentences=remove_unrequested_sentences(candidate,contract)
@@ -2004,3 +2014,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
