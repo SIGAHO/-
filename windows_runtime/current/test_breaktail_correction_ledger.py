@@ -39,6 +39,7 @@ class CorrectionLedgerTests(unittest.TestCase):
                second["old"]["sha256"], second["new"]["sha256"])
         report = history(self.raw, self.ledger, "shop location", "old-turn-0001")
         self.assertEqual(report["count"], 2)
+        self.assertTrue(report["chain_verified"])
         self.assertEqual(report["latest_turn_id"], "next-turn-0003")
         self.assertEqual(report["items"][0]["old_text"], "The shop is east.")
         self.assertEqual(report["items"][0]["new_text"], "Correction: the shop is west.")
@@ -138,6 +139,23 @@ class CorrectionLedgerTests(unittest.TestCase):
             commit(self.raw, self.ledger, "shop location", "new-turn-0002", "next-turn-0003",
                    second["old"]["sha256"], second["new"]["sha256"])
         self.assertEqual(self.ledger.read_bytes(), before)
+
+    def test_history_does_not_claim_latest_if_earlier_link_is_broken(self):
+        first = preview(self.raw, "shop location", "old-turn-0001", "new-turn-0002")
+        commit(self.raw, self.ledger, "shop location", "old-turn-0001", "new-turn-0002",
+               first["old"]["sha256"], first["new"]["sha256"])
+        second = preview(self.raw, "shop location", "new-turn-0002", "next-turn-0003")
+        commit(self.raw, self.ledger, "shop location", "new-turn-0002", "next-turn-0003",
+               second["old"]["sha256"], second["new"]["sha256"])
+        rows = [json.loads(line) for line in self.raw.read_text(encoding="utf-8").splitlines()]
+        rows[0]["user_text"] = "The first source was changed."
+        self.raw.write_text("".join(json.dumps(row) + "\n" for row in rows), encoding="utf-8")
+        report = history(self.raw, self.ledger, "shop location", "old-turn-0001")
+        self.assertEqual(report["count"], 2)
+        self.assertFalse(report["chain_verified"])
+        self.assertTrue(report["items"][1]["sources_available"])
+        self.assertIsNone(report["latest_turn_id"])
+        self.assertIsNone(report["latest_text"])
 
 
 if __name__ == "__main__":
