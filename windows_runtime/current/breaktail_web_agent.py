@@ -1,6 +1,7 @@
 """Explicit Web bridge for one workspace agent job at a time; no test execution."""
 import json
 import threading
+import time
 import urllib.parse
 
 from breaktail_agent import Workspace
@@ -98,8 +99,15 @@ class WebAgentService:
 
     def status(self, root, job_id):
         root = self._root(root)
-        with AgentQueue(root) as queue:
-            job = queue.get(job_id)
+        for attempt in range(3):
+            try:
+                with AgentQueue(root) as queue:
+                    job = queue.get(job_id)
+                break
+            except ValueError as error:
+                if str(error) != "path escapes workspace" or attempt == 2:
+                    raise
+                time.sleep(0.01)
         result = job["result"] or {}
         events = []
         if job["run_id"]:
