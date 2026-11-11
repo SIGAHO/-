@@ -112,8 +112,15 @@ class WebAgentService:
                 for line in lines[-12:]:
                     try:
                         event = json.loads(line)
-                        events.append({key: event[key] for key in ("step", "tool", "error", "detail", "observation")
-                                       if key in event})
+                        item = {key: event[key] for key in ("step", "tool", "error", "detail")
+                                if key in event}
+                        if isinstance(event.get("args"), dict):
+                            item["path"] = event["args"].get("path")
+                        if "result" in event:
+                            item["observation"] = event["result"]
+                        elif "observation" in event:
+                            item["observation"] = event["observation"]
+                        events.append(item)
                     except (ValueError, TypeError):
                         continue
         with self.lock:
