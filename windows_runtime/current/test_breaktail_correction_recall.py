@@ -82,6 +82,17 @@ class CorrectionRecallTests(unittest.TestCase):
         self.assertIn("北支店", reply)
         self.assertEqual(proof["new_turn_id"], "turn-new-0003")
 
+    def test_update_link_does_not_promote_pending_work_to_verified(self):
+        self.add("turn-old-0001", "未確認：望遠鏡修理の在庫")
+        self.add("turn-new-0002", "望遠鏡修理の在庫は明日確認する予定。")
+        self.link("望遠鏡修理の在庫", "turn-old-0001", "turn-new-0002")
+        query = "望遠鏡修理の在庫は今どっち？"
+        _, meta = hub.build_hub(self.raw, query, "session-a", correction_path=self.ledger)
+        reply, proof = hub.ground_correction_answer(query, "確認済みだよ。", meta)
+        self.assertIn("明日確認する予定", reply)
+        self.assertNotIn("確認済み", reply)
+        self.assertFalse(proof["external_verification"])
+
     def test_two_matched_topics_and_other_session_decline(self):
         self.add("turn-old-0001", "望遠鏡修理の窓口は東支店。")
         self.add("turn-new-0002", "望遠鏡修理の窓口は西支店。")
