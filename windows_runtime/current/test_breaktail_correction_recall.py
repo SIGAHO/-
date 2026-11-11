@@ -119,9 +119,10 @@ class CorrectionRecallTests(unittest.TestCase):
                                  correction_path=self.ledger)
         self.assertIsNone(other["correction"])
         self.assertFalse(other.get("correction_unresolved", False))
-        _, nested = hub.build_hub(self.raw, "望遠鏡修理の窓口の料金は今どう？", "session-a",
+        _, nested = hub.build_hub(self.raw, "望遠鏡修理の窓口の料金は現在どう？", "session-a",
                                   correction_path=self.ledger)
         self.assertIsNone(nested["correction"])
+        self.assertTrue(nested["correction_unresolved"])
 
     def test_question_scope_and_quote_budget_decline(self):
         self.add("turn-old-0001", "望遠鏡修理の窓口は東支店。")
