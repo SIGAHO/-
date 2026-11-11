@@ -57,6 +57,13 @@ class WebAgentBridgeTests(unittest.TestCase):
         self.assertEqual([event["tool"] for event in result["events"][:3]],
                          ["write_file", "review_changes", "check_python"])
         self.assertEqual((self.root / "sample.py").read_text(encoding="utf-8"), "value = 1\n")
+        report = service.review(self.root, submitted["job_id"])
+        self.assertEqual(report["total_tracked"], 1)
+        self.assertEqual(report["changes"][0]["status"], "added")
+        self.assertIn("+value = 1", report["changes"][0]["diff"])
+        (self.root / "sample.py").write_text("value = 2\n", encoding="utf-8")
+        changed = service.review(self.root, submitted["job_id"])
+        self.assertEqual(changed["changes"][0]["status"], "external_change")
 
     def test_cancel_running_job_prevents_pending_write(self):
         entered, release = threading.Event(), threading.Event()
