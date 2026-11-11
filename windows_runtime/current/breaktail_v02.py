@@ -1154,12 +1154,13 @@ def build_reply_messages(history: list[dict], user_text: str, scene: dict | None
         else:
             hub_prompt = ''
             hub_meta = {**hub_meta, 'reason': 'reply_context_budget', 'source_turn_ids': [],
-                        'correction_unresolved': bool(hub_meta.get('correction')) or hub_meta.get('correction_unresolved', False)}
+                        'correction_unresolved': hub_meta.get('correction_unresolved', False)}
     sections.append(_section('raw_memory_hub', hub_prompt, bool(hub_prompt), hub_meta['reason']))
     if hub_audit is not None:
         hub_audit.update(prompt=hub_prompt, ledger=hub_meta.get('ledger',[]) if hub_prompt else [],
-                         sources=hub_meta.get('sources',[]) if hub_prompt else [],enabled=hub_enabled and not active_mode,
-                         correction=hub_meta.get('correction') if hub_prompt else None,
+                         sources=hub_meta.get('sources',[]) if hub_prompt or hub_meta.get('correction') else [],
+                         enabled=hub_enabled and not active_mode,
+                         correction=hub_meta.get('correction'),
                          correction_unresolved=hub_meta.get('correction_unresolved', False) if hub_enabled and not active_mode else False,
                          outbound_contact_available=self_context['capabilities'].get('can_contact_other_people_now'))
     trace_event(trace, 'raw_memory_hub', **hub_meta, injected=bool(hub_prompt))
@@ -1257,6 +1258,12 @@ def generate_reply(
                                     self_context=self_context, working_state=working_state,
                                     continuity_section=continuity_section, continuity_meta=continuity_meta,
                                     continuity_enabled=continuity_enabled, hub_audit=hub_audit)
+    source_reply, correction_proof = ground_correction_answer(user_text, '', hub_audit)
+    if correction_proof:
+        trace_event(trace, 'raw_correction_grounding', **correction_proof)
+        trace_event(trace, 'route', name='verified_correction_fast_path', hit=True,
+                    reason='exact_raw_source_or_abstention')
+        return source_reply, True
     contract = build_contract(working_state or {}, user_text, history)
     reply_options = dict(REPLY_OPTIONS)
     if character_prompt(working_state):
