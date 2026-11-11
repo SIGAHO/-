@@ -120,9 +120,13 @@ def history(raw_path, ledger_path, label, anchor_turn_id):
         items.append({**record, "old_text": old["messages"][0]["content"] if verified else None,
                       "new_text": new["messages"][0]["content"] if verified else None,
                       "sources_available": verified, "external_verification": False})
+    chain_verified = bool(items and all(item["sources_available"] for item in items)
+                          and all(before["new_turn_id"] == after["old_turn_id"]
+                                  for before, after in zip(items, items[1:])))
     return {"label": label, "conversation_id": conversation_id, "count": len(items),
-            "latest_turn_id": items[-1]["new_turn_id"] if items and items[-1]["sources_available"] else None,
-            "latest_text": items[-1]["new_text"] if items and items[-1]["sources_available"] else None,
+            "chain_verified": chain_verified,
+            "latest_turn_id": items[-1]["new_turn_id"] if chain_verified else None,
+            "latest_text": items[-1]["new_text"] if chain_verified else None,
             "items": items}
 
 
