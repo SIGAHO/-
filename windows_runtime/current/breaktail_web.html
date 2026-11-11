@@ -190,12 +190,12 @@ function agentPrepare(kind){
 }
 function renderAgentStatus(state){
   const lines=['状態: '+state.status,'作業キューID: '+state.job_id,'実行ID: '+(state.run_id||'まだありません'),
-    'コード実行: 無効','構文検査: '+(!(state.changes||[]).length?'対象なし':state.syntax_verified==null?'未確定':state.syntax_verified?'確認済み':'未合格')];
+    'コード実行: 無効','作業時の構文検査: '+(!(state.changes||[]).length?'対象なし':state.syntax_verified==null?'未確定':state.syntax_verified?'確認済み':'未合格')];
   if(state.summary)lines.push('結果: '+state.summary);
   if(state.error)lines.push('エラー: '+state.error);
   if(state.cancel_requested)lines.push('停止を要求しました。途中の変更は残ります。');
-  if(state.undone)lines.push('この作業の編集はバックアップから取り消し済みです。');
-  for(const change of state.changes||[])lines.push('変更: '+change.path+' / 保存後SHA-256: '+change.after_sha256);
+  if(state.undone)lines.push('この作業の編集はバックアップから取り消し済みです。復元後の構文は未検査です。');
+  for(const change of state.changes||[])lines.push('作業時の変更: '+change.path+' / 保存後SHA-256: '+change.after_sha256);
   for(const event of state.events||[])lines.push('道具: '+(event.tool||'モデル')+(event.path?' / 対象: '+event.path:'')+(event.error?' / 失敗: '+event.error:'')+(event.detail?' / '+event.detail:'')+(event.observation?'\n観測: '+JSON.stringify(event.observation).slice(0,1800):''));
   $('agent-result').textContent=lines.join('\n\n');
 }
