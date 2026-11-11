@@ -16,7 +16,7 @@ class WebAgentBridgeTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
         self.config = {"model": None, "safe_mode": False,
-                       "ollama_url": "http://127.0.0.1:11434/api/chat"}
+                       "ollama_url": "http://127.0.0.1:11434/api/chat", "num_ctx": 8192}
 
     def wait_status(self, service, job_id):
         for _ in range(100):
@@ -119,6 +119,11 @@ class WebAgentBridgeTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 service.start(self.root, "task")
         self.assertFalse((self.root / ".breaktail-agent" / "queue.sqlite3").exists())
+
+    def test_web_agent_context_is_bounded_without_changing_saved_config(self):
+        service = WebAgentService(config_loader=lambda: self.config)
+        self.assertEqual(service._config()["num_ctx"], 4096)
+        self.assertEqual(self.config["num_ctx"], 8192)
 
 
 if __name__ == "__main__":
