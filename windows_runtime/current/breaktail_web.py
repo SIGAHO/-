@@ -1,5 +1,7 @@
 """Local browser UI. RAM holds live state; reply inputs/outputs are also logged to disk."""
 
+import difflib
+import hashlib
 import json
 import os
 import re
@@ -20,6 +22,7 @@ from breaktail_review_bridge import handle_review
 from breaktail_memory_manager import ProfileStoreError, load_profile
 from breaktail_style import make_style_report
 from breaktail_agent import Workspace
+from breaktail_agent_edit_preview import ReplacementSyntaxError, preview as preview_replacement
 
 
 HOST = "127.0.0.1"
@@ -161,17 +164,51 @@ def memories():
     return found
 
 
-def read_workspace(workspace_root, tool, path):
-    if tool not in ("list_files", "read_file"):
-        raise ValueError("読取り専用の操作だけ利用できます")
+def open_workspace(workspace_root):
     if (not isinstance(workspace_root, str) or not workspace_root.strip() or
             not Path(workspace_root).is_absolute() or not re.fullmatch(r"[A-Za-z]:", Path(workspace_root).drive)):
         raise ValueError("作業フォルダーの絶対パスを指定してください")
+    return Workspace(workspace_root, create_audit=False)
+
+
+def read_workspace(workspace_root, tool, path):
+    if tool not in ("list_files", "read_file"):
+        raise ValueError("読取り専用の操作だけ利用できます")
     if not isinstance(path, str) or not path.strip():
         raise ValueError("作業フォルダー内の相対パスを指定してください")
-    workspace = Workspace(workspace_root, create_audit=False)
+    workspace = open_workspace(workspace_root)
     observation = workspace.execute(tool, {"path": path})
     return {"tool": tool, "workspace": str(workspace.root), "path": path, "observation": observation}
+
+
+def preview_workspace_replace(workspace_root, path, old, new):
+    """Show a bounded literal replacement and syntax check without touching files."""
+    if not isinstance(path, str) or not path.strip() or not isinstance(old, str) or not old:
+        raise ValueError("対象ファイルと置換前の文字列を指定してください")
+    if not isinstance(new, str):
+        raise ValueError("置換後の文字列を指定してください")
+    workspace = open_workspace(workspace_root)
+    target = workspace.path(path)
+    if target.suffix.lower() in {".exe", ".dll", ".sys", ".key", ".pfx", ".pem", ".sqlite", ".db"}:
+        raise ValueError("この種類のファイルは編集できません")
+    observed = workspace.read(path)
+    before = observed["content"]
+    if before.count(old) != 1:
+        raise ValueError("置換前の文字列はファイル中にちょうど1回必要です")
+    candidate = before.replace(old, new, 1)
+    if len(candidate.encode("utf-8")) > 64000:
+        raise ValueError("変更後のファイルは64KB以内にしてください")
+    try:
+        syntax = preview_replacement(path, before, candidate, observed["sha256"])
+    except ReplacementSyntaxError as error:
+        syntax = error.observation
+    patch = "".join(difflib.unified_diff(before.splitlines(keepends=True),
+                                          candidate.splitlines(keepends=True),
+                                          fromfile="before/" + path, tofile="preview/" + path))
+    return {"workspace": str(workspace.root), "path": path, "source_sha256": observed["sha256"],
+            "candidate_sha256": hashlib.sha256(candidate.encode("utf-8")).hexdigest(),
+            "diff": patch[:8000], "diff_truncated": len(patch) > 8000,
+            "syntax": syntax, "written": False}
 
 
 def local_request_allowed(host, origin=None):
@@ -371,6 +408,13 @@ class Handler(BaseHTTPRequestHandler):
         if self.path == "/api/workspace/read":
             try:
                 result = read_workspace(body.get("workspace"), body.get("tool"), body.get("path"))
+            except (ValueError, OSError, UnicodeError) as error:
+                return self.send(400, {"error": str(error)})
+            return self.send(200, result)
+        if self.path == "/api/workspace/preview":
+            try:
+                result = preview_workspace_replace(body.get("workspace"), body.get("path"),
+                                                   body.get("old"), body.get("new"))
             except (ValueError, OSError, UnicodeError) as error:
                 return self.send(400, {"error": str(error)})
             return self.send(200, result)
