@@ -77,7 +77,11 @@ def _records(path):
             record = json.loads(line)
             if (not isinstance(record, dict) or record.get("schema") != 1 or
                     not all(isinstance(record.get(key), str) for key in
-                            ("id", "key", "label", "conversation_id", "old_turn_id", "new_turn_id", "created_at"))):
+                            ("id", "key", "label", "conversation_id", "old_turn_id", "new_turn_id", "created_at")) or
+                    not record["conversation_id"] or record["key"] != normalized(record["label"]) or
+                    record["old_turn_id"] == record["new_turn_id"] or
+                    record.get("source") != "explicit_user_selection" or
+                    record.get("external_verification") is not False):
                 raise ValueError("訂正履歴が破損しています。追記しません")
             records.append(record)
     return records
@@ -130,6 +134,11 @@ def commit(raw_path, ledger_path, label, old_turn_id, new_turn_id, expected_old_
         existing = [record for record in _records(ledger_path)
                     if record["conversation_id"] == checked["conversation_id"] and record["key"] == checked["key"]]
         if existing and (existing[-1]["old_turn_id"], existing[-1]["new_turn_id"]) == (old_turn_id, new_turn_id):
+            if (existing[-1].get("old_source_sha256") != checked["old"]["sha256"] or
+                    existing[-1].get("new_source_sha256") != checked["new"]["sha256"] or
+                    existing[-1].get("source") != "explicit_user_selection" or
+                    existing[-1].get("external_verification") is not False):
+                raise ValueError("既存の訂正記録の出典を再確認できません。追記しません")
             return {"record": existing[-1], "already_recorded": True}
         if existing and existing[-1]["new_turn_id"] != old_turn_id:
             raise ValueError("この話題の最新出典から続けてください")
