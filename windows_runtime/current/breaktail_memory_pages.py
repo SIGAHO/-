@@ -1,6 +1,7 @@
 """Read-only, bounded pages of Raw turns and separate unverified interpretations."""
 import json
 from pathlib import Path
+from breaktail_memory_hub import ledger_event
 
 
 PAGE_SIZE = 10
@@ -47,11 +48,28 @@ def _rows(path, scope):
 
 
 def page_records(memory_path, raw_path, scope, page=1):
-    if scope not in ("raw", "interpretations"):
-        raise ValueError("Raw会話か解釈記憶を選んでください")
+    if scope not in ("raw", "interpretations", "ledger"):
+        raise ValueError("Raw会話、解釈記憶、確認事項の履歴から選んでください")
     if type(page) is not int or page < 1:
         raise ValueError("ページ番号は1以上の整数にしてください")
-    rows, invalid = _rows(raw_path if scope == "raw" else memory_path, scope)
+    rows, invalid = _rows(raw_path if scope in ("raw", "ledger") else memory_path,
+                          "raw" if scope == "ledger" else scope)
+    if scope == "ledger":
+        events = []
+        for row in reversed(rows):
+            declaration = ledger_event(row["messages"][0]["content"])
+            if declaration and row["status"] == "complete":
+                events.append({"conversation_id": row["conversation_id"], "turn_id": row["turn_id"],
+                               "timestamp": row["timestamp"], "key": declaration["key"],
+                               "label": declaration["label"], "detail": declaration["detail"],
+                               "status": declaration["status"], "source": "user_declaration",
+                               "externally_verified": False})
+        latest = {(event["conversation_id"], event["key"]): event["turn_id"] for event in events}
+        for event in events:
+            newest = latest[(event["conversation_id"], event["key"])]
+            event["is_latest"] = event["turn_id"] == newest
+            event["superseded_by_turn_id"] = None if event["is_latest"] else newest
+        rows = list(reversed(events))
     total = len(rows)
     pages = (total + PAGE_SIZE - 1) // PAGE_SIZE
     if page > max(1, pages):
