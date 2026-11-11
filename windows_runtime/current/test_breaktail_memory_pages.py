@@ -37,12 +37,30 @@ class MemoryPageTests(unittest.TestCase):
                               encoding="utf-8")
             page = page_records(memory, root / "absent.jsonl", "interpretations", 1)
             self.assertEqual(page["total"], 1)
-            self.assertIsNone(page["items"][0]["source_turn_id"])
+            self.assertEqual(page["items"][0]["sources"], [])
             self.assertEqual(page["items"][0]["verification"], "unverified_interpretation")
             self.assertEqual(page_records(memory, root / "absent.jsonl", "raw", 1)["total"], 0)
             for value in (0, -1, "1", True):
                 with self.assertRaises(ValueError):
                     page_records(memory, root / "absent.jsonl", "raw", value)
+
+    def test_recorded_source_is_read_from_raw_without_promoting_interpretation(self):
+        with tempfile.TemporaryDirectory(dir=Path(__file__).resolve().parents[2]) as directory:
+            root = Path(directory)
+            memory = root / "memory.jsonl"
+            raw = root / "raw.jsonl"
+            memory.write_text(json.dumps({"id": 2, "content": "model interpretation", "recorded_at": "2026-11-12T00:01:00Z",
+                                          "source_turn_ids": ["turn-a", "missing"]}) + "\n", encoding="utf-8")
+            raw.write_text(json.dumps({"conversation_id": "session-a", "turn_id": "turn-a",
+                                       "timestamp": "2026-11-12T00:00:00Z", "user_text": "original words",
+                                       "assistant_text": "reply", "status": "complete"}) + "\n", encoding="utf-8")
+            item = page_records(memory, raw, "interpretations", 1)["items"][0]
+            self.assertEqual(item["created_at"], "2026-11-12T00:01:00Z")
+            self.assertEqual(item["verification"], "unverified_interpretation")
+            self.assertEqual(item["sources"][0]["user_text"], "original words")
+            self.assertEqual(item["sources"][0]["speaker"], "user")
+            self.assertTrue(item["sources"][0]["raw_found"])
+            self.assertFalse(item["sources"][1]["raw_found"])
 
     def test_explicit_status_history_keeps_old_and_new_user_evidence(self):
         with tempfile.TemporaryDirectory(dir=Path(__file__).resolve().parents[2]) as directory:
