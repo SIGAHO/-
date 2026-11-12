@@ -551,11 +551,13 @@ class Handler(BaseHTTPRequestHandler):
             try:
                 if self.path.endswith("/preview"):
                     result = preview_correction(tail.raw_conversation.RAW_CONVERSATION_FILE,
-                                                body.get("label"), body.get("old_turn_id"), body.get("new_turn_id"))
+                                                body.get("label"), body.get("old_turn_id"), body.get("new_turn_id"),
+                                                body.get("alias", ""))
                 elif self.path.endswith("/commit"):
                     result = commit_correction(tail.raw_conversation.RAW_CONVERSATION_FILE, CORRECTION_FILE,
                                                body.get("label"), body.get("old_turn_id"), body.get("new_turn_id"),
-                                               body.get("expected_old_sha256"), body.get("expected_new_sha256"))
+                                               body.get("expected_old_sha256"), body.get("expected_new_sha256"),
+                                               body.get("alias", ""))
                 else:
                     result = correction_history(tail.raw_conversation.RAW_CONVERSATION_FILE, CORRECTION_FILE,
                                                 body.get("label"), body.get("anchor_turn_id"))
