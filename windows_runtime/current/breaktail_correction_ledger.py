@@ -228,14 +228,18 @@ def _names(record):
 
 def _possible_later_mention(text, record):
     """A later paraphrase can invalidate a linked value, but cannot prove a new one."""
-    text = normalized(text)
-    for name in _names(record):
-        if name in text:
-            return True
-        if len(name) >= 6:
-            start = text.find(name[:3])
-            if start >= 0 and name[-2:] in text[start + 3:]:
+    for clause in re.split(r'[。！？?!\n;；]', normalized(text)):
+        for name in _names(record):
+            if name in clause:
                 return True
+            if len(name) < 6:
+                continue
+            start = clause.find(name[:3])
+            while start >= 0:
+                end = clause.find(name[-2:], start + 3)
+                if 0 <= end - (start + 3) <= 32:
+                    return True
+                start = clause.find(name[:3], start + 1)
     return False
 
 
