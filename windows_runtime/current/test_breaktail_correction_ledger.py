@@ -66,6 +66,9 @@ class CorrectionLedgerTests(unittest.TestCase):
     def test_alias_must_be_distinct_from_label(self):
         with self.assertRaisesRegex(ValueError, "異なる表現"):
             preview(self.raw, "shop location", "old-turn-0001", "new-turn-0002", "shop location")
+        for alias in ("今は", "どっち？", "where?"):
+            with self.subTest(alias=alias), self.assertRaisesRegex(ValueError, "対象名"):
+                preview(self.raw, "shop location", "old-turn-0001", "new-turn-0002", alias)
         self.assertFalse(self.ledger.exists())
 
     def test_alias_cannot_be_reused_as_another_topic_name(self):
