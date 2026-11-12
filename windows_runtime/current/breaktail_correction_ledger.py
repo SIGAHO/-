@@ -226,6 +226,19 @@ def _names(record):
     return [record["key"]] + ([normalized(record["alias"])] if record.get("alias") else [])
 
 
+def _possible_later_mention(text, record):
+    """A later paraphrase can invalidate a linked value, but cannot prove a new one."""
+    text = normalized(text)
+    for name in _names(record):
+        if name in text:
+            return True
+        if len(name) >= 6:
+            start = text.find(name[:3])
+            if start >= 0 and name[-2:] in text[start + 3:]:
+                return True
+    return False
+
+
 def matching_topic_exists(ledger_path, query, conversation_id):
     """Whether a narrow question has a recorded topic, even if its proof fails."""
     if not _question_shape(query):
@@ -281,7 +294,7 @@ def match_for_question(raw_path, ledger_path, query, conversation_id, source_row
             latest.get("old_source_sha256") != _raw_digest(old) or
             latest.get("new_source_sha256") != _raw_digest(new)):
         return None
-    if any(any(name in normalized(r["user_text"]) for name in _names(latest))
+    if any(_possible_later_mention(r["user_text"], latest)
            for r in source_rows[new_found[0]+1:]):
         return None
     return {"label": latest["label"], "alias": latest.get("alias", ""),
