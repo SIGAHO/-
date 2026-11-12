@@ -68,6 +68,41 @@ class CorrectionRecallTests(unittest.TestCase):
         self.assertIsNone(meta["correction"])
         self.assertTrue(meta["correction_unresolved"])
 
+    def test_unlinked_later_rephrased_topic_abstains(self):
+        self.add("turn-old-0001", "望遠鏡修理の窓口は東支店。")
+        self.add("turn-new-0002", "望遠鏡修理の窓口は西支店。")
+        self.link("望遠鏡修理の窓口", "turn-old-0001", "turn-new-0002")
+        self.add("turn-later-003", "望遠鏡修理の受付窓口は北支店に変更。")
+        query = "望遠鏡修理の窓口は今どっち？"
+        _, meta = hub.build_hub(self.raw, query, "session-a", correction_path=self.ledger)
+        self.assertIsNone(meta["correction"])
+        self.assertTrue(meta["correction_unresolved"])
+        reply, proof = hub.ground_correction_answer(query, "西支店だよ。", meta)
+        self.assertIn("断定できない", reply)
+        self.assertEqual(proof["kind"], "correction_source_abstention")
+        with patch.object(tail.raw_conversation, "RAW_CONVERSATION_FILE", self.raw), \
+             patch.object(tail, "DATA_ROOT", self.root), \
+             patch.object(tail, "MEMORY_FILE", self.root / "memory.jsonl"), \
+             patch.object(tail, "retrieve_memory_candidates", return_value=[]), \
+             patch.object(tail, "load_profile", return_value=None), \
+             patch.object(tail, "call_ollama") as model, \
+             patch.object(tail, "trace_event"), \
+             patch.object(tail, "log_turn"):
+            live_reply, complete = tail.generate_reply([], query,
+                                                        trace={"conversation_id": "session-a", "turn_id": "current-turn"})
+        self.assertTrue(complete)
+        model.assert_not_called()
+        self.assertIn("断定できない", live_reply)
+
+    def test_unrelated_later_topic_does_not_hide_verified_correction(self):
+        self.add("turn-old-0001", "望遠鏡修理の窓口は東支店。")
+        self.add("turn-new-0002", "望遠鏡修理の窓口は西支店。")
+        self.link("望遠鏡修理の窓口", "turn-old-0001", "turn-new-0002")
+        self.add("turn-later-003", "望遠鏡修理の料金は来月に発表。")
+        _, meta = hub.build_hub(self.raw, "望遠鏡修理の窓口は今どっち？", "session-a",
+                                correction_path=self.ledger)
+        self.assertEqual(meta["correction"]["new_turn_id"], "turn-new-0002")
+
     def test_chained_updates_select_only_the_last_link(self):
         self.add("turn-old-0001", "望遠鏡修理の窓口は東支店。")
         self.add("turn-mid-0002", "望遠鏡修理の窓口は西支店。")
