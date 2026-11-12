@@ -133,7 +133,8 @@ class WebCommandReachabilityTests(unittest.TestCase):
                      "timestamp": f"2026-11-12T00:0{index}:00Z", "user_text": content,
                      "assistant_text": "ack", "status": "complete"}
                     for index, (identity, content) in enumerate(
-                        (("old-turn-0001", "old value"), ("new-turn-0002", "new value")))]
+                        (("old-turn-0001", "old value"), ("new-turn-0002", "new value"),
+                         ("next-turn-0003", "newer value")))]
             raw.write_text("".join(json.dumps(row) + "\n" for row in rows), encoding="utf-8")
             server = web.ExclusiveHTTPServer(("127.0.0.1", 0), web.Handler)
             thread = threading.Thread(target=server.serve_forever, daemon=True)
@@ -162,6 +163,9 @@ class WebCommandReachabilityTests(unittest.TestCase):
                     report = post("history", {"label": "sample fact", "anchor_turn_id": "old-turn-0001"})
                     self.assertEqual(report["latest_turn_id"], "new-turn-0002")
                     self.assertEqual(report["alias"], "another phrase")
+                    next_check = post("preview", {"label": "sample fact", "old_turn_id": "new-turn-0002",
+                                                  "new_turn_id": "next-turn-0003"})
+                    self.assertEqual(next_check["alias"], "another phrase")
                     self.assertEqual(len(ledger.read_text(encoding="utf-8").splitlines()), 1)
             finally:
                 server.shutdown()
