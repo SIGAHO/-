@@ -124,6 +124,25 @@ class CorrectionRecallTests(unittest.TestCase):
         self.assertIsNone(nested["correction"])
         self.assertTrue(nested["correction_unresolved"])
 
+    def test_explicit_alias_selects_the_same_verified_source(self):
+        self.add("turn-old-0001", "望遠鏡修理の窓口は東支店。")
+        self.add("turn-new-0002", "望遠鏡修理の窓口は西支店。")
+        checked = preview(self.raw, "望遠鏡修理の窓口", "turn-old-0001", "turn-new-0002",
+                          "望遠鏡の修理窓口")
+        commit(self.raw, self.ledger, "望遠鏡修理の窓口", "turn-old-0001", "turn-new-0002",
+               checked["old"]["sha256"], checked["new"]["sha256"], "望遠鏡の修理窓口")
+        query = "望遠鏡の修理窓口は今どっち？"
+        _, meta = hub.build_hub(self.raw, query, "session-a", correction_path=self.ledger)
+        self.assertEqual(meta["correction"]["new_turn_id"], "turn-new-0002")
+        self.assertEqual(meta["source_turn_ids"], ["turn-new-0002"])
+        reply, proof = hub.ground_correction_answer(query, "東支店だよ。", meta)
+        self.assertIn("西支店", reply)
+        self.assertEqual(proof["new_turn_id"], "turn-new-0002")
+        self.assertFalse(proof["external_verification"])
+        _, different = hub.build_hub(self.raw, "望遠鏡修理の料金は今どう？", "session-a",
+                                     correction_path=self.ledger)
+        self.assertIsNone(different["correction"])
+
     def test_question_scope_and_quote_budget_decline(self):
         self.add("turn-old-0001", "望遠鏡修理の窓口は東支店。")
         self.add("turn-new-0002", "望遠鏡修理の窓口は西支店。")
