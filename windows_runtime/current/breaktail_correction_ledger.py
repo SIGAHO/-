@@ -44,6 +44,11 @@ def _raw_digest(row):
     return hashlib.sha256(json.dumps(fields, ensure_ascii=False, sort_keys=True).encode("utf-8")).hexdigest()
 
 
+def _alias_source_digest(alias, old_hash, new_hash):
+    return hashlib.sha256(json.dumps({"alias": alias, "old": old_hash, "new": new_hash},
+                                     ensure_ascii=False, sort_keys=True).encode("utf-8")).hexdigest()
+
+
 def _source_pair(raw_path, old_turn_id, new_turn_id):
     old_turn_id, new_turn_id = _identity(old_turn_id), _identity(new_turn_id)
     if old_turn_id == new_turn_id:
@@ -92,11 +97,15 @@ def _records(path):
             record = json.loads(line)
             if (not isinstance(record, dict) or record.get("schema") != 1 or
                     not all(isinstance(record.get(key), str) for key in
-                            ("id", "key", "label", "conversation_id", "old_turn_id", "new_turn_id", "created_at")) or
+                            ("id", "key", "label", "conversation_id", "old_turn_id", "new_turn_id", "created_at",
+                             "old_source_sha256", "new_source_sha256")) or
                     not record["conversation_id"] or record["key"] != normalized(record["label"]) or
                     record["old_turn_id"] == record["new_turn_id"] or
                     not isinstance(record.get("alias", ""), str) or
                     (record.get("alias") and _alias(record["alias"], record["label"]) != record["alias"]) or
+                    (record.get("alias") and record.get("alias_source_sha256") !=
+                     _alias_source_digest(record["alias"], record["old_source_sha256"],
+                                          record["new_source_sha256"])) or
                     record.get("source") != "explicit_user_selection" or
                     record.get("external_verification") is not False):
                 raise ValueError("訂正履歴が破損しています。追記しません")
@@ -193,6 +202,9 @@ def commit(raw_path, ledger_path, label, old_turn_id, new_turn_id, expected_old_
                   "old_source_sha256": checked["old"]["sha256"],
                   "new_source_sha256": checked["new"]["sha256"],
                   "source": "explicit_user_selection", "external_verification": False}
+        if record["alias"]:
+            record["alias_source_sha256"] = _alias_source_digest(
+                record["alias"], record["old_source_sha256"], record["new_source_sha256"])
         ledger_path.parent.mkdir(parents=True, exist_ok=True)
         with ledger_path.open("a", encoding="utf-8") as stream:
             stream.write(json.dumps(record, ensure_ascii=False) + "\n")
