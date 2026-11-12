@@ -22,6 +22,8 @@ def _alias(value, label):
     if value is None or value == "":
         return ""
     alias = _label(value)
+    if len(alias) < 4 or re.search(r'[？?。]|今は|現在どう|どっち|どこ|教えて', alias):
+        raise ValueError("別名は質問文ではなく、4文字以上の対象名にしてください")
     if normalized(alias) == normalized(label):
         raise ValueError("別名は話題と異なる表現にしてください")
     return alias
