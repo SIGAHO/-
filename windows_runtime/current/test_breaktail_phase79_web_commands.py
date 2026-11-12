@@ -150,16 +150,18 @@ class WebCommandReachabilityTests(unittest.TestCase):
                      patch.object(web, "CORRECTION_FILE", ledger), \
                      patch.object(web.tail.raw_conversation, "RAW_CONVERSATION_FILE", raw), \
                      patch.object(web, "handle_review", return_value=False):
-                    request = {"label": "sample fact", "old_turn_id": "old-turn-0001",
+                    request = {"label": "sample fact", "alias": "another phrase", "old_turn_id": "old-turn-0001",
                                "new_turn_id": "new-turn-0002"}
                     check = post("preview", request)
                     self.assertFalse(ledger.exists())
+                    self.assertEqual(check["alias"], "another phrase")
                     self.assertEqual(check["new"]["text"], "new value")
                     receipt = post("commit", {**request, "expected_old_sha256": check["old"]["sha256"],
                                               "expected_new_sha256": check["new"]["sha256"]})
                     self.assertFalse(receipt["already_recorded"])
                     report = post("history", {"label": "sample fact", "anchor_turn_id": "old-turn-0001"})
                     self.assertEqual(report["latest_turn_id"], "new-turn-0002")
+                    self.assertEqual(report["alias"], "another phrase")
                     self.assertEqual(len(ledger.read_text(encoding="utf-8").splitlines()), 1)
             finally:
                 server.shutdown()
