@@ -46,6 +46,37 @@ class CorrectionLedgerTests(unittest.TestCase):
         self.assertFalse(report["items"][1]["external_verification"])
         self.assertEqual(len(self.ledger.read_text(encoding="utf-8").splitlines()), 2)
 
+    def test_person_selected_alias_is_preserved_across_a_chain(self):
+        first = preview(self.raw, "shop location", "old-turn-0001", "new-turn-0002", "store address")
+        self.assertEqual(first["alias"], "store address")
+        saved = commit(self.raw, self.ledger, "shop location", "old-turn-0001", "new-turn-0002",
+                       first["old"]["sha256"], first["new"]["sha256"], "store address")
+        self.assertEqual(saved["record"]["alias"], "store address")
+        second = preview(self.raw, "shop location", "new-turn-0002", "next-turn-0003")
+        later = commit(self.raw, self.ledger, "shop location", "new-turn-0002", "next-turn-0003",
+                       second["old"]["sha256"], second["new"]["sha256"])
+        self.assertEqual(later["record"]["alias"], "store address")
+        self.assertEqual(history(self.raw, self.ledger, "shop location", "old-turn-0001")["alias"],
+                         "store address")
+        with self.assertRaisesRegex(ValueError, "別名は変更できません"):
+            commit(self.raw, self.ledger, "shop location", "new-turn-0002", "next-turn-0003",
+                   second["old"]["sha256"], second["new"]["sha256"], "another address")
+
+    def test_alias_must_be_distinct_from_label(self):
+        with self.assertRaisesRegex(ValueError, "異なる表現"):
+            preview(self.raw, "shop location", "old-turn-0001", "new-turn-0002", "shop location")
+        self.assertFalse(self.ledger.exists())
+
+    def test_alias_cannot_be_reused_as_another_topic_name(self):
+        checked = preview(self.raw, "shop location", "old-turn-0001", "new-turn-0002",
+                          "store address")
+        commit(self.raw, self.ledger, "shop location", "old-turn-0001", "new-turn-0002",
+               checked["old"]["sha256"], checked["new"]["sha256"], "store address")
+        another = preview(self.raw, "store address", "old-turn-0001", "new-turn-0002")
+        with self.assertRaisesRegex(ValueError, "重複"):
+            commit(self.raw, self.ledger, "store address", "old-turn-0001", "new-turn-0002",
+                   another["old"]["sha256"], another["new"]["sha256"])
+
     def test_wrong_hash_branch_and_cross_session_are_rejected(self):
         checked = preview(self.raw, "shop location", "old-turn-0001", "new-turn-0002")
         with self.assertRaises(ValueError):
