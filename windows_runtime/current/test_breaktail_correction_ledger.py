@@ -52,6 +52,7 @@ class CorrectionLedgerTests(unittest.TestCase):
         saved = commit(self.raw, self.ledger, "shop location", "old-turn-0001", "new-turn-0002",
                        first["old"]["sha256"], first["new"]["sha256"], "store address")
         self.assertEqual(saved["record"]["alias"], "store address")
+        self.assertEqual(len(saved["record"]["alias_source_sha256"]), 64)
         second = preview(self.raw, "shop location", "new-turn-0002", "next-turn-0003")
         later = commit(self.raw, self.ledger, "shop location", "new-turn-0002", "next-turn-0003",
                        second["old"]["sha256"], second["new"]["sha256"])
@@ -76,6 +77,17 @@ class CorrectionLedgerTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "重複"):
             commit(self.raw, self.ledger, "store address", "old-turn-0001", "new-turn-0002",
                    another["old"]["sha256"], another["new"]["sha256"])
+
+    def test_changed_alias_is_not_accepted_as_a_new_topic_link(self):
+        checked = preview(self.raw, "shop location", "old-turn-0001", "new-turn-0002",
+                          "store address")
+        commit(self.raw, self.ledger, "shop location", "old-turn-0001", "new-turn-0002",
+               checked["old"]["sha256"], checked["new"]["sha256"], "store address")
+        record = json.loads(self.ledger.read_text(encoding="utf-8"))
+        record["alias"] = "another subject"
+        self.ledger.write_text(json.dumps(record) + "\n", encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "破損"):
+            history(self.raw, self.ledger, "shop location", "old-turn-0001")
 
     def test_wrong_hash_branch_and_cross_session_are_rejected(self):
         checked = preview(self.raw, "shop location", "old-turn-0001", "new-turn-0002")
