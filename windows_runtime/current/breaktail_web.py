@@ -553,6 +553,14 @@ class Handler(BaseHTTPRequestHandler):
                     result = preview_correction(tail.raw_conversation.RAW_CONVERSATION_FILE,
                                                 body.get("label"), body.get("old_turn_id"), body.get("new_turn_id"),
                                                 body.get("alias", ""))
+                    previous = correction_history(tail.raw_conversation.RAW_CONVERSATION_FILE,
+                                                  CORRECTION_FILE, result["label"], result["old"]["turn_id"])
+                    if previous["count"]:
+                        if not previous["chain_verified"]:
+                            raise ValueError("既存の訂正チェーンの出典を再確認できません")
+                        if result["alias"] and result["alias"] != previous["alias"]:
+                            raise ValueError("この話題の別名は変更できません")
+                        result["alias"] = previous["alias"]
                 elif self.path.endswith("/commit"):
                     result = commit_correction(tail.raw_conversation.RAW_CONVERSATION_FILE, CORRECTION_FILE,
                                                body.get("label"), body.get("old_turn_id"), body.get("new_turn_id"),
