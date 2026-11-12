@@ -227,7 +227,8 @@ def ground_correction_answer(query, draft, audit):
     item = audit.get('correction')
     if not item or item.get('source') != 'explicit_user_selection' or item.get('external_verification') is not False:
         return draft, None
-    if not (item['label'] and normalized(item['label']) in normalized(query)):
+    if not (item['label'] and any(normalized(name) in normalized(query)
+                                  for name in (item['label'], item.get('alias')) if name)):
         return draft, None
     if not any(s.get('turn_id') == item['new_turn_id'] and s.get('user_text') == item['new_text']
                for s in audit.get('sources', [])):
