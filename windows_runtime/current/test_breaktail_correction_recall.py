@@ -103,6 +103,15 @@ class CorrectionRecallTests(unittest.TestCase):
                                 correction_path=self.ledger)
         self.assertEqual(meta["correction"]["new_turn_id"], "turn-new-0002")
 
+    def test_separate_later_sentences_do_not_combine_into_same_topic(self):
+        self.add("turn-old-0001", "望遠鏡修理の窓口は東支店。")
+        self.add("turn-new-0002", "望遠鏡修理の窓口は西支店。")
+        self.link("望遠鏡修理の窓口", "turn-old-0001", "turn-new-0002")
+        self.add("turn-later-003", "望遠鏡修理の料金は来月発表。別の展示会の窓口は東館。")
+        _, meta = hub.build_hub(self.raw, "望遠鏡修理の窓口は今どっち？", "session-a",
+                                correction_path=self.ledger)
+        self.assertEqual(meta["correction"]["new_turn_id"], "turn-new-0002")
+
     def test_chained_updates_select_only_the_last_link(self):
         self.add("turn-old-0001", "望遠鏡修理の窓口は東支店。")
         self.add("turn-mid-0002", "望遠鏡修理の窓口は西支店。")
