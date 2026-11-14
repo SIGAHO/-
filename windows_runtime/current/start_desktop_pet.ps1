@@ -19,6 +19,13 @@ $python = Join-Path (Split-Path -Parent $pythonw) 'python.exe'
 if ($LASTEXITCODE -ne 0) { throw 'Python の Tkinter と Pillow が必要です。' }
 
 $script = Join-Path $runtime 'breaktail_desktop_pet.py'
+$running = Get-CimInstance Win32_Process -Filter "Name='pythonw.exe'" |
+    Where-Object { $_.CommandLine -and $_.CommandLine.Contains($script) } |
+    Select-Object -First 1
+if ($running) {
+    Write-Host "Breaktailの画面キャラは起動済みです (PID $($running.ProcessId))。"
+    return
+}
 $arguments = @($script, '--sprite', $Sprite, '--model', $Model)
 if ($LookNow) { $arguments += '--look-on-start' }
 $pet = Start-Process -FilePath $pythonw -ArgumentList $arguments -WorkingDirectory $runtime -PassThru
