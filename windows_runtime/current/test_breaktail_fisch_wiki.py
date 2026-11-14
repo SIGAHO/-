@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import patch
 
-from breaktail_fisch_wiki import lookup, select_fisch_term
+from breaktail_fisch_wiki import lookup, resolve_page, select_fisch_term
 
 
 class WikiTests(unittest.TestCase):
@@ -26,6 +26,16 @@ class WikiTests(unittest.TestCase):
         self.assertEqual(result["title"], "Fish Radar")
         self.assertEqual(result["url"], Response.url)
         self.assertIn("nearby areas", result["excerpt"])
+
+    def test_page_index_matches_locally_without_sending_ocr_query(self):
+        pages = b"".join(f'<a href="/wiki/item-{i}/">Item {i}</a>'.encode()
+                         for i in range(100))
+        pages += b'<a href="/wiki/fish-radar/">Fish Radar</a>'
+        with patch("breaktail_fisch_wiki._fetch", return_value=(pages, "https://fisch.wiki/wiki/")) as fetch:
+            with patch("breaktail_fisch_wiki._INDEX", []), patch("breaktail_fisch_wiki._INDEX_FETCHED", 0):
+                self.assertEqual(resolve_page("Fish Radir"),
+                                 ("Fish Radar", "https://fisch.wiki/wiki/fish-radar/"))
+        self.assertEqual(fetch.call_args.args[0], "https://fisch.wiki/wiki/")
 
 
 if __name__ == "__main__":
