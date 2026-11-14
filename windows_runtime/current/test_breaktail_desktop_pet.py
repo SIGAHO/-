@@ -2,12 +2,22 @@
 import json
 import unittest
 from unittest.mock import patch
+from PIL import Image
 
 from breaktail_desktop_pet import (KeyboardActivity, activity_guess, classify_key, clean_comment, ease, hop_arc,
-                                   screen_hint, vision_comment, window_category)
+                                   frame_change_score, screen_hint, vision_comment, window_category)
 
 
 class DesktopPetTests(unittest.TestCase):
+    def test_screen_change_detects_substantial_change_without_model(self):
+        before = Image.new("L", (48, 27), 40)
+        after = before.copy()
+        self.assertEqual(frame_change_score(before, after), 0)
+        for x in range(24):
+            for y in range(27):
+                after.putpixel((x, y), 90)
+        self.assertGreater(frame_change_score(before, after), 5)
+
     def test_window_reaction_does_not_repeat_private_title(self):
         title = "private-document-name — Visual Studio Code"
         category = window_category(title)
