@@ -3,7 +3,7 @@ import json
 import unittest
 from unittest.mock import patch
 
-from breaktail_desktop_pet import (KeyboardActivity, classify_key, clean_comment, ease, hop_arc,
+from breaktail_desktop_pet import (KeyboardActivity, activity_guess, classify_key, clean_comment, ease, hop_arc,
                                    screen_hint, vision_comment, window_category)
 
 
@@ -34,6 +34,13 @@ class DesktopPetTests(unittest.TestCase):
         self.assertEqual(classify_key(ord("F"), True), "search")
         self.assertEqual(classify_key(0x25, False), "navigate")
         self.assertEqual(classify_key(ord("A"), False), "type")
+        self.assertEqual(window_category("Roblox"), "ゲーム画面")
+        self.assertEqual(activity_guess("ゲーム画面", {"available": False}, {"navigate": 5}),
+                         "ゲームを操作しているみたい")
+        self.assertEqual(activity_guess("作業画面", {"focused_type": "EditControl"},
+                                        {"type": 5}), "入力しているみたい")
+        self.assertEqual(activity_guess("作業画面", {}, {"save": 1}),
+                         "保存キーを押したみたい")
 
     def test_keyboard_keeps_only_categories_and_short_window(self):
         activity = KeyboardActivity()
