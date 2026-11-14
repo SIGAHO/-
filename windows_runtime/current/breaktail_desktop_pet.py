@@ -546,7 +546,9 @@ class DesktopPet:
             elif item[0] == "screen_change":
                 self.last_visual_change = item[2]
                 self.last_visual_score = item[1]
-                if self.auto_vision.get() and not self.vision_busy and item[2] - self.last_vision >= 4:
+                if (self.auto_vision.get() and not self.vision_busy
+                        and time.monotonic() - item[2] < 1.2
+                        and item[2] - self.last_vision >= 4):
                     self.look(automatic=True)
             elif item[0] == "vision":
                 self.vision_busy = False
