@@ -29,6 +29,7 @@ from breaktail_screen_memory import ScreenMemory, visual_signature
 from breaktail_fisch_wiki import lookup as lookup_fisch_wiki, select_fisch_term
 from breaktail_rli import load_rli
 from breaktail_fireworks_game import FireworksGame
+from breaktail_vanish import VanishEffect, WIDTH as VANISH_WIDTH, HEIGHT as VANISH_HEIGHT
 
 
 BG = "#ff00ff"
@@ -400,6 +401,10 @@ class DesktopPet:
         self.screen_memory = ScreenMemory(Path(__file__).resolve().parent.parent /
                                           "data" / "screen_observations.sqlite3")
         self.frames = sprite_frames(sprite, self.root)
+        with Image.open(sprite) as original_sprite:
+            original_sprite.seek(0)
+            self.vanish_source = original_sprite.convert("RGBA").resize(
+                (96, 96), Image.Resampling.NEAREST)
         fireworks_dir = Path(__file__).resolve().parent.parent / "assets"
         fireworks_rli = fireworks_dir / "gomi_fireworks.rli"
         fireworks_gif = fireworks_dir / "gomi_fireworks.gif"
@@ -410,6 +415,7 @@ class DesktopPet:
         self.firework_animation_s = (sum(frame["delay"] for frame in self.fireworks) / 1000
                                      if self.fireworks else 0)
         self.frame_index = 0
+        self.disappearing = False
         self.canvas = tk.Canvas(self.root, width=SIZE[0], height=SIZE[1], bg=BG,
                                 highlightthickness=0)
         self.canvas.pack()
@@ -467,6 +473,8 @@ class DesktopPet:
             self.root.after(1200, self.look)
 
     def say(self, message: str):
+        if self.disappearing:
+            return
         if self.bubble is not None:
             self.canvas.delete(self.bubble)
             self.canvas.delete(self.bubble_text)
@@ -487,6 +495,8 @@ class DesktopPet:
         self.hide_after = None
 
     def animate(self):
+        if self.disappearing:
+            return
         self.frame_index = (self.frame_index + 1) % len(self.frames)
         if not (self.hop and self.fireworks and self.sparkles_enabled.get()):
             self.canvas.itemconfigure(self.sprite, image=self.frames[self.frame_index][self.facing])
@@ -519,6 +529,8 @@ class DesktopPet:
         self.sparkles = living
 
     def move(self):
+        if self.disappearing:
+            return
         now = time.monotonic()
         if self.drag is None:
             width = self.root.winfo_screenwidth()
@@ -564,6 +576,8 @@ class DesktopPet:
         self.root.after(40, self.move)
 
     def watch_keys(self):
+        if self.disappearing:
+            return
         now = time.monotonic()
         if not self.observe_keys_enabled.get():
             self.keyboard.events.clear()
@@ -581,6 +595,8 @@ class DesktopPet:
         self.root.after(60, self.watch_keys)
 
     def observe_window(self):
+        if self.disappearing:
+            return
         handle, title = active_window()
         now = time.monotonic()
         if title and title != "Breaktail Pet" and title != self.last_window:
@@ -692,6 +708,8 @@ class DesktopPet:
         threading.Thread(target=worker, daemon=True).start()
 
     def poll_results(self):
+        if self.disappearing:
+            return
         try:
             item = self.results.get_nowait()
         except queue.Empty:
@@ -816,9 +834,38 @@ class DesktopPet:
         self.root.mainloop()
 
     def close(self):
+        if self.disappearing:
+            return
+        self.disappearing = True
         self.watch_stop.set()
-        _OCR_CLIENT.close()
-        self.root.destroy()
+        threading.Thread(target=_OCR_CLIENT.close, daemon=True).start()
+        if self.fireworks_game and self.fireworks_game.window.winfo_exists():
+            self.fireworks_game.close()
+        if self.hide_after:
+            self.root.after_cancel(self.hide_after)
+        cx = self.root.winfo_rootx() + 128
+        cy = self.root.winfo_rooty() + 118
+        left = max(0, min(self.root.winfo_screenwidth() - VANISH_WIDTH,
+                          round(cx - VANISH_WIDTH / 2)))
+        top = max(0, min(self.root.winfo_screenheight() - VANISH_HEIGHT,
+                         round(cy - VANISH_HEIGHT / 2)))
+        self.vanish_effect = VanishEffect(self.vanish_source, (cx-left, cy-top))
+        self.canvas.delete("all")
+        self.canvas.configure(width=VANISH_WIDTH, height=VANISH_HEIGHT)
+        self.root.geometry(f"{VANISH_WIDTH}x{VANISH_HEIGHT}+{left}+{top}")
+        self.vanish_item = self.canvas.create_image(0, 0, anchor="nw")
+        self.vanish_started = time.monotonic()
+        self.animate_vanish()
+
+    def animate_vanish(self):
+        progress = min(1.0, (time.monotonic() - self.vanish_started) / 1.4)
+        self.vanish_photo = ImageTk.PhotoImage(self.vanish_effect.render(progress),
+                                               master=self.root)
+        self.canvas.itemconfigure(self.vanish_item, image=self.vanish_photo)
+        if progress < 1.0:
+            self.root.after(33, self.animate_vanish)
+        else:
+            self.root.destroy()
 
 
 def main():
