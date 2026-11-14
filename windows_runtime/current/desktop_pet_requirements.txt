@@ -1,4 +1,6 @@
 Pillow
 uiautomation==2.0.29
 comtypes==1.5.0
+rapidocr==3.10.0
+onnxruntime==1.32.0
 
