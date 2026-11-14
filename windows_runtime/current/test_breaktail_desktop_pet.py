@@ -5,8 +5,9 @@ from unittest.mock import patch
 from PIL import Image
 
 from breaktail_desktop_pet import (KeyboardActivity, activity_guess, classify_key, clean_comment, ease, hop_arc,
-                                   identify_fisch_term,
-                                   frame_change_score, screen_hint, vision_comment, window_category)
+                                   identify_fisch_term, animation_frame_index, float_progress, flight_target,
+                                   frame_change_score, masked_frame_change, screen_hint, star_points,
+                                   vision_comment, window_category)
 
 
 class DesktopPetTests(unittest.TestCase):
@@ -18,6 +19,20 @@ class DesktopPetTests(unittest.TestCase):
             for y in range(27):
                 after.putpixel((x, y), 90)
         self.assertGreater(frame_change_score(before, after), 5)
+
+    def test_pet_motion_mask_does_not_hide_unrelated_screen_changes(self):
+        before = Image.new("L", (48, 27), 0)
+        inside = before.copy()
+        outside = before.copy()
+        for x in range(2, 10):
+            for y in range(2, 10):
+                inside.putpixel((x, y), 255)
+        for x in range(30, 40):
+            for y in range(2, 12):
+                outside.putpixel((x, y), 255)
+        masks = [(0, 0, 110, 110)]
+        self.assertEqual(masked_frame_change(before, inside, (480, 270), masks), 0)
+        self.assertGreater(masked_frame_change(before, outside, (480, 270), masks), 5)
 
     def test_window_reaction_does_not_repeat_private_title(self):
         title = "private-document-name — Visual Studio Code"
@@ -37,6 +52,17 @@ class DesktopPetTests(unittest.TestCase):
         self.assertEqual(ease(0), 0)
         self.assertEqual(ease(1), 1)
         self.assertAlmostEqual(ease(0.5), 0.5)
+        points = star_points(10, 10, 4)
+        self.assertEqual(len(points), 16)
+        self.assertEqual(points[:2], (10, 6))
+        frames = [{"delay": 50}, {"delay": 100}, {"delay": 50}]
+        self.assertEqual(animation_frame_index(frames, 70), 1)
+        self.assertEqual(animation_frame_index(frames, 220), 2)
+        self.assertEqual(float_progress(2.5, 3.65, 3.0), 0)
+        self.assertAlmostEqual(float_progress(5.15, 3.65, 3.0), 0.5)
+        self.assertEqual(float_progress(7, 3.65, 3.0), 1)
+        self.assertLess(flight_target(1700, 1920, 60), 100)
+        self.assertGreater(flight_target(100, 1920, 60), 1500)
 
     def test_ui_shape_and_key_categories_do_not_require_text(self):
         self.assertEqual(screen_hint("作業画面", {"available": True,
