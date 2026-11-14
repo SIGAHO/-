@@ -67,6 +67,10 @@ def window_category(title: str) -> str:
         return "ファイル画面"
     if "discord" in title:
         return "チャット画面"
+    if any(word in title for word in ("roblox", "steam", "minecraft")):
+        return "ゲーム画面"
+    if any(word in title for word in ("word", "excel", "powerpoint")):
+        return "文書画面"
     return "別の画面"
 
 
@@ -99,8 +103,25 @@ def probe_ui(handle: int) -> dict:
     return {"available": False}
 
 
-def screen_hint(category: str, structure: dict) -> str:
+def activity_guess(category: str, structure: dict, keys: dict) -> str:
+    """Tentative activity from roles and counts, never an assertion of task success."""
+    if keys.get("save", 0):
+        return "保存キーを押したみたい"
+    if ("Edit" in structure.get("focused_type", "") and
+            keys.get("type", 0) >= 4):
+        return "入力しているみたい"
+    if category == "ゲーム画面" and sum(keys.values()) >= 5:
+        return "ゲームを操作しているみたい"
+    if structure.get("types", {}).get("ListItemControl", 0) >= 5:
+        return "一覧を見ているみたい"
+    return ""
+
+
+def screen_hint(category: str, structure: dict, keys: dict | None = None) -> str:
     """A coarse observation from control roles, without labels or field values."""
+    activity = activity_guess(category, structure, keys or {})
+    if activity:
+        return activity + "。"
     if structure.get("available"):
         types = structure.get("types", {})
         focus = structure.get("focused_type", "")
@@ -142,7 +163,8 @@ def classify_key(key: int, ctrl: bool) -> str:
 
 def vision_comment(jpeg: bytes, model: str = MODEL, timeout: int = 120,
                    context: dict | None = None) -> str:
-    prompt = ("このPC画面を見て、見えているもの一つに対して友達のような自然な感想を日本語一文だけ。"
+    prompt = ("このPC画面を見て、手前のダイアログと背後、左右の配置を区別した上で、"
+              "見えているもの一つに対して友達のような自然な感想を日本語一文だけ。"
               "読めない文字や画面外のことは推測しない。個人名、会話本文、URL、パス、通知内容は引用しない。"
               "30字以内。『画像です』『画面です』という説明文や箇条書きは避ける。")
     if context:
@@ -376,8 +398,10 @@ class DesktopPet:
         def worker():
             try:
                 structure = probe_ui(handle)
-                context = {"app_kind": window_category(title), "ui_structure": structure,
-                           "key_categories_last_12s": keys}
+                category = window_category(title)
+                context = {"app_kind": category, "ui_structure": structure,
+                           "key_categories_last_12s": keys,
+                           "activity_guess": activity_guess(category, structure, keys)}
                 self.results.put(("vision", True, vision_comment(jpeg, self.model,
                                                                    context=context)))
             except (error.URLError, TimeoutError, ValueError, OSError, json.JSONDecodeError):
@@ -393,7 +417,8 @@ class DesktopPet:
             if (item[0] == "ui" and item[1] == self.last_window and
                     not self.vision_busy and time.monotonic() - self.last_vision > 8):
                 self.structure = item[2]
-                self.say(screen_hint(window_category(item[1]), self.structure))
+                self.say(screen_hint(window_category(item[1]), self.structure,
+                                     self.keyboard.summary()))
             elif item[0] == "vision":
                 self.vision_busy = False
                 self.say(item[2])
@@ -432,6 +457,9 @@ class DesktopPet:
         counts = self.keyboard.summary()
         controls = self.structure.get("types", {})
         parts = [window_category(self.last_window)]
+        guess = activity_guess(parts[0], self.structure, counts)
+        if guess:
+            parts.append(guess)
         if counts.get("type", 0):
             parts.append(f"入力{counts['type']}")
         if counts.get("navigate", 0):
