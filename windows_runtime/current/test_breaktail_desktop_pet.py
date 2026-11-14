@@ -17,6 +17,7 @@ class DesktopPetTests(unittest.TestCase):
     def test_model_comment_drops_thinking_and_extra_lines(self):
         self.assertEqual(clean_comment("<think>hidden</think> 画面が明るいね。\n秘密"), "画面が明るいね。")
         self.assertNotIn("person@example.com", clean_comment("person@example.com が見えるね。"))
+        self.assertTrue(clean_comment("あ" * 60).endswith("…"))
 
     def test_hop_has_rest_and_landing_with_a_visible_arc(self):
         self.assertEqual(hop_arc(0), 0)
