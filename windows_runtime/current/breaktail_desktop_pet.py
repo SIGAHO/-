@@ -27,6 +27,7 @@ import webbrowser
 from PIL import Image, ImageChops, ImageDraw, ImageGrab, ImageOps, ImageStat, ImageTk
 from breaktail_screen_memory import ScreenMemory, visual_signature
 from breaktail_fisch_wiki import lookup as lookup_fisch_wiki, select_fisch_term
+from breaktail_rli import load_rli
 
 
 BG = "#ff00ff"
@@ -205,6 +206,31 @@ def hop_arc(progress: float) -> float:
     return math.sin(math.pi * progress) * 32
 
 
+def star_points(x: float, y: float, radius: float) -> tuple[float, ...]:
+    short = radius * 0.28
+    return (x, y - radius, x + short, y - short,
+            x + radius, y, x + short, y + short,
+            x, y + radius, x - short, y + short,
+            x - radius, y, x - short, y - short)
+
+
+def animation_frame_index(frames: list[dict], elapsed_ms: float) -> int:
+    for index, frame in enumerate(frames):
+        elapsed_ms -= frame["delay"]
+        if elapsed_ms < 0:
+            return index
+    return len(frames) - 1
+
+
+def float_progress(elapsed_s: float, animation_s: float, cruise_s: float) -> float:
+    return ease((elapsed_s - animation_s) / cruise_s) if elapsed_s > animation_s else 0.0
+
+
+def flight_target(x: float, screen_width: int, offset: int) -> int:
+    left, right = 24, max(24, screen_width - SIZE[0] - 24)
+    return min(right, left + offset) if x >= (left + right) / 2 else max(left, right - offset)
+
+
 def ease(progress: float) -> float:
     progress = max(0.0, min(1.0, progress))
     return progress * progress * (3 - 2 * progress)
@@ -293,20 +319,40 @@ def frame_change_score(before: Image.Image, after: Image.Image) -> float:
     return ImageStat.Stat(ImageChops.difference(before, after)).mean[0]
 
 
-def sprite_frames(path: Path, root: tk.Tk):
-    source = Image.open(path)
+def masked_frame_change(before: Image.Image, after: Image.Image,
+                        screen_size: tuple[int, int], masks: list[tuple[float, float, float, float]]) -> float:
+    older, newer = before.copy(), after.copy()
+    for left, top, right, bottom in masks:
+        box = (round(left / screen_size[0] * before.width),
+               round(top / screen_size[1] * before.height),
+               round(right / screen_size[0] * before.width),
+               round(bottom / screen_size[1] * before.height))
+        ImageDraw.Draw(older).rectangle(box, fill=0)
+        ImageDraw.Draw(newer).rectangle(box, fill=0)
+    return frame_change_score(older, newer)
+
+
+def sprite_frames_from_images(images, root: tk.Tk):
     frames = []
-    for index in range(getattr(source, "n_frames", 1)):
-        source.seek(index)
-        image = source.convert("RGBA").resize((96, 96), Image.Resampling.NEAREST)
+    for source_image, delay in images:
+        image = source_image.convert("RGBA").resize((96, 96), Image.Resampling.NEAREST)
         frames.append({
             "left": ImageTk.PhotoImage(image, master=root),
             "right": ImageTk.PhotoImage(ImageOps.mirror(image), master=root),
             "left_land": ImageTk.PhotoImage(image.resize((96, 82), Image.Resampling.NEAREST), master=root),
             "right_land": ImageTk.PhotoImage(ImageOps.mirror(image).resize((96, 82), Image.Resampling.NEAREST), master=root),
-            "delay": max(80, int(source.info.get("duration", 200))),
+            "delay": max(40, int(delay)),
         })
     return frames
+
+
+def sprite_frames(path: Path, root: tk.Tk):
+    with Image.open(path) as source:
+        images = []
+        for index in range(getattr(source, "n_frames", 1)):
+            source.seek(index)
+            images.append((source.convert("RGBA").copy(), source.info.get("duration", 200)))
+    return sprite_frames_from_images(images, root)
 
 
 class KeyboardActivity:
@@ -353,6 +399,15 @@ class DesktopPet:
         self.screen_memory = ScreenMemory(Path(__file__).resolve().parent.parent /
                                           "data" / "screen_observations.sqlite3")
         self.frames = sprite_frames(sprite, self.root)
+        fireworks_dir = Path(__file__).resolve().parent.parent / "assets"
+        fireworks_rli = fireworks_dir / "gomi_fireworks.rli"
+        fireworks_gif = fireworks_dir / "gomi_fireworks.gif"
+        if fireworks_rli.is_file():
+            self.fireworks = sprite_frames_from_images(load_rli(fireworks_rli), self.root)
+        else:
+            self.fireworks = sprite_frames(fireworks_gif, self.root) if fireworks_gif.is_file() else None
+        self.firework_animation_s = (sum(frame["delay"] for frame in self.fireworks) / 1000
+                                     if self.fireworks else 0)
         self.frame_index = 0
         self.canvas = tk.Canvas(self.root, width=SIZE[0], height=SIZE[1], bg=BG,
                                 highlightthickness=0)
@@ -363,9 +418,13 @@ class DesktopPet:
         self.hide_after = None
         self.x = max(0, self.root.winfo_screenwidth() - SIZE[0] - 80)
         self.y = max(0, self.root.winfo_screenheight() - SIZE[1] - 60)
+        self.render_y = self.y
         self.home_x = self.x
         self.facing = "left"
         self.hop = None
+        self.sparkles = []
+        self.last_sparkle = 0.0
+        self.sparkles_enabled = tk.BooleanVar(value=True)
         self.rng = random.Random()
         self.next_hop = time.monotonic() + 2
         self.drag = None
@@ -427,8 +486,35 @@ class DesktopPet:
 
     def animate(self):
         self.frame_index = (self.frame_index + 1) % len(self.frames)
-        self.canvas.itemconfigure(self.sprite, image=self.frames[self.frame_index][self.facing])
+        if not (self.hop and self.fireworks and self.sparkles_enabled.get()):
+            self.canvas.itemconfigure(self.sprite, image=self.frames[self.frame_index][self.facing])
         self.root.after(self.frames[self.frame_index]["delay"], self.animate)
+
+    def update_sparkles(self, now: float, moving: bool):
+        if moving and self.sparkles_enabled.get() and now - self.last_sparkle >= 0.07:
+            direction = -1 if self.facing == "right" else 1
+            x = 128 + direction * self.rng.randint(32, 63)
+            y = self.rng.randint(86, 148)
+            radius = self.rng.choice((3, 4, 5, 6))
+            color = self.rng.choice(("#fff4a8", "#fffde5", "#77f4ff"))
+            item = self.canvas.create_polygon(*star_points(x, y, radius), fill=color,
+                                              outline="", tags="sparkle")
+            self.canvas.tag_lower(item, self.sprite)
+            self.sparkles.append((item, x, y, radius, direction, now, color))
+            self.last_sparkle = now
+        living = []
+        for item, x, y, radius, direction, born, color in self.sparkles:
+            age = now - born
+            if age >= 0.7 or not self.sparkles_enabled.get():
+                self.canvas.delete(item)
+                continue
+            drift_x = x + direction * age * 55
+            drift_y = y - age * 18
+            size = radius * max(0.25, 1 - age / 0.7)
+            self.canvas.coords(item, *star_points(drift_x, drift_y, size))
+            self.canvas.itemconfigure(item, fill=color if age < 0.28 else "#888b83")
+            living.append((item, x, y, radius, direction, born, color))
+        self.sparkles = living
 
     def move(self):
         now = time.monotonic()
@@ -436,18 +522,27 @@ class DesktopPet:
             width = self.root.winfo_screenwidth()
             self.y = min(self.y, max(0, self.root.winfo_screenheight() - SIZE[1]))
             if not self.hop and now >= self.next_hop and not self.keyboard.active(now):
-                target = self.home_x + self.rng.choice((-1, 1)) * self.rng.randint(35, 110)
-                target = max(0, min(width - SIZE[0], target))
+                target = flight_target(self.x, width, self.rng.randint(0, 85))
                 self.facing = "right" if target > self.x else "left"
-                self.hop = (now, float(self.x), float(target), self.rng.uniform(0.7, 1.0))
+                duration = (self.firework_animation_s + 2.4 if self.fireworks and self.sparkles_enabled.get()
+                            else self.rng.uniform(0.7, 1.0))
+                self.hop = (now, float(self.x), float(target), duration)
             lift = 0.0
             landing = False
             if self.hop:
                 start, origin, target, duration = self.hop
-                progress = min(1.0, (now - start) / duration)
-                self.x = origin + (target - origin) * ease(progress)
-                lift = hop_arc(progress)
-                landing = progress > 0.84
+                elapsed = now - start
+                if self.fireworks and self.sparkles_enabled.get():
+                    progress = float_progress(elapsed, self.firework_animation_s, 2.4)
+                    self.x = origin + (target - origin) * progress
+                    lift = ((min(110, max(0, self.y - 10)) * math.sin(math.pi * progress)
+                             + 7 * math.sin(now * 5.2)) if elapsed > self.firework_animation_s
+                            else 3 * math.sin(now * 2.7))
+                else:
+                    progress = min(1.0, elapsed / duration)
+                    self.x = origin + (target - origin) * ease(progress)
+                    lift = hop_arc(progress)
+                    landing = progress > 0.84
                 if progress >= 1.0:
                     self.x = target
                     self.hop = None
@@ -455,9 +550,15 @@ class DesktopPet:
             else:
                 lift = 2 * math.sin(now * 2.1)
             image_key = self.facing + ("_land" if landing else "")
-            self.canvas.itemconfigure(self.sprite, image=self.frames[self.frame_index][image_key])
+            if self.hop and self.fireworks and self.sparkles_enabled.get():
+                frame_index = animation_frame_index(self.fireworks, (now - self.hop[0]) * 1000)
+                self.canvas.itemconfigure(self.sprite, image=self.fireworks[frame_index][self.facing])
+            else:
+                self.canvas.itemconfigure(self.sprite, image=self.frames[self.frame_index][image_key])
             self.canvas.coords(self.sprite, 128, 118 + (7 if landing else 0))
-            self.root.geometry(f"+{round(self.x)}+{round(self.y - lift)}")
+            self.render_y = self.y - lift
+            self.root.geometry(f"+{round(self.x)}+{round(self.render_y)}")
+        self.update_sparkles(now, bool(self.hop or self.drag))
         self.root.after(40, self.move)
 
     def watch_keys(self):
@@ -496,20 +597,25 @@ class DesktopPet:
 
     def watch_screen(self):
         previous = None
+        previous_rect = None
         while not self.watch_stop.wait(0.5):
             try:
-                # The pet's own motion should not count as a changed screen.
+                # Mask only the pet's current and previous positions; keep the game HUD visible.
+                screen_width = ctypes.windll.user32.GetSystemMetrics(0)
                 screen_height = ctypes.windll.user32.GetSystemMetrics(1)
-                mask = (0, max(0, screen_height - 230),
-                        ctypes.windll.user32.GetSystemMetrics(0), screen_height)
-                current = frame_fingerprint(mask)
+                rect = (self.x - 12, self.render_y - 12,
+                        self.x + SIZE[0] + 12, self.render_y + SIZE[1] + 12)
+                current = frame_fingerprint()
                 if previous is not None:
-                    score = frame_change_score(previous, current)
+                    score = masked_frame_change(previous, current, (screen_width, screen_height),
+                                                [previous_rect, rect])
                     if score >= 5.0:
                         self.results.put(("screen_change", score, time.monotonic()))
                 previous = current
+                previous_rect = rect
             except Exception:
                 previous = None
+                previous_rect = None
 
     def look(self, automatic=False):
         if self.vision_busy:
@@ -628,6 +734,7 @@ class DesktopPet:
             self.x = max(0, min(self.root.winfo_screenwidth() - SIZE[0], event.x_root - self.drag[0]))
             self.y = max(0, min(self.root.winfo_screenheight() - SIZE[1], event.y_root - self.drag[1]))
             self.hop = None
+            self.render_y = self.y
             self.root.geometry(f"+{round(self.x)}+{round(self.y)}")
 
     def on_release(self, _event):
@@ -645,6 +752,7 @@ class DesktopPet:
                              command=lambda: webbrowser.open(self.last_wiki_reference["url"]))
         menu.add_checkbutton(label="画面を自動で見る（約0.5秒ごとに変化を確認）",
                              variable=self.auto_vision)
+        menu.add_checkbutton(label="移動中の花火と星", variable=self.sparkles_enabled)
         menu.add_checkbutton(label="キー操作の傾向を見る（文字は記録しない）",
                              variable=self.observe_keys_enabled)
         menu.add_command(label="Breaktailの会話を開く", command=lambda: webbrowser.open(WEB_URL))
