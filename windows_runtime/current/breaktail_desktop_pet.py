@@ -28,6 +28,7 @@ from PIL import Image, ImageChops, ImageDraw, ImageGrab, ImageOps, ImageStat, Im
 from breaktail_screen_memory import ScreenMemory, visual_signature
 from breaktail_fisch_wiki import lookup as lookup_fisch_wiki, select_fisch_term
 from breaktail_rli import load_rli
+from breaktail_fireworks_game import FireworksGame
 
 
 BG = "#ff00ff"
@@ -425,6 +426,7 @@ class DesktopPet:
         self.sparkles = []
         self.last_sparkle = 0.0
         self.sparkles_enabled = tk.BooleanVar(value=True)
+        self.fireworks_game = None
         self.rng = random.Random()
         self.next_hop = time.monotonic() + 2
         self.drag = None
@@ -744,6 +746,8 @@ class DesktopPet:
 
     def open_menu(self, event):
         menu = Menu(self.root, tearoff=False)
+        menu.add_command(label="花火弾幕で遊ぶ", command=self.open_fireworks_game)
+        menu.add_separator()
         menu.add_command(label="今の画面を見て感想", command=self.look)
         menu.add_command(label="いまの観測状態", command=self.show_status)
         menu.add_command(label="最近覚えた画面", command=self.show_memory)
@@ -760,6 +764,15 @@ class DesktopPet:
         menu.add_command(label="終了", command=self.close)
         menu.tk_popup(event.x_root, event.y_root)
         menu.grab_release()
+
+    def open_fireworks_game(self):
+        if self.fireworks_game and self.fireworks_game.window.winfo_exists():
+            self.fireworks_game.window.lift()
+            self.fireworks_game.window.focus_force()
+            return
+        self.fireworks_game = FireworksGame(
+            self.root,
+            on_close=lambda: setattr(self, "fireworks_game", None))
 
     def show_status(self):
         counts = self.keyboard.summary()
