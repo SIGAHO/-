@@ -6,8 +6,10 @@ redacts obvious contact details and secrets before returning to the pet.
 from __future__ import annotations
 
 from contextlib import redirect_stderr, redirect_stdout
+import argparse
 from io import BytesIO, StringIO
 import json
+import logging
 import os
 from pathlib import Path
 import re
@@ -61,18 +63,49 @@ def parse_result(result, width: int, height: int, elapsed: float) -> dict:
             "elapsed_s": round(elapsed, 2)}
 
 
-def recognize(image_bytes: bytes) -> dict:
+def recognize(image_bytes: bytes, engine=None) -> dict:
     _deps()
     from PIL import Image
     width, height = Image.open(BytesIO(image_bytes)).size
     from rapidocr import RapidOCR
     start = time.perf_counter()
     with redirect_stdout(StringIO()), redirect_stderr(StringIO()):
-        result = RapidOCR()(image_bytes)
+        result = (engine or RapidOCR())(image_bytes)
     return parse_result(result, width, height, time.perf_counter() - start)
 
 
+def serve():
+    _deps()
+    from rapidocr import RapidOCR
+    logging.disable(logging.INFO)
+    with redirect_stdout(StringIO()), redirect_stderr(StringIO()):
+        engine = RapidOCR()
+    stream = sys.stdin.buffer
+    while True:
+        header = stream.read(4)
+        if len(header) != 4:
+            return
+        size = int.from_bytes(header, "little")
+        if not 0 < size <= 4 * 1024 * 1024:
+            return
+        image = stream.read(size)
+        if len(image) != size:
+            return
+        try:
+            result = recognize(image, engine)
+        except Exception:
+            result = {"available": False, "reason": "ocr_error"}
+        sys.stdout.buffer.write(json.dumps(result, ensure_ascii=False).encode("utf-8") + b"\n")
+        sys.stdout.buffer.flush()
+
+
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--serve", action="store_true")
+    args = parser.parse_args()
+    if args.serve:
+        serve()
+        return
     image = sys.stdin.buffer.read(4 * 1024 * 1024 + 1)
     if not image or len(image) > 4 * 1024 * 1024:
         print(json.dumps({"available": False, "reason": "image_size"}))
