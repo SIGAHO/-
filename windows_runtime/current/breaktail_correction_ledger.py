@@ -1,0 +1,310 @@
+"""Explicit, append-only links between two user Raw turns; no inferred confirmation."""
+from datetime import datetime, timezone
+import hashlib
+import json
+import os
+from pathlib import Path
+import re
+import uuid
+
+from breaktail_file_lock import ExclusiveLock
+from breaktail_memory_hub import normalized
+from breaktail_memory_pages import _rows
+
+
+def _label(value):
+    if not isinstance(value, str) or not 2 <= len(value.strip()) <= 80 or "\n" in value:
+        raise ValueError("訂正する話題を2–80文字で指定してください")
+    return value.strip()
+
+
+def _alias(value, label):
+    if value is None or value == "":
+        return ""
+    alias = _label(value)
+    if len(alias) < 4 or re.search(r'[？?。]|今は|現在どう|どっち|どこ|教えて', alias):
+        raise ValueError("別名は質問文ではなく、4文字以上の対象名にしてください")
+    if normalized(alias) == normalized(label):
+        raise ValueError("別名は話題と異なる表現にしてください")
+    return alias
+
+
+def _identity(value):
+    if not isinstance(value, str) or not re.fullmatch(r"[A-Za-z0-9_-]{8,128}", value):
+        raise ValueError("Rawの出典IDを指定してください")
+    return value
+
+
+def _source_digest(row):
+    fields = {key: row[key] for key in ("conversation_id", "turn_id", "timestamp", "status")}
+    fields["user_text"] = row["messages"][0]["content"]
+    return hashlib.sha256(json.dumps(fields, ensure_ascii=False, sort_keys=True).encode("utf-8")).hexdigest()
+
+
+def _raw_digest(row):
+    fields = {key: row[key] for key in ("conversation_id", "turn_id", "timestamp", "status", "user_text")}
+    return hashlib.sha256(json.dumps(fields, ensure_ascii=False, sort_keys=True).encode("utf-8")).hexdigest()
+
+
+def _alias_source_digest(alias, old_hash, new_hash):
+    return hashlib.sha256(json.dumps({"alias": alias, "old": old_hash, "new": new_hash},
+                                     ensure_ascii=False, sort_keys=True).encode("utf-8")).hexdigest()
+
+
+def _source_pair(raw_path, old_turn_id, new_turn_id):
+    old_turn_id, new_turn_id = _identity(old_turn_id), _identity(new_turn_id)
+    if old_turn_id == new_turn_id:
+        raise ValueError("訂正前後に異なる出典IDを指定してください")
+    rows, invalid = _rows(raw_path, "raw")
+    if invalid:
+        raise ValueError("Raw会話に読取れない行があり、訂正を登録できません")
+    chronological = list(reversed(rows))
+    matches = {identity: [(index, row) for index, row in enumerate(chronological)
+                          if row["turn_id"] == identity]
+               for identity in (old_turn_id, new_turn_id)}
+    if any(len(found) != 1 for found in matches.values()):
+        raise ValueError("出典IDをRaw会話で一意に確認できません")
+    old_index, old = matches[old_turn_id][0]
+    new_index, new = matches[new_turn_id][0]
+    if (old_index >= new_index or old["conversation_id"] != new["conversation_id"] or
+            old["status"] != "complete" or new["status"] != "complete"):
+        raise ValueError("同じ会話の完了した発言を古い順に指定してください")
+    for row in (old, new):
+        user_text = row["messages"][0]["content"]
+        if (row.get("scene_snapshot") or user_text.startswith("/") or
+                re.search(r"ロールプレイ|なりきり|ごっこ|\bRP\b", user_text, re.I)):
+            raise ValueError("コマンドや場面設定中の発言は訂正の出典にできません")
+    return old, new
+
+
+def preview(raw_path, label, old_turn_id, new_turn_id, alias=""):
+    label = _label(label)
+    alias = _alias(alias, label)
+    old, new = _source_pair(raw_path, old_turn_id, new_turn_id)
+    return {"label": label, "alias": alias, "key": normalized(label), "conversation_id": old["conversation_id"],
+            "old": {"turn_id": old["turn_id"], "timestamp": old["timestamp"],
+                    "speaker": "user", "text": old["messages"][0]["content"], "sha256": _source_digest(old)},
+            "new": {"turn_id": new["turn_id"], "timestamp": new["timestamp"],
+                    "speaker": "user", "text": new["messages"][0]["content"], "sha256": _source_digest(new)},
+            "external_verification": False, "written": False}
+
+
+def _records(path):
+    path = Path(path)
+    if not path.exists():
+        return []
+    records = []
+    with path.open("r", encoding="utf-8") as stream:
+        for line in stream:
+            record = json.loads(line)
+            if (not isinstance(record, dict) or record.get("schema") != 1 or
+                    not all(isinstance(record.get(key), str) for key in
+                            ("id", "key", "label", "conversation_id", "old_turn_id", "new_turn_id", "created_at",
+                             "old_source_sha256", "new_source_sha256")) or
+                    not record["conversation_id"] or record["key"] != normalized(record["label"]) or
+                    record["old_turn_id"] == record["new_turn_id"] or
+                    not isinstance(record.get("alias", ""), str) or
+                    (record.get("alias") and _alias(record["alias"], record["label"]) != record["alias"]) or
+                    (record.get("alias") and record.get("alias_source_sha256") !=
+                     _alias_source_digest(record["alias"], record["old_source_sha256"],
+                                          record["new_source_sha256"])) or
+                    record.get("source") != "explicit_user_selection" or
+                    record.get("external_verification") is not False):
+                raise ValueError("訂正履歴が破損しています。追記しません")
+            records.append(record)
+    return records
+
+
+def history(raw_path, ledger_path, label, anchor_turn_id):
+    label = _label(label)
+    anchor_turn_id = _identity(anchor_turn_id)
+    rows, invalid = _rows(raw_path, "raw")
+    if invalid:
+        raise ValueError("Raw会話に読取れない行があります")
+    anchors = [row for row in rows if row["turn_id"] == anchor_turn_id]
+    if len(anchors) != 1:
+        raise ValueError("出典IDをRaw会話で一意に確認できません")
+    conversation_id = anchors[0]["conversation_id"]
+    sources = {}
+    duplicates = set()
+    for row in rows:
+        if row["turn_id"] in sources:
+            duplicates.add(row["turn_id"])
+        sources[row["turn_id"]] = row
+    records = [record for record in _records(ledger_path)
+               if record["conversation_id"] == conversation_id and record["key"] == normalized(label)]
+    items = []
+    for record in records:
+        old, new = sources.get(record["old_turn_id"]), sources.get(record["new_turn_id"])
+        verified = bool(old and new and record["old_turn_id"] not in duplicates
+                        and record["new_turn_id"] not in duplicates
+                        and record.get("old_source_sha256") == _source_digest(old)
+                        and record.get("new_source_sha256") == _source_digest(new))
+        items.append({**record, "old_text": old["messages"][0]["content"] if verified else None,
+                      "new_text": new["messages"][0]["content"] if verified else None,
+                      "sources_available": verified, "external_verification": False})
+    chain_verified = bool(items and all(item["sources_available"] for item in items)
+                          and all(before["new_turn_id"] == after["old_turn_id"]
+                                  for before, after in zip(items, items[1:])))
+    return {"label": label, "conversation_id": conversation_id, "count": len(items),
+            "chain_verified": chain_verified,
+            "alias": items[-1].get("alias", "") if chain_verified else "",
+            "latest_turn_id": items[-1]["new_turn_id"] if chain_verified else None,
+            "latest_text": items[-1]["new_text"] if chain_verified else None,
+            "items": items}
+
+
+def commit(raw_path, ledger_path, label, old_turn_id, new_turn_id, expected_old_sha256, expected_new_sha256,
+           alias=""):
+    if not all(isinstance(value, str) and re.fullmatch(r"[0-9a-f]{64}", value)
+               for value in (expected_old_sha256, expected_new_sha256)):
+        raise ValueError("確認した出典ハッシュを指定してください")
+    ledger_path = Path(ledger_path)
+    with ExclusiveLock(ledger_path.with_suffix(ledger_path.suffix + ".lock")):
+        checked = preview(raw_path, label, old_turn_id, new_turn_id, alias)
+        if (checked["old"]["sha256"] != expected_old_sha256 or
+                checked["new"]["sha256"] != expected_new_sha256):
+            raise ValueError("確認後にRawの出典が変わりました。登録しません")
+        all_records = _records(ledger_path)
+        existing = [record for record in all_records
+                    if record["conversation_id"] == checked["conversation_id"] and record["key"] == checked["key"]]
+        if existing:
+            previous_alias = existing[-1].get("alias", "")
+            if checked["alias"] and checked["alias"] != previous_alias:
+                raise ValueError("この話題の別名は変更できません")
+            checked["alias"] = previous_alias
+        if any(
+                record["conversation_id"] == checked["conversation_id"] and
+                record["key"] != checked["key"] and
+                (checked["key"] == normalized(record.get("alias", "")) or
+                 (checked["alias"] and normalized(checked["alias"]) in
+                  (record["key"], normalized(record.get("alias", "")))))
+                for record in all_records):
+            raise ValueError("別の話題の名前や別名と重複しています")
+        if existing:
+            chain = history(raw_path, ledger_path, checked["label"], existing[0]["old_turn_id"])
+            if (chain["count"] != len(existing) or
+                    not all(item["sources_available"] for item in chain["items"]) or
+                    any(before["new_turn_id"] != after["old_turn_id"]
+                        for before, after in zip(chain["items"], chain["items"][1:]))):
+                raise ValueError("既存の訂正チェーンの出典を再確認できません。追記しません")
+        if existing and (existing[-1]["old_turn_id"], existing[-1]["new_turn_id"]) == (old_turn_id, new_turn_id):
+            if (existing[-1].get("old_source_sha256") != checked["old"]["sha256"] or
+                    existing[-1].get("new_source_sha256") != checked["new"]["sha256"] or
+                    existing[-1].get("source") != "explicit_user_selection" or
+                    existing[-1].get("external_verification") is not False):
+                raise ValueError("既存の訂正記録の出典を再確認できません。追記しません")
+            return {"record": existing[-1], "already_recorded": True}
+        if existing and existing[-1]["new_turn_id"] != old_turn_id:
+            raise ValueError("この話題の最新出典から続けてください")
+        record = {"schema": 1, "id": uuid.uuid4().hex, "conversation_id": checked["conversation_id"],
+                  "key": checked["key"], "label": checked["label"], "alias": checked["alias"],
+                  "old_turn_id": old_turn_id,
+                  "new_turn_id": new_turn_id, "created_at": datetime.now(timezone.utc).isoformat(),
+                  "old_source_sha256": checked["old"]["sha256"],
+                  "new_source_sha256": checked["new"]["sha256"],
+                  "source": "explicit_user_selection", "external_verification": False}
+        if record["alias"]:
+            record["alias_source_sha256"] = _alias_source_digest(
+                record["alias"], record["old_source_sha256"], record["new_source_sha256"])
+        ledger_path.parent.mkdir(parents=True, exist_ok=True)
+        with ledger_path.open("a", encoding="utf-8") as stream:
+            stream.write(json.dumps(record, ensure_ascii=False) + "\n")
+            stream.flush()
+            os.fsync(stream.fileno())
+        return {"record": record, "already_recorded": False}
+
+
+def _question_shape(query):
+    return (isinstance(query, str) and len(query) <= 160 and not re.search(r'[\n「」『』]', query)
+            and re.search(r"訂正|最新|今は|現在|どっち|どれ", query)
+            and re.search(r"[？?]|教え|何|どっち|どれ|どう|どこ", query)
+            and not re.search(r'[。、;；]|それと|ついで|加えて|他にも', query))
+
+
+def _names(record):
+    return [record["key"]] + ([normalized(record["alias"])] if record.get("alias") else [])
+
+
+def _possible_later_mention(text, record):
+    """A later paraphrase can invalidate a linked value, but cannot prove a new one."""
+    for clause in re.split(r'[。！？?!\n;；]', normalized(text)):
+        for name in _names(record):
+            if name in clause:
+                return True
+            if len(name) < 6:
+                continue
+            start = clause.find(name[:3])
+            while start >= 0:
+                end = clause.find(name[-2:], start + 3)
+                if 0 <= end - (start + 3) <= 32:
+                    return True
+                start = clause.find(name[:3], start + 1)
+    return False
+
+
+def matching_topic_exists(ledger_path, query, conversation_id):
+    """Whether a narrow question has a recorded topic, even if its proof fails."""
+    if not _question_shape(query):
+        return False
+    normalized_query = normalized(query)
+    return any(record["conversation_id"] == conversation_id and
+               len(query) <= max(len(record["label"]), len(record.get("alias", ""))) + 35 and
+               (any(name in normalized_query for name in _names(record)) or
+                (len(record["key"]) >= 6 and record["key"][:3] in normalized_query
+                 and record["key"][-2:] in normalized_query))
+               for record in _records(ledger_path))
+
+
+def match_for_question(raw_path, ledger_path, query, conversation_id, source_rows):
+    """Return one exact, intact correction chain for a narrow current-state question.
+
+    The caller supplies its already filtered Raw rows. Missing/truncated sources,
+    altered Raw, another matching topic, or a later unlinked correction all decline.
+    """
+    if not _question_shape(query):
+        return None
+    normalized_query = normalized(query)
+    all_records = [r for r in _records(ledger_path) if r["conversation_id"] == conversation_id]
+    keys = {r["key"] for r in all_records if any(name in normalized_query for name in _names(r))}
+    if len(keys) != 1:
+        return None
+    records = [r for r in all_records if r["key"] in keys]
+    latest = records[-1]
+    # A question about a child attribute (e.g. "window's price") is not a
+    # question about the corrected topic itself.
+    matched_names = [name for name in _names(latest) if name in normalized_query]
+    if not matched_names:
+        return None
+    matched_name = max(matched_names, key=len)
+    suffix = normalized_query.split(matched_name, 1)[1]
+    if suffix.startswith("の"):
+        return None
+    if len(query) > len(matched_name) + 35:
+        return None
+    chain = history(raw_path, ledger_path, latest["label"], records[0]["old_turn_id"])
+    if (chain["conversation_id"] != conversation_id or len(chain["items"]) != len(records)
+            or not all(item["sources_available"] for item in chain["items"])
+            or any(before["new_turn_id"] != after["old_turn_id"]
+                   for before, after in zip(chain["items"], chain["items"][1:]))):
+        return None
+    by_id = {r["turn_id"]: (index, r) for index, r in enumerate(source_rows)}
+    old_found, new_found = by_id.get(latest["old_turn_id"]), by_id.get(latest["new_turn_id"])
+    if not old_found or not new_found or old_found[0] >= new_found[0]:
+        return None
+    old, new = old_found[1], new_found[1]
+    if (old["conversation_id"] != conversation_id or new["conversation_id"] != conversation_id or
+            len(old["user_text"]) > 400 or len(new["user_text"]) > 400 or
+            latest.get("old_source_sha256") != _raw_digest(old) or
+            latest.get("new_source_sha256") != _raw_digest(new)):
+        return None
+    if any(_possible_later_mention(r["user_text"], latest)
+           for r in source_rows[new_found[0]+1:]):
+        return None
+    return {"label": latest["label"], "alias": latest.get("alias", ""),
+            "old_turn_id": old["turn_id"],
+            "new_turn_id": new["turn_id"], "old_text": old["user_text"],
+            "new_text": new["user_text"], "old_timestamp": old["timestamp"],
+            "new_timestamp": new["timestamp"], "source": "explicit_user_selection",
+            "external_verification": False}
+

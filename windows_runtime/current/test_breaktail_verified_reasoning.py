@@ -6,6 +6,61 @@ from breaktail_conversation_state import session_context
 
 
 class VerificationTests(unittest.TestCase):
+    def test_currency_subtraction_is_checked_on_followup(self):
+        state=new_working_state()
+        source='7600円から交通費2100円と食費1300円を引くといくら？'
+        answer,audit=verify_reply(source,'6200円。',state,[])
+        self.assertEqual(audit['value'],4200)
+        answer,audit=verify_reply('残りは5200円だったよね？','そうだね。',state,[{'role':'user','content':source}])
+        self.assertIn('4200円',answer)
+        self.assertNotIn('5200円',answer)
+        reply,audit=verify_reply('別のコードを書いて。','コード',state,[])
+        self.assertIsNone(audit)
+    def test_colleague_is_retained_for_later_family_correction(self):
+        state=new_working_state()
+        update_working_state(state,'同行者は同僚のユウ。曜日は火曜。')
+        text='ユウは同僚じゃなく姉。変更した点だけ教えて。'
+        update_working_state(state,text)
+        answer,_=verify_reply(text,'変更したよ。',state)
+        self.assertIn('姉',answer)
+        self.assertEqual(state['conversation']['facts']['companion']['value'],'ユウ')
+    def test_confirmation_question_cannot_overwrite_prior_user_facts(self):
+        state=new_working_state()
+        update_working_state(state,'同行者は妹のハル。曜日は日曜。集合は駅の南口に10時。')
+        question='ハルは兄、行くのは土曜、待ち合わせは北口だったよね？これは変更の指示ではなくて前の内容の確認だよ。'
+        update_working_state(state,question)
+        answer,audit=verify_reply(question,'そうだね、兄で土曜だよ。',state)
+        for value in ('妹','日曜','南口','10時'):self.assertIn(value,answer)
+        update_working_state(state,'曜日は土曜だったよね？')
+        self.assertEqual(state['conversation']['facts']['day']['value'],'日曜')
+    def test_budget_verification_keeps_other_requested_plan_fields(self):
+        state=new_working_state()
+        update_working_state(state,'同行者は友人のハル。日曜に海へ行く。集合は駅の東口に8時。予算は二人で5200円。まだ昼食のお店は決めてない。')
+        update_working_state(state,'ハルは友人じゃなくて弟。日曜じゃなく土曜に変更。集合は東口じゃなく西口、8時じゃなく9時。')
+        update_working_state(state,'二人往復の電車代が1600円、昼食が一人800円。')
+        answer,audit=verify_reply('同行者の続柄、曜日、目的地、集合、残金、店が決まったかを全部教えて。','2000円だけ',state)
+        for value in ('ハル','弟','土曜','海','西口','9時','2000円','未決定'):
+            self.assertIn(value,answer)
+        self.assertEqual(audit['remaining'],2000)
+
+    def test_relationship_correction_is_not_limited_to_siblings(self):
+        state=new_working_state()
+        update_working_state(state,'同行者は友人のハル。日曜に海へ、予算は二人で4000円。')
+        text='ハルは友人じゃなくて弟。日曜じゃなく土曜に変更。変更点だけ教えて。'
+        update_working_state(state,text)
+        answer,_=verify_reply(text,'曜日だけ変更',state)
+        self.assertIn('弟',answer)
+        self.assertIn('土曜',answer)
+
+    def test_fare_wording_keeps_both_people_in_budget(self):
+        for fare in ('二人往復の電車代が1600円','電車代は二人往復で1600円','交通費は二人で1600円'):
+            state=new_working_state()
+            update_working_state(state,'予算は二人で5200円。')
+            update_working_state(state,fare+'、昼食が一人800円。')
+            answer,audit=verify_reply('残りはいくら？','2800円',state)
+            self.assertEqual(audit['remaining'],2000)
+            self.assertIn('2000円',answer)
+
     def state(self):
         state = new_working_state()
         for i,text in enumerate(['帰り道にパン買ったんだけど、袋でぺちゃんこ。',

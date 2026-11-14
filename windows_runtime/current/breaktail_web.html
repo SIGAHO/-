@@ -49,8 +49,10 @@
     <div class="brand"><div class="mark">B</div><div><strong>Breaktail</strong><small>Local AI · v0.2</small></div></div>
     <div><div class="section-label">接続</div><div class="status-card"><div class="status-line"><span class="dot"></span><span id="status">ローカルで稼働中</span></div><p>会話はこのPCで処理します</p></div></div>
     <div><div class="section-label">いまの状態</div><div class="meta"><span>モデル</span><b>Qwen2.5 14B</b></div><div class="meta"><span>会話履歴</span><b>再起動後も復元</b></div><div class="meta"><span>場面</span><b id="scene">通常の会話</b></div><div class="meta"><span>長期記憶</span><b id="memory-count">読み込み中</b></div></div>
-    <div><div class="section-label">最近の記憶 <span style="color:#607882">· 未確認の解釈</span></div><div id="memory-list" class="memory-list"><div class="memory-empty">読み込み中…</div></div></div>
-    <div class="side-bottom">発言原文と返答はRaw会話ファイルに保存されます。記憶欄はモデルによる未確認の解釈です。外部検索やファイル操作には対応していません。</div>
+    <div><div class="section-label">最近の記憶 <span style="color:#607882">· 未確認の解釈</span></div><div id="memory-list" class="memory-list"><div class="memory-empty">読み込み中…</div></div><button id="memory-open" type="button">Raw会話と記憶を一覧</button></div>
+    <div><div class="section-label">作業フォルダーを読む</div><input id="workspace-root" aria-label="作業フォルダー" placeholder="作業フォルダーの絶対パス" style="width:100%;box-sizing:border-box"><input id="workspace-path" aria-label="相対パス" value="." placeholder="相対パス" style="width:100%;box-sizing:border-box;margin-top:6px"><div style="margin-top:6px"><button id="list-files">一覧</button><button id="read-file">ファイルを読む</button></div></div>
+    <div><div class="section-label">作業エージェント</div><p style="font-size:12px;color:#91a4b1">指定した作業フォルダーだけで、Breaktailがファイルを調べて編集します。コードの実行は無効です。</p><textarea id="agent-task" aria-label="作業の依頼" placeholder="作業内容を入力" style="width:100%;min-height:65px"></textarea><button id="agent-start" type="button">作業を依頼</button><input id="agent-job-id" aria-label="作業キューID" placeholder="作業キューID" style="width:100%;margin-top:8px"><div><button id="agent-status" type="button">状態</button><button id="agent-review" type="button">差分を見る</button><button id="agent-undo" type="button">編集を戻す</button><button id="agent-cancel" type="button">停止</button><button id="agent-work" type="button">待機作業を再試行</button></div><input id="agent-run-id" aria-label="再開する作業ID" placeholder="未完了の作業ID" style="width:100%;margin-top:8px"><button id="agent-resume" type="button">未完了から再開</button></div>
+    <div class="side-bottom">発言原文と返答はRaw会話ファイルに保存されます。記憶欄はモデルによる未確認の解釈です。ファイル操作と作業エージェントは明示操作だけで、会話から自動実行しません。</div>
   </aside>
   <main>
     <header><div><div class="title">Breaktail と話す</div><div class="subtitle">自分のPC上で動く、まだ成長途中のAI</div></div><div class="header-actions"><a href="/review" target="_blank" rel="noopener" style="color:inherit">品質レビュー</a><span class="pill">● LOCAL ONLY</span><button class="ghost" id="clear">会話をクリア</button></div></header>
@@ -58,11 +60,18 @@
     <div class="composer-zone"><div class="composer-wrap"><div class="composer"><textarea id="input" rows="1" placeholder="Breaktail に話しかける…"></textarea><button id="send" class="send" aria-label="送信">➜</button></div><div class="hint"><span>Enter で送信 · Shift + Enter で改行 · /capabilities で操作一覧</span><span id="hint-status">記憶は解釈だけ保存</span></div></div></div>
   </main>
 </div>
+<dialog id="memory-dialog" style="width:min(900px,90vw);max-height:75vh;background:#101620;color:#eaf2f6;border:1px solid #263244;border-radius:12px"><button id="memory-close" type="button" style="float:right">閉じる</button><h2>保存された会話と記憶</h2><p>Raw会話は発言の原文です。解釈記憶は未確認で、出典IDが保存されていないものはそのまま示します。</p><button id="memory-raw" type="button">Raw会話</button><button id="memory-interpretations" type="button">解釈記憶</button><button id="memory-ledger" type="button">確認事項の履歴</button><p id="memory-page-meta"></p><div id="memory-page-items" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:45vh;overflow:auto" aria-live="polite"></div><button id="memory-prev" type="button">前へ</button><button id="memory-next" type="button">次へ</button><details><summary>Rawの２発言を訂正として結ぶ</summary><p>同じ会話の古い発言と新しい発言を一覧から選ぶか、出典IDを入力します。話題の別名は本人が明示した時だけ使います。原文を確認してから別の追記記録に結びます。Raw・解釈記憶は書き換えません。</p><input id="correction-label" aria-label="訂正する話題" placeholder="話題（例: 店の場所）" style="width:100%;box-sizing:border-box"><input id="correction-alias" aria-label="話題の別名（任意）" placeholder="別名（任意。例: 店の所在地）" style="width:100%;box-sizing:border-box"><input id="correction-old" aria-label="古い発言の出典ID" placeholder="古い発言の出典ID" style="width:100%;box-sizing:border-box"><input id="correction-new" aria-label="新しい発言の出典ID" placeholder="新しい発言の出典ID" style="width:100%;box-sizing:border-box"><button id="correction-preview" type="button">原文を確認</button><button id="correction-commit" type="button" disabled>この訂正を記録</button><button id="correction-history" type="button">この話題の履歴</button><pre id="correction-result" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:30vh;overflow:auto" aria-live="polite"></pre></details></dialog>
+<dialog id="workspace-dialog" style="width:min(900px,90vw);max-height:75vh;background:#101620;color:#eaf2f6;border:1px solid #263244;border-radius:12px"><button id="close-workspace" style="float:right">閉じる</button><h2>作業フォルダーの結果</h2><div id="workspace-entries" style="display:flex;flex-wrap:wrap;gap:8px;margin:12px 0"></div><pre id="workspace-result" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:40vh;overflow:auto" aria-live="polite"></pre><details><summary>文字列の変更案を確認</summary><p>選んだファイルで、置換前の文字列を1か所だけ指定します。差分を確認した後だけ保存できます。</p><textarea id="preview-old" aria-label="置換前の文字列" placeholder="置換前の文字列" style="width:100%;box-sizing:border-box"></textarea><textarea id="preview-new" aria-label="置換後の文字列" placeholder="置換後の文字列" style="width:100%;box-sizing:border-box"></textarea><button id="preview-change" type="button">変更案と構文を確認</button><button id="save-change" type="button" disabled>確認した変更案を保存</button><p>保存した変更の取消（再起動後も作業IDを入力して利用できます）</p><input id="undo-id" aria-label="取消する作業ID" placeholder="保存時の作業ID" style="width:100%;box-sizing:border-box"><button id="undo-change" type="button" disabled>変更を取り消す</button><div id="edit-confirm" hidden style="margin-top:12px;padding:12px;border:1px solid #607882;border-radius:8px"><p id="edit-confirm-text"></p><button id="edit-confirm-yes" type="button">はい、実行する</button><button id="edit-confirm-no" type="button">やめる</button></div></details></dialog>
+<dialog id="agent-dialog" style="width:min(900px,90vw);max-height:75vh;background:#101620;color:#eaf2f6;border:1px solid #263244;border-radius:12px"><button id="agent-close" type="button" style="float:right">閉じる</button><h2>作業エージェント</h2><div id="agent-confirm" hidden><pre id="agent-confirm-text" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre><button id="agent-confirm-yes" type="button">この作業を開始</button><button id="agent-confirm-no" type="button">やめる</button></div><div id="agent-undo-confirm" hidden><p>表示した差分の変更をバックアップから戻しますか？</p><button id="agent-undo-yes" type="button">この編集を戻す</button><button id="agent-undo-no" type="button">やめる</button></div><pre id="agent-result" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:55vh;overflow:auto" aria-live="polite"></pre></dialog>
 <script>
 const token = '__BREAKTAIL_TOKEN__';
 const $ = id => document.getElementById(id);
 const chat = $('chat'), conversation = $('conversation'), input = $('input');
 let working = false;
+let previewId = null;
+let pendingEditAction = null;
+function hideEditConfirmation(){pendingEditAction=null;$('edit-confirm').hidden=true;}
+function invalidatePreview(){previewId=null;$('save-change').disabled=true;hideEditConfirmation();}
 async function api(path, data) {
   const options = data === undefined ? {} : {method:'POST',headers:{'Content-Type':'application/json','X-Breaktail-Token':token},body:JSON.stringify(data)};
   const response = await fetch(path, options);
@@ -87,6 +96,86 @@ function renderMemories(items) {
   if(!items.length){const e=document.createElement('div');e.className='memory-empty';e.textContent='まだ保存されていません';list.append(e);return;}
   for(const item of items.slice(-6).reverse()){const div=document.createElement('div');div.className='memory';const b=document.createElement('b');b.textContent='#'+item.id;div.append(b,document.createTextNode(item.content));list.append(div);}
 }
+let memoryScope='raw',memoryPage=1,memoryLoadSeq=0;
+async function loadMemoryPage(scope=memoryScope,page=memoryPage){
+  memoryScope=scope;memoryPage=page;const requestSeq=++memoryLoadSeq;
+  if(!$('memory-dialog').open)$('memory-dialog').showModal();
+  $('memory-page-items').textContent='読取り中…';
+  try{
+    const result=await api('/api/memory/page',{scope,page});
+    if(requestSeq!==memoryLoadSeq)return;
+    $('memory-page-meta').textContent=(scope==='raw'?'Raw会話':scope==='ledger'?'明示された確認事項':'未確認の解釈記憶')+' · 全'+result.total+'件 · '+result.start+'–'+result.end+'件目 · '+(result.page_count?result.page+'/'+result.page_count:'0')+'ページ'+(result.invalid_rows?' · 読取れない行 '+result.invalid_rows+'件':'');
+    const panel=$('memory-page-items');
+    const lines=[];
+    if(scope==='raw'){
+      panel.replaceChildren();
+      for(const item of result.items){
+        const block=document.createElement('div');block.style.cssText='padding:10px 0;border-bottom:1px solid #263244';
+        const source=document.createElement('div');
+        source.textContent='出典ID: '+item.turn_id+' / 会話ID: '+item.conversation_id+' / 時刻: '+item.timestamp+' / 状態: '+item.status+'\n'+item.messages.map(m=>(m.speaker==='user'?'あなた':'Breaktail')+': '+m.content).join('\n');
+        block.append(source);
+        const userText=item.messages[0]?.content||'';
+        if(item.status==='complete'&&!item.scene_snapshot&&!userText.startsWith('/')&&!/ロールプレイ|なりきり|ごっこ|\bRP\b/i.test(userText)){
+          for(const [field,label] of [['correction-old','訂正前に選ぶ'],['correction-new','訂正後に選ぶ']]){
+            const button=document.createElement('button');button.type='button';button.textContent=label;
+            button.style.margin='8px 8px 0 0';button.addEventListener('click',()=>{
+              $(field).value=item.turn_id;$(field).dispatchEvent(new Event('input'));
+              $('memory-dialog').querySelector('details').open=true;
+              $('correction-result').textContent=label+'：出典ID '+item.turn_id+' を選びました。話題ともう一方の発言を指定して、原文を確認してください。';
+            });
+            block.append(button);
+          }
+        }
+        panel.append(block);
+      }
+      if(!result.items.length)panel.textContent='該当する記録はありません。';
+    }else{
+      for(const item of result.items){
+        if(scope==='ledger')lines.push('出典ID: '+item.turn_id+' / 会話ID: '+item.conversation_id+' / 時刻: '+item.timestamp+' / 発言者: あなた / 本人の申告（外部未検証）\n'+item.status+': '+item.detail+'\n'+(item.is_latest?'この会話内の同名項目で最新':'後の出典ID '+item.superseded_by_turn_id+' に更新'));
+        else {
+          const sources=(item.sources||[]).length?item.sources.map(source=>'出典ID: '+source.turn_id+(source.raw_found?' / Raw照合済み / 時刻: '+source.timestamp+' / 発言者: あなた\n原文: '+source.user_text:' / Raw照合不可')).join('\n'):'出典ID: 記録なし';
+          lines.push('記憶番号: '+item.id+' / 作成時刻: '+(item.created_at||'記録なし')+' / 未確認の解釈\n'+item.content+'\n'+sources);
+        }
+      }
+      panel.textContent=lines.join('\n\n')||'該当する記録はありません。';
+    }
+    $('memory-prev').disabled=!result.has_previous;$('memory-next').disabled=!result.has_next;
+  }catch(error){if(requestSeq===memoryLoadSeq)$('memory-page-items').textContent='一覧を読めませんでした: '+error.message;}
+}
+$('memory-open').addEventListener('click',()=>loadMemoryPage('raw',1));
+$('memory-raw').addEventListener('click',()=>loadMemoryPage('raw',1));
+$('memory-interpretations').addEventListener('click',()=>loadMemoryPage('interpretations',1));
+$('memory-ledger').addEventListener('click',()=>loadMemoryPage('ledger',1));
+$('memory-prev').addEventListener('click',()=>loadMemoryPage(memoryScope,memoryPage-1));
+$('memory-next').addEventListener('click',()=>loadMemoryPage(memoryScope,memoryPage+1));
+$('memory-close').addEventListener('click',()=>$('memory-dialog').close());
+let pendingCorrection=null;
+for(const name of ['correction-label','correction-alias','correction-old','correction-new'])$(name).addEventListener('input',()=>{pendingCorrection=null;$('correction-commit').disabled=true;});
+$('correction-preview').addEventListener('click',async()=>{
+  pendingCorrection=null;$('correction-commit').disabled=true;
+  const data={label:$('correction-label').value.trim(),alias:$('correction-alias').value.trim(),old_turn_id:$('correction-old').value.trim(),new_turn_id:$('correction-new').value.trim()};
+  try{
+    const check=await api('/api/memory/correction/preview',data);
+    if(data.label!==$('correction-label').value.trim()||data.alias!==$('correction-alias').value.trim()||data.old_turn_id!==$('correction-old').value.trim()||data.new_turn_id!==$('correction-new').value.trim())return;
+    pendingCorrection={...data,expected_old_sha256:check.old.sha256,expected_new_sha256:check.new.sha256};
+    $('correction-result').textContent='会話ID: '+check.conversation_id+'\n話題: '+check.label+'\n本人指定の別名: '+(check.alias||'なし')+'\n\n訂正前 / 出典ID: '+check.old.turn_id+' / 時刻: '+check.old.timestamp+' / あなた\n'+check.old.text+'\n\n訂正後 / 出典ID: '+check.new.turn_id+' / 時刻: '+check.new.timestamp+' / あなた\n'+check.new.text+'\n\nこれは本人が選んだ更新で、外部確認済みの事実ではありません。';
+    $('correction-commit').disabled=false;
+  }catch(error){$('correction-result').textContent='原文を確認できませんでした: '+error.message;}
+});
+$('correction-commit').addEventListener('click',async()=>{
+  const request=pendingCorrection;pendingCorrection=null;$('correction-commit').disabled=true;
+  if(!request)return;
+  try{const result=await api('/api/memory/correction/commit',request);$('correction-result').textContent=(result.already_recorded?'同じ訂正は記録済みです。':'訂正を追記しました。')+'\n記録ID: '+result.record.id+'\n旧出典ID: '+result.record.old_turn_id+'\n新出典ID: '+result.record.new_turn_id+'\n本人が選んだ更新です。外部確認済みの事実ではありません。';}
+  catch(error){$('correction-result').textContent='訂正を記録できませんでした: '+error.message;}
+});
+$('correction-history').addEventListener('click',async()=>{
+  try{
+    const result=await api('/api/memory/correction/history',{label:$('correction-label').value.trim(),anchor_turn_id:$('correction-old').value.trim()});
+    const lines=['この会話の話題「'+result.label+'」: '+result.count+'件','最新の出典ID: '+(result.latest_turn_id||(result.count?'チェーン全体の出典未確認':'記録なし'))];
+    for(const item of result.items)lines.push('記録ID: '+item.id+' / 登録時刻: '+item.created_at+'\n旧 '+item.old_turn_id+': '+(item.old_text||'Raw照合不可')+'\n新 '+item.new_turn_id+': '+(item.new_text||'Raw照合不可'));
+    $('correction-result').textContent=lines.join('\n\n')+'\n\n本人が選んだ更新で、外部確認済みの事実ではありません。';
+  }catch(error){$('correction-result').textContent='訂正履歴を読めませんでした: '+error.message;}
+});
 async function refresh() {const state=await api('/api/state');conversation.querySelectorAll('.message').forEach(e=>e.remove());for(const m of state.messages)addMessage(m.role,m.text,m.complete!==false);$('scene').textContent=state.scene?.name || '通常の会話';renderMemories(state.memories);if(state.pending){setBusy(true,'記憶を判定中…');await extract(state.pending.id);}}
 async function extract(turnId) {
   try {const result=await api('/api/extract',{turn_id:turnId});$('scene').textContent=result.scene?.name || '通常の会話';if(result.warning)$('hint-status').textContent=result.warning;else if(result.memory)$('hint-status').textContent='記憶に保存: '+result.memory.content;else $('hint-status').textContent='今回は記憶に保存しませんでした';const state=await api('/api/state');renderMemories(state.memories);}
@@ -101,6 +190,159 @@ async function send() {
   catch(error){loading.remove();$('hint-status').textContent='エラー: '+error.message;setBusy(false);input.value=text;input.focus();}
 }
 $('send').addEventListener('click',send);
+async function workspaceRead(tool) {
+  invalidatePreview();
+  if (!$('workspace-dialog').open) $('workspace-dialog').showModal();
+  const result=$('workspace-result');result.textContent='読取り中…';
+  const entries=$('workspace-entries');entries.replaceChildren();
+  try {
+    const response=await api('/api/workspace/read',{workspace:$('workspace-root').value.trim(),path:$('workspace-path').value.trim(),tool});
+    const heading='実際に読んだ場所: '+response.workspace+' / '+response.path+'\n';
+    result.textContent=tool==='list_files'
+      ? heading+'見つかった項目 '+response.observation.entries.length+' 件。選ぶと開きます。'
+      : heading+'SHA-256: '+response.observation.sha256+'\n\n'+response.observation.content;
+    if (tool==='list_files') {
+      const current=response.path.replace(/\\/g,'/').replace(/\/$/,'');
+      if (current && current!=='.') {
+        const up=document.createElement('button');up.type='button';up.textContent='← 上のフォルダー';
+        up.addEventListener('click',()=>{$('workspace-path').value=current.split('/').slice(0,-1).join('/')||'.';workspaceRead('list_files');});entries.append(up);
+      }
+      for (const name of response.observation.entries) {
+        const folder=name.endsWith('/'),button=document.createElement('button');
+        button.type='button';button.textContent=name;
+        button.addEventListener('click',()=>{$('workspace-path').value=(current==='.'?'':current+'/')+name.replace(/\/$/,'');workspaceRead(folder?'list_files':'read_file');});
+        entries.append(button);
+      }
+    }
+  } catch(error) {result.textContent='読取り失敗: '+error.message;}
+}
+async function workspacePreview() {
+  invalidatePreview();
+  const result=$('workspace-result');result.textContent='変更案を確認中…';
+  $('workspace-entries').replaceChildren();
+  try {
+    const response=await api('/api/workspace/preview',{workspace:$('workspace-root').value.trim(),path:$('workspace-path').value.trim(),old:$('preview-old').value,new:$('preview-new').value});
+    const syntax=response.syntax.checked?'Python構文: 確認済み':response.syntax.error?'Python構文: '+response.syntax.error+'（行 '+response.syntax.error_line+'）':'Python構文: 未確認（'+response.syntax.reason+'）';
+    result.textContent='保存していません\n対象: '+response.workspace+' / '+response.path+'\n元のSHA-256: '+response.source_sha256+'\n変更案のSHA-256: '+response.candidate_sha256+'\n'+syntax+'\n\n'+response.diff+(response.diff_truncated?'\n差分は途中で省略しました':'');
+    if(response.preview_id){previewId=response.preview_id;$('save-change').disabled=false;}
+  } catch(error) {result.textContent='変更案の確認に失敗: '+error.message;}
+}
+async function workspaceSave(){
+  if(!previewId)return;
+  pendingEditAction='save';$('edit-confirm-text').textContent='画面の差分どおりに保存します。変更前の内容は作業フォルダー内にバックアップします。';$('edit-confirm').hidden=false;
+}
+async function workspaceSaveConfirmed(){
+  if(!previewId)return;
+  const identity=previewId;invalidatePreview();
+  try{const response=await api('/api/workspace/commit',{preview_id:identity});$('workspace-result').textContent='保存して読み戻しました\n対象: '+response.workspace+' / '+response.path+'\n変更前のSHA-256: '+response.before_sha256+'\n変更後のSHA-256: '+response.after_sha256+'\nバックアップ: '+response.backup+'\n作業ID: '+response.run_id;$('undo-id').value=response.run_id;$('undo-change').disabled=false;}
+  catch(error){$('workspace-result').textContent='保存できませんでした: '+error.message+'\nもう一度読み直して変更案を確認してください。';}
+}
+async function workspaceUndo(){
+  const runId=$('undo-id').value.trim();
+  if(!/^[0-9a-f]{32}$/.test(runId))return;
+  pendingEditAction='undo';$('edit-confirm-text').textContent='作業ID '+runId+' の変更を取り消します。保存後にファイルが変わっていたら上書きせず拒否します。';$('edit-confirm').hidden=false;
+}
+async function workspaceUndoConfirmed(){
+  const runId=$('undo-id').value.trim();
+  if(!/^[0-9a-f]{32}$/.test(runId))return;
+  try{const response=await api('/api/workspace/undo',{workspace:$('workspace-root').value.trim(),run_id:runId});$('workspace-result').textContent='変更を取り消して読み戻しました\n対象: '+response.workspace+' / '+response.path+'\n復元後のSHA-256: '+response.sha256+'\n作業ID: '+response.run_id;$('undo-change').disabled=true;}
+  catch(error){$('workspace-result').textContent='取消できませんでした: '+error.message;}
+}
+$('list-files').addEventListener('click',()=>workspaceRead('list_files'));
+$('read-file').addEventListener('click',()=>workspaceRead('read_file'));
+$('preview-change').addEventListener('click',workspacePreview);
+$('save-change').addEventListener('click',workspaceSave);
+$('undo-change').addEventListener('click',workspaceUndo);
+$('edit-confirm-yes').addEventListener('click',()=>{const action=pendingEditAction;hideEditConfirmation();if(action==='save')workspaceSaveConfirmed();else if(action==='undo')workspaceUndoConfirmed();});
+$('edit-confirm-no').addEventListener('click',hideEditConfirmation);
+$('undo-id').addEventListener('input',()=>{hideEditConfirmation();$('undo-change').disabled=!/^[0-9a-f]{32}$/.test($('undo-id').value.trim());});
+for(const name of ['workspace-root','workspace-path','preview-old','preview-new'])$(name).addEventListener('input',invalidatePreview);
+$('close-workspace').addEventListener('click',()=>{hideEditConfirmation();$('workspace-dialog').close();});
+let pendingAgentAction=null,pendingAgentUndo=null,agentPollTimer=null;
+function openAgentDialog(){if(!$('agent-dialog').open)$('agent-dialog').showModal();}
+function stopAgentPolling(){if(agentPollTimer){clearTimeout(agentPollTimer);agentPollTimer=null;}}
+function agentPrepare(kind){
+  stopAgentPolling();openAgentDialog();
+  const workspace=$('workspace-root').value.trim();
+  const task=$('agent-task').value.trim(),runId=$('agent-run-id').value.trim();
+  pendingAgentAction={kind,workspace,task,runId};
+  $('agent-confirm-text').textContent='作業フォルダー: '+workspace+'\n'+(kind==='start'?'依頼: '+task:'再開する作業ID: '+runId)+'\n最大8手・4分。ファイル編集は可能、コードとテストの実行は無効です。';
+  $('agent-confirm').hidden=false;$('agent-result').textContent='内容を確認して開始してください。';
+}
+function renderAgentStatus(state){
+  const lines=['状態: '+state.status,'作業キューID: '+state.job_id,'実行ID: '+(state.run_id||'まだありません'),
+    'コード実行: 無効','作業時の構文検査: '+(!(state.changes||[]).length?'対象なし':state.syntax_verified==null?'未確定':state.syntax_verified?'確認済み':'未合格')];
+  if(state.summary)lines.push('結果: '+state.summary);
+  if(state.error)lines.push('エラー: '+state.error);
+  if(state.cancel_requested)lines.push('停止を要求しました。途中の変更は残ります。');
+  if(state.undone)lines.push('この作業の編集はバックアップから取り消し済みです。復元後の構文は未検査です。');
+  for(const change of state.changes||[])lines.push('作業時の変更: '+change.path+' / 保存後SHA-256: '+change.after_sha256);
+  for(const event of state.events||[])lines.push('道具: '+(event.tool||'モデル')+(event.path?' / 対象: '+event.path:'')+(event.error?' / 失敗: '+event.error:'')+(event.detail?' / '+event.detail:'')+(event.observation?'\n観測: '+JSON.stringify(event.observation).slice(0,1800):''));
+  $('agent-result').textContent=lines.join('\n\n');
+}
+async function agentRefresh(){
+  stopAgentPolling();openAgentDialog();$('agent-confirm').hidden=true;
+  try{
+    const state=await api('/api/agent/status',{workspace:$('workspace-root').value.trim(),job_id:$('agent-job-id').value.trim()});
+    renderAgentStatus(state);if(state.run_id)$('agent-run-id').value=state.run_id;
+    if(state.status==='queued'||state.status==='running')agentPollTimer=setTimeout(agentRefresh,2000);
+  }catch(error){$('agent-result').textContent='状態を確認できませんでした: '+error.message;}
+}
+async function agentSubmit(){
+  const request=pendingAgentAction;pendingAgentAction=null;$('agent-confirm').hidden=true;
+  if(!request)return;
+  $('agent-result').textContent='作業を登録中…';
+  try{
+    const path=request.kind==='start'?'/api/agent/start':'/api/agent/resume';
+    const data=request.kind==='start'?{workspace:request.workspace,task:request.task}:{workspace:request.workspace,run_id:request.runId};
+    const result=await api(path,data);$('agent-job-id').value=result.job_id;await agentRefresh();
+  }catch(error){$('agent-result').textContent='開始できませんでした: '+error.message;}
+}
+async function agentControl(path){
+  stopAgentPolling();openAgentDialog();$('agent-confirm').hidden=true;
+  try{await api(path,{workspace:$('workspace-root').value.trim(),job_id:$('agent-job-id').value.trim()});await agentRefresh();}
+  catch(error){$('agent-result').textContent='操作できませんでした: '+error.message;}
+}
+async function agentReview(){
+  stopAgentPolling();openAgentDialog();$('agent-confirm').hidden=true;
+  try{
+    const report=await api('/api/agent/review',{workspace:$('workspace-root').value.trim(),job_id:$('agent-job-id').value.trim()});
+    const lines=['追跡された変更: '+report.total_tracked+'件','表示省略: '+report.files_omitted+'件','差分表示のための読取り確認。構文・テスト合格は別です。'];
+    if(report.undone)lines.push('この作業の編集はバックアップから取り消し済みです。');
+    for(const change of report.changes)lines.push('対象: '+change.path+' / 状態: '+change.status+' / 整合性: '+(change.integrity||'未確認')+'\n'+(change.diff||change.diff_unavailable||''));
+    $('agent-result').textContent=lines.join('\n\n');
+  }catch(error){$('agent-result').textContent='差分を確認できませんでした: '+error.message;}
+}
+async function agentUndoPrepare(){
+  stopAgentPolling();openAgentDialog();$('agent-confirm').hidden=true;$('agent-undo-confirm').hidden=true;pendingAgentUndo=null;
+  try{
+    const workspace=$('workspace-root').value.trim(),jobId=$('agent-job-id').value.trim();
+    const report=await api('/api/agent/review',{workspace,job_id:jobId});
+    if(report.total_tracked!==1||report.files_omitted||report.changes[0].status!=='modified'||report.changes[0].integrity!=='verified')throw new Error('整合性を確認できる既存ファイル１件の変更だけ戻せます');
+    const change=report.changes[0];
+    pendingAgentUndo={workspace,job_id:jobId,expected_after_sha256:change.current_sha256};
+    $('agent-result').textContent='対象: '+change.path+'\n変更後SHA-256: '+change.current_sha256+'\n\n'+(change.diff||'差分表示なし');
+    $('agent-undo-confirm').hidden=false;
+  }catch(error){$('agent-result').textContent='編集を戻せません: '+error.message;}
+}
+async function agentUndoConfirmed(){
+  const request=pendingAgentUndo;pendingAgentUndo=null;$('agent-undo-confirm').hidden=true;
+  if(!request)return;
+  try{const result=await api('/api/agent/undo',request);$('agent-result').textContent='バックアップから戻して読み直しました\n対象: '+result.path+'\n復元後SHA-256: '+result.sha256;}
+  catch(error){$('agent-result').textContent='編集を戻せませんでした: '+error.message;}
+}
+$('agent-start').addEventListener('click',()=>agentPrepare('start'));
+$('agent-resume').addEventListener('click',()=>agentPrepare('resume'));
+$('agent-confirm-yes').addEventListener('click',agentSubmit);
+$('agent-confirm-no').addEventListener('click',()=>{$('agent-confirm').hidden=true;pendingAgentAction=null;});
+$('agent-status').addEventListener('click',agentRefresh);
+$('agent-review').addEventListener('click',agentReview);
+$('agent-undo').addEventListener('click',agentUndoPrepare);
+$('agent-undo-yes').addEventListener('click',agentUndoConfirmed);
+$('agent-undo-no').addEventListener('click',()=>{pendingAgentUndo=null;$('agent-undo-confirm').hidden=true;});
+$('agent-cancel').addEventListener('click',()=>agentControl('/api/agent/cancel'));
+$('agent-work').addEventListener('click',()=>agentControl('/api/agent/work'));
+$('agent-close').addEventListener('click',()=>{stopAgentPolling();$('agent-dialog').close();});
 input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}});
 input.addEventListener('input',()=>{input.style.height='auto';input.style.height=Math.min(input.scrollHeight,170)+'px';});
 document.querySelectorAll('[data-prompt]').forEach(button=>button.addEventListener('click',()=>{input.value=button.dataset.prompt;input.focus();}));
@@ -109,3 +351,4 @@ refresh().catch(error=>{$('status').textContent='接続エラー';$('hint-status
 </script>
 </body>
 </html>
+

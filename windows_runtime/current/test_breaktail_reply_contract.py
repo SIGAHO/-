@@ -8,6 +8,50 @@ from breaktail_reply_contract import build_contract,violations,sentences,repetit
 
 
 class ReplyContractTests(ModelIsolatedCase):
+    def test_reported_speech_ending_is_not_imperative(self):
+        contract=build_contract(new_working_state(),'その話を聞いた。助言はいらない。')
+        self.assertNotIn('imperative_mood',violations('歩いた方が速かったんだって。',contract))
+    def test_concrete_sharing_needs_more_than_bare_acknowledgement(self):
+        contract=build_contract(new_working_state(),'ずっと探していた鍵が、今朝かばんの一番小さいポケットから出てきた。')
+        self.assertIn('bare_acknowledgement_to_concrete_sharing',violations('へえ、そうなんだ。',contract))
+        self.assertNotIn('bare_acknowledgement_to_concrete_sharing',violations('一番小さいポケットが盲点だったね。',contract))
+        self.assertNotIn('bare_acknowledgement_to_concrete_sharing',violations('了解。',build_contract(new_working_state(),'短く話して。')))
+    def test_requested_greeting_cannot_degenerate_to_acknowledgement(self):
+        contract=build_contract(new_working_state(),'時計係にひとこと挨拶して。')
+        self.assertIn('acknowledgement_instead_of_requested_response',violations('うん。',contract))
+        self.assertIn('missing_requested_greeting',violations('おはよう。',contract))
+        self.assertNotIn('missing_requested_greeting',violations('時計係、おはよう。',contract))
+
+    def test_no_advice_variants_apply_to_current_turn(self):
+        for wording in ('助言なしで。','解決策はいらない。','アドバイスなしで。'):
+            self.assertTrue(build_contract(new_working_state(),wording)['no_advice'])
+
+    def test_foreign_contamination_is_regenerated_instead_of_silently_deleted(self):
+        responses=iter(['時計が急に止まったね。Follow rules.部屋が静かだね。',
+                        json.dumps({'sentences':['時計まで一息ついてるみたいだね。']},ensure_ascii=False)])
+        def model(*a,**kw):return {'message':{'content':next(responses)},'done_reason':'stop'}
+        with patch.object(tail,'call_ollama',side_effect=model),patch.object(tail,'log_turn'):
+            reply,complete=tail.generate_reply([],'机の時計が急に止まった。')
+        self.assertTrue(complete)
+        self.assertEqual(reply,'時計まで一息ついてるみたいだね。')
+
+    def test_current_detailed_request_overrides_persistent_brief_preference(self):
+        c=build_contract(self.state(),'仕組みを詳しく、全部説明して。')
+        self.assertIsNone(c['max_sentences'])
+        self.assertIsNone(c['max_chars'])
+
+    def test_problem_statement_count_is_not_a_reply_format(self):
+        text='三文で、正しいのはちょうど二つ。答えは一つに決まる？理由も短く。'
+        self.assertIsNone(build_contract(new_working_state(),text)['exact_sentences'])
+        self.assertEqual(build_contract(new_working_state(),'二文で説明して。')['exact_sentences'],2)
+        self.assertEqual(build_contract(new_working_state(),'二文だけの短編を作って。')['exact_sentences'],2)
+
+    def test_plain_sharing_does_not_invite_remedies_but_requested_advice_does(self):
+        self.assertTrue(build_contract(new_working_state(),'買ったばかりの手袋を片方なくした。')['no_advice'])
+        self.assertFalse(build_contract(new_working_state(),'手袋をなくした時はどうしたらいい？')['no_advice'])
+        state=new_working_state();state['mode']['active']=True
+        self.assertFalse(build_contract(state,'友達とご飯へ行く。')['no_advice'])
+
     def state(self):
         state=new_working_state()
         update_working_state(state,'アドバイスより、短く雑談して。敬語なし。')

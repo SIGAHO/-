@@ -76,6 +76,7 @@ def build_self_context(runtime: SelfRuntime | None = None, *, user_text: str = "
         "web_search_connection": "検索アダプタ接続済み" if runtime.web_search_available else "検索アダプタ未接続",
         "can_initiate_contact_now": False,
         "can_launch_desktop_app_now": False,
+        "can_contact_other_people_now": False,
         "initiative_connection": "こちらから後で話しかける通知・開始アダプタ未接続",
         "search_state": runtime.search_state,
         "search_observation": runtime.search_observation[:4000] if runtime.search_state == "success" else None,
@@ -258,7 +259,12 @@ def ground_self_reply(user_text: str, draft: str, context: dict, scene: dict | N
         response = "ぐおっ、まだ怪獣ごっこは続いてるぞ！ ……現実のファイルへの影響は見えていないから、分からないよ。"
         reason = "scene_draft_claimed_unobserved_file_effect"
     elif re.search(r"名前|何者|会話モデル|モデル|記憶の仕組み|どういう構造", text) and (about_self or "会話モデル" in text or re.fullmatch(r"(?:お)?名前(?:は|を|って)?(?:教えて|何|なんて)?[？?]?", text)):
-        response = "名前はBreaktail、会話モデルはQwen2.5:14bだよ。Memoryに記憶の解釈候補、Rawに会話原文、Traceに処理記録を外部保存する。今の会話で渡された情報だけを参照するよ。"
+        model=context['facts']['conversation_model']
+        model_label='スワロー8B' if 'Swallow-8B' in model else 'Qwen2.5:14b' if model=='qwen2.5:14b' else model
+        if re.search(r'会話モデル|モデル名',text) and not re.search(r'名前|記憶|仕組み|構造|何者',text):
+            response=model_label+'だよ。'
+        else:
+            response = '名前はBreaktail、会話モデルは'+model_label+'だよ。Memoryに記憶の解釈候補、Rawに会話原文、Traceに処理記録を外部保存する。今の会話で渡された情報だけを参照するよ。'
         reason = "identity_and_external_storage"
     if response is None:
         def truthful_prose(prose):

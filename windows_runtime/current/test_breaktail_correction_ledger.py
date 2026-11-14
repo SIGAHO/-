@@ -1,0 +1,209 @@
+import json
+from pathlib import Path
+import tempfile
+import unittest
+
+from breaktail_correction_ledger import commit, history, preview
+
+
+class CorrectionLedgerTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory(dir=Path(__file__).resolve().parents[2])
+        self.addCleanup(self.temp.cleanup)
+        root = Path(self.temp.name)
+        self.raw = root / "raw.jsonl"
+        self.ledger = root / "corrections.jsonl"
+        turns = [("conversation-a", "old-turn-0001", "The shop is east."),
+                 ("conversation-a", "new-turn-0002", "Correction: the shop is west."),
+                 ("conversation-a", "next-turn-0003", "It moved north."),
+                 ("conversation-b", "other-turn-0004", "The shop is south.")]
+        self.raw.write_text("".join(json.dumps({"conversation_id": session, "turn_id": identity,
+                                                "timestamp": f"2026-11-12T00:0{index}:00Z",
+                                                "user_text": text, "assistant_text": "ack",
+                                                "status": "complete"}) + "\n"
+                                   for index, (session, identity, text) in enumerate(turns)), encoding="utf-8")
+
+    def test_explicit_links_keep_both_sources_and_latest_without_certifying_fact(self):
+        first = preview(self.raw, "shop location", "old-turn-0001", "new-turn-0002")
+        self.assertFalse(self.ledger.exists())
+        self.assertEqual(first["old"]["text"], "The shop is east.")
+        self.assertEqual(first["new"]["text"], "Correction: the shop is west.")
+        saved = commit(self.raw, self.ledger, "shop location", "old-turn-0001", "new-turn-0002",
+                       first["old"]["sha256"], first["new"]["sha256"])
+        self.assertFalse(saved["already_recorded"])
+        repeat = commit(self.raw, self.ledger, "shop location", "old-turn-0001", "new-turn-0002",
+                        first["old"]["sha256"], first["new"]["sha256"])
+        self.assertTrue(repeat["already_recorded"])
+        second = preview(self.raw, "shop location", "new-turn-0002", "next-turn-0003")
+        commit(self.raw, self.ledger, "shop location", "new-turn-0002", "next-turn-0003",
+               second["old"]["sha256"], second["new"]["sha256"])
+        report = history(self.raw, self.ledger, "shop location", "old-turn-0001")
+        self.assertEqual(report["count"], 2)
+        self.assertTrue(report["chain_verified"])
+        self.assertEqual(report["latest_turn_id"], "next-turn-0003")
+        self.assertEqual(report["items"][0]["old_text"], "The shop is east.")
+        self.assertEqual(report["items"][0]["new_text"], "Correction: the shop is west.")
+        self.assertFalse(report["items"][1]["external_verification"])
+        self.assertEqual(len(self.ledger.read_text(encoding="utf-8").splitlines()), 2)
+
+    def test_person_selected_alias_is_preserved_across_a_chain(self):
+        first = preview(self.raw, "shop location", "old-turn-0001", "new-turn-0002", "store address")
+        self.assertEqual(first["alias"], "store address")
+        saved = commit(self.raw, self.ledger, "shop location", "old-turn-0001", "new-turn-0002",
+                       first["old"]["sha256"], first["new"]["sha256"], "store address")
+        self.assertEqual(saved["record"]["alias"], "store address")
+        self.assertEqual(len(saved["record"]["alias_source_sha256"]), 64)
+        second = preview(self.raw, "shop location", "new-turn-0002", "next-turn-0003")
+        later = commit(self.raw, self.ledger, "shop location", "new-turn-0002", "next-turn-0003",
+                       second["old"]["sha256"], second["new"]["sha256"])
+        self.assertEqual(later["record"]["alias"], "store address")
+        self.assertEqual(history(self.raw, self.ledger, "shop location", "old-turn-0001")["alias"],
+                         "store address")
+        with self.assertRaisesRegex(ValueError, "別名は変更できません"):
+            commit(self.raw, self.ledger, "shop location", "new-turn-0002", "next-turn-0003",
+                   second["old"]["sha256"], second["new"]["sha256"], "another address")
+
+    def test_alias_must_be_distinct_from_label(self):
+        with self.assertRaisesRegex(ValueError, "異なる表現"):
+            preview(self.raw, "shop location", "old-turn-0001", "new-turn-0002", "shop location")
+        for alias in ("今は", "どっち？", "where?"):
+            with self.subTest(alias=alias), self.assertRaisesRegex(ValueError, "対象名"):
+                preview(self.raw, "shop location", "old-turn-0001", "new-turn-0002", alias)
+        self.assertFalse(self.ledger.exists())
+
+    def test_alias_cannot_be_reused_as_another_topic_name(self):
+        checked = preview(self.raw, "shop location", "old-turn-0001", "new-turn-0002",
+                          "store address")
+        commit(self.raw, self.ledger, "shop location", "old-turn-0001", "new-turn-0002",
+               checked["old"]["sha256"], checked["new"]["sha256"], "store address")
+        another = preview(self.raw, "store address", "old-turn-0001", "new-turn-0002")
+        with self.assertRaisesRegex(ValueError, "重複"):
+            commit(self.raw, self.ledger, "store address", "old-turn-0001", "new-turn-0002",
+                   another["old"]["sha256"], another["new"]["sha256"])
+
+    def test_changed_alias_is_not_accepted_as_a_new_topic_link(self):
+        checked = preview(self.raw, "shop location", "old-turn-0001", "new-turn-0002",
+                          "store address")
+        commit(self.raw, self.ledger, "shop location", "old-turn-0001", "new-turn-0002",
+               checked["old"]["sha256"], checked["new"]["sha256"], "store address")
+        record = json.loads(self.ledger.read_text(encoding="utf-8"))
+        record["alias"] = "another subject"
+        self.ledger.write_text(json.dumps(record) + "\n", encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "破損"):
+            history(self.raw, self.ledger, "shop location", "old-turn-0001")
+
+    def test_wrong_hash_branch_and_cross_session_are_rejected(self):
+        checked = preview(self.raw, "shop location", "old-turn-0001", "new-turn-0002")
+        with self.assertRaises(ValueError):
+            commit(self.raw, self.ledger, "shop location", "old-turn-0001", "new-turn-0002",
+                   "0" * 64, checked["new"]["sha256"])
+        self.assertFalse(self.ledger.exists())
+        commit(self.raw, self.ledger, "shop location", "old-turn-0001", "new-turn-0002",
+               checked["old"]["sha256"], checked["new"]["sha256"])
+        branch = preview(self.raw, "shop location", "old-turn-0001", "next-turn-0003")
+        with self.assertRaises(ValueError):
+            commit(self.raw, self.ledger, "shop location", "old-turn-0001", "next-turn-0003",
+                   branch["old"]["sha256"], branch["new"]["sha256"])
+        with self.assertRaises(ValueError):
+            preview(self.raw, "shop location", "new-turn-0002", "other-turn-0004")
+        with self.assertRaises(ValueError):
+            preview(self.raw, "shop location", "new-turn-0002", "old-turn-0001")
+        self.assertEqual(history(self.raw, self.ledger, "shop location", "other-turn-0004")["count"], 0)
+
+    def test_changed_raw_is_not_reported_as_current_value(self):
+        checked = preview(self.raw, "shop location", "old-turn-0001", "new-turn-0002")
+        commit(self.raw, self.ledger, "shop location", "old-turn-0001", "new-turn-0002",
+               checked["old"]["sha256"], checked["new"]["sha256"])
+        rows = [json.loads(line) for line in self.raw.read_text(encoding="utf-8").splitlines()]
+        rows[1]["user_text"] = "Changed after registration."
+        self.raw.write_text("".join(json.dumps(row) + "\n" for row in rows), encoding="utf-8")
+        report = history(self.raw, self.ledger, "shop location", "old-turn-0001")
+        self.assertEqual(report["count"], 1)
+        self.assertIsNone(report["latest_turn_id"])
+        self.assertIsNone(report["latest_text"])
+        self.assertFalse(report["items"][0]["sources_available"])
+
+    def test_idempotent_retry_rejects_tampered_existing_record(self):
+        checked = preview(self.raw, "shop location", "old-turn-0001", "new-turn-0002")
+        commit(self.raw, self.ledger, "shop location", "old-turn-0001", "new-turn-0002",
+               checked["old"]["sha256"], checked["new"]["sha256"])
+        record = json.loads(self.ledger.read_text(encoding="utf-8"))
+        record["new_source_sha256"] = "0" * 64
+        self.ledger.write_text(json.dumps(record) + "\n", encoding="utf-8")
+        before = self.ledger.read_bytes()
+        with self.assertRaisesRegex(ValueError, "再確認できません"):
+            commit(self.raw, self.ledger, "shop location", "old-turn-0001", "new-turn-0002",
+                   checked["old"]["sha256"], checked["new"]["sha256"])
+        self.assertEqual(self.ledger.read_bytes(), before)
+
+    def test_corrupt_topic_key_fails_closed(self):
+        checked = preview(self.raw, "shop location", "old-turn-0001", "new-turn-0002")
+        commit(self.raw, self.ledger, "shop location", "old-turn-0001", "new-turn-0002",
+               checked["old"]["sha256"], checked["new"]["sha256"])
+        record = json.loads(self.ledger.read_text(encoding="utf-8"))
+        record["key"] = "different topic"
+        self.ledger.write_text(json.dumps(record) + "\n", encoding="utf-8")
+        before = self.ledger.read_bytes()
+        with self.assertRaisesRegex(ValueError, "破損"):
+            history(self.raw, self.ledger, "shop location", "old-turn-0001")
+        with self.assertRaisesRegex(ValueError, "破損"):
+            commit(self.raw, self.ledger, "shop location", "old-turn-0001", "new-turn-0002",
+                   checked["old"]["sha256"], checked["new"]["sha256"])
+        self.assertEqual(self.ledger.read_bytes(), before)
+
+    def test_roleplay_and_command_cannot_become_durable_corrections(self):
+        original = self.raw.read_bytes()
+        try:
+            for text in ("ごっこで店は西だよ。", "/set shop west"):
+                rows = [json.loads(line) for line in original.decode("utf-8").splitlines()]
+                rows[1]["user_text"] = text
+                self.raw.write_text("".join(json.dumps(row) + "\n" for row in rows), encoding="utf-8")
+                with self.subTest(text=text), self.assertRaisesRegex(ValueError, "出典にできません"):
+                    preview(self.raw, "shop location", "old-turn-0001", "new-turn-0002")
+                self.assertFalse(self.ledger.exists())
+        finally:
+            self.raw.write_bytes(original)
+
+    def test_scene_snapshot_cannot_become_a_correction_source(self):
+        rows = [json.loads(line) for line in self.raw.read_text(encoding="utf-8").splitlines()]
+        rows[1]["scene_snapshot"] = {"name": "fictional shop"}
+        self.raw.write_text("".join(json.dumps(row) + "\n" for row in rows), encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "出典にできません"):
+            preview(self.raw, "shop location", "old-turn-0001", "new-turn-0002")
+        self.assertFalse(self.ledger.exists())
+
+    def test_next_link_rejects_changed_earlier_raw_source(self):
+        first = preview(self.raw, "shop location", "old-turn-0001", "new-turn-0002")
+        commit(self.raw, self.ledger, "shop location", "old-turn-0001", "new-turn-0002",
+               first["old"]["sha256"], first["new"]["sha256"])
+        rows = [json.loads(line) for line in self.raw.read_text(encoding="utf-8").splitlines()]
+        rows[0]["user_text"] = "Changed after the first link."
+        self.raw.write_text("".join(json.dumps(row) + "\n" for row in rows), encoding="utf-8")
+        second = preview(self.raw, "shop location", "new-turn-0002", "next-turn-0003")
+        before = self.ledger.read_bytes()
+        with self.assertRaisesRegex(ValueError, "チェーンの出典を再確認できません"):
+            commit(self.raw, self.ledger, "shop location", "new-turn-0002", "next-turn-0003",
+                   second["old"]["sha256"], second["new"]["sha256"])
+        self.assertEqual(self.ledger.read_bytes(), before)
+
+    def test_history_does_not_claim_latest_if_earlier_link_is_broken(self):
+        first = preview(self.raw, "shop location", "old-turn-0001", "new-turn-0002")
+        commit(self.raw, self.ledger, "shop location", "old-turn-0001", "new-turn-0002",
+               first["old"]["sha256"], first["new"]["sha256"])
+        second = preview(self.raw, "shop location", "new-turn-0002", "next-turn-0003")
+        commit(self.raw, self.ledger, "shop location", "new-turn-0002", "next-turn-0003",
+               second["old"]["sha256"], second["new"]["sha256"])
+        rows = [json.loads(line) for line in self.raw.read_text(encoding="utf-8").splitlines()]
+        rows[0]["user_text"] = "The first source was changed."
+        self.raw.write_text("".join(json.dumps(row) + "\n" for row in rows), encoding="utf-8")
+        report = history(self.raw, self.ledger, "shop location", "old-turn-0001")
+        self.assertEqual(report["count"], 2)
+        self.assertFalse(report["chain_verified"])
+        self.assertTrue(report["items"][1]["sources_available"])
+        self.assertIsNone(report["latest_turn_id"])
+        self.assertIsNone(report["latest_text"])
+
+
+if __name__ == "__main__":
+    unittest.main()
+

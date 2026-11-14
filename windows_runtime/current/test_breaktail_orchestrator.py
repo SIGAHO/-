@@ -100,6 +100,14 @@ class OrchestratorTests(ModelIsolatedCase):
             working_state["topic"] = "new topic"
         return "回答です", True, "ユーザーは星空観察が好き", None, None
 
+    def test_selected_persona_is_persisted_per_conversation(self):
+        from breaktail_character import selected
+        self.engine.command('/persona atashi','persona-test')
+        self.assertTrue(selected(self.engine.journal.session('persona-test',tail)['working_state']))
+        self.assertFalse(selected(self.engine.journal.session('other-session',tail)['working_state']))
+        self.engine.command('/persona off','persona-test')
+        self.assertFalse(selected(self.engine.journal.session('persona-test',tail)['working_state']))
+
     def test_http_end_to_end_reuses_actual_core_and_memory_gate(self):
         ModelHandler.payloads = []
         server = ThreadingHTTPServer(("127.0.0.1", 0), ModelHandler)
@@ -203,6 +211,14 @@ class OrchestratorTests(ModelIsolatedCase):
         self.assertTrue(raw.get_turn(row["turn_id"]))
         with self.assertRaises(ValueError):
             self.engine.review(row["id"], "人の訂正", "human")
+
+    def test_remember_phrase_must_not_swallow_a_separate_question(self):
+        self.config['safe_mode']=True
+        self.submit('その話は覚えておいて。最後に、店へ連絡したかだけ教えて。')
+        with patch.object(tail,'prepare_turn',return_value=('連絡は実行していないよ。',True,None,None,None)) as generate:
+            row=self.engine.process_next()
+        self.assertEqual(json.loads(row['result'])['reply'],'連絡は実行していないよ。')
+        generate.assert_called_once()
 
     def test_interactive_commands_reuse_adapter_and_respect_safe_mode(self):
         self.config["safe_mode"] = True

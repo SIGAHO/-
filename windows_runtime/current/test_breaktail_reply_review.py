@@ -6,6 +6,12 @@ from breaktail_reply_review import review_pragmatics
 
 
 class ReplyReviewTests(unittest.TestCase):
+    def test_false_advice_vote_cannot_reject_plain_past_description(self):
+        text='白身は先に皿へ移ったんだね。'
+        audit=review_pragmatics('卵を焼いた。',text,self.model(True,text))
+        self.assertEqual(audit['hits'],[])
+        self.assertIn('semantic_unrequested_advice_or_guarantee',audit['unconfirmed_claims'])
+
     def model(self,advice,quote):
         return lambda *a,**k:{'message':{'content':json.dumps({'advice':advice,'japanese':True,'quote':quote},ensure_ascii=False)},'done_reason':'stop'}
 
@@ -21,6 +27,17 @@ class ReplyReviewTests(unittest.TestCase):
 
     def test_reflection_is_accepted(self):
         self.assertEqual(review_pragmatics('助言不要。','寂しさ隠すのも一苦労だね。',self.model(False,''))['hits'],[])
+
+    def test_disabled_advice_dimension_cannot_reject_grammar_review(self):
+        text='また明日ね。'
+        audit=review_pragmatics('おやすみ。',text,self.model(True,text),check_advice=False,check_japanese=True)
+        self.assertEqual(audit['hits'],[])
+
+    def test_comparative_past_is_not_recommendation(self):
+        for text in ('電車の方が速かったんだね。','青い方が大きかった。'):
+            self.assertEqual(review_pragmatics('雑談。',text,self.model(True,text))['hits'],[])
+        text='電車の方がいいよ。'
+        self.assertIn('semantic_unrequested_advice_or_guarantee',review_pragmatics('雑談。',text,self.model(True,text))['hits'])
 
     def test_clear_language_error_requires_verbatim_evidence(self):
         def model(*a,**k):return {'message':{'content':json.dumps({'advice':False,'japanese':False,'quote':'にで'},ensure_ascii=False)},'done_reason':'stop'}

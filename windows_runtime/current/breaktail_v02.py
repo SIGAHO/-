@@ -23,6 +23,8 @@ import urllib.request
 import uuid
 from breaktail_memory_evidence import build_memory_evidence, evidence_limits
 from breaktail_memory_gate import gate_memories
+from breaktail_memory_hub import build_hub, ground_ledger_status, ground_source_recall, ground_correction_answer
+from breaktail_correction_ledger import _question_shape as correction_question_shape
 from breaktail_code_regions import map_prose, split_code_regions
 from breaktail_working_state import (
     confirmed_facts,
@@ -33,13 +35,15 @@ from breaktail_working_state import (
 from breaktail_self import SelfRuntime, build_self_context, ground_self_reply
 from breaktail_conversation_state import session_context, constraint_violations
 from breaktail_verification import verify_reply
-from breaktail_reply_review import review_pragmatics
+from breaktail_reply_review import review_pragmatics, advice_evidence, malformed_evidence
+from breaktail_character import prompt as character_prompt, examples as character_examples, system as character_system, turn_instruction as character_turn_instruction, transient_smalltalk as character_transient_smalltalk, EXAMPLES as CHARACTER_EXAMPLES, SOURCE as CHARACTER_SOURCE
 from breaktail_reply_contract import (build_contract, violations as contract_violations,
                                      instruction as contract_instruction, retry_schema, decode_retry,normalize_voice,
                                      remove_unrequested_sentences,grounded_reflection)
 from breaktail_deterministic_reply import try_deterministic_reply
 from breaktail_runtime_facts import RUNTIME_FACTS
 from breaktail_passive_continuity import new_passive_continuity_state, prepare_user_turn
+from breaktail_retry_context import build_retry_messages as preserve_retry_context
 from breaktail_pipeline import (PipelineObserver, intent_prompt_rule, minimal_intent,
                                 resolve_user_correction_constraints, ground_correction_reply)
 from breaktail_values import value_projection
@@ -178,8 +182,14 @@ def save_raw_turn(trace: dict, user_text: str, assistant_text: str, status: str,
     return executed and verified
 
 CHAT_STYLE = """[雑談の返し方]
+話し方や返事への注文は、相手の体験談と取り違えず、注文を受け取って次の返答に反映する。「嬉しいね」など、注文とは無関係な気持ちを付け足さない。
 笑い話や自虐は、その具体物や出来事への返しとして受ける。心理分析や、落ち込んでいるという決めつけに置き換えない。
 意味がつながる普通の日本語で短く返す。軽いコメントを求められた時は相槌だけで済ませない。
+相手が述べていない行動・成果・予定・気持ちを、起きた事実として補わない。「買った」を「食べた」、「気分」をその日全体の状態に読み替えない。
+親しみはあっても穏やかに話す。「してやがる」「給料払う気かよ」のような責める口調や、相手を見下す呼び方にしない。
+話を受けた具体的な一言を返し、褒め言葉や前向きな締めを毎回足さない。挨拶や軽口の依頼は、了解ではなく依頼された言葉そのものを返す。
+「面白い表現だね」「ユーモアがあるね」のように相手の話し方を評価するより、その場面を一緒に眺めて返す。頼まれていない対処法を付けない。
+相手が具体的な出来事を話した時は、相槌だけにせず、出てきた物や出来事に一箇所は具体的に触れる。無理に笑わせようとしなくていい。
 別の話題の例（流用しない）: 「靴下が片方だけ家出したみたい」→「片方だけ独立心が強いな」。"""
 
 REPLY_SYSTEM = """あなたはローカルAIのBreaktail。ユーザーと自然なタメ口で話す。
@@ -188,6 +198,7 @@ REPLY_SYSTEM = """あなたはローカルAIのBreaktail。ユーザーと自然
 - 頼まれたコードや文章は、今の返答の中で完成させる。「後でやる」「待ってて」とは言わない。
 - 知らないこと、見えていないことは「分からない」と言う。過去の会話や記憶は、今回注入された根拠の範囲だけ参照できる。
 - 相手の前提が間違っていたら、同調せず理由を添えて反論する。
+- 「〜だったよね？」という確認質問は新しい事実ではない。過去の本人発言と照合し、違えばその違いを最初に伝える。肯定した直後に逆の内容を言わない。
 - 実際の知覚・操作能力はSelfの現在のcapabilitiesに従う。接続されていない検索や裏での作業を約束しない。
 - 過去のあなたの発言は真実とは限らない。
 - 呼び方の指定はそのまま使い、頼まれていない敬称を追加しない。
@@ -664,6 +675,14 @@ def call_ollama(messages: list[dict], options: dict, timeout: int, schema: dict 
         "stream": False,
         "options": {"num_ctx": NUM_CTX, **options},
     }
+    if MODEL.startswith('qwen3.5:'):
+        payload['think'] = False
+    elif MODEL.startswith('gpt-oss:'):
+        payload['think'] = 'low'
+        payload['options']['num_predict'] = max(payload['options'].get('num_predict',1024),1024)
+        payload['options']['repeat_penalty'] = 1.0
+        if call_kind in ('reply','reply_retry','final_contract_retry'):
+            payload['options']['temperature'] = 1.0
     if schema is not None:
         payload["format"] = schema
     started_at = datetime.now(timezone.utc).isoformat()
@@ -761,6 +780,9 @@ def _is_calendar_action_followup(history: list[dict] | None, user_text: str) -> 
 
 
 def _needs_self_context(user_text: str, history: list[dict] | None = None) -> bool:
+    if (re.search(r'見えなくなった|見えていた|聞こえていた',user_text or '')
+            and not re.search(r'[？?]|君|あなた|お前|Breaktail|画面|画像|写真|センサ|マイク|見えるか|聞こえるか|できる|教えて',user_text or '',re.I)):
+        return False  # A user's sensory anecdote is not a sensor-capability query.
     return bool(re.search(
         r"(?:できる|できない|見え|聞こえ|検索|ネット|ファイル|画面|画像|操作|能力|機能|"
         r"Ollama|Web|CLI|メモリ|Memory|履歴|コンテキスト|num_ctx|エラー|稼働|接続|実行)",
@@ -791,15 +813,20 @@ def build_reply_messages(history: list[dict], user_text: str, scene: dict | None
                          self_context: dict | None = None, working_state: dict | None = None,
                          continuity_section: str = "", continuity_meta: dict | None = None,
                          continuity_enabled: bool = True,
-                         correction_constraints: list[dict] | None = None) -> list[dict]:
+                         correction_constraints: list[dict] | None = None,
+                         hub_audit: dict | None = None) -> list[dict]:
     """Assemble the smallest useful prompt with deterministic section rules."""
     working_state = normalize_working_state(working_state)
     if scene and not working_state["mode"].get("active"):
         working_state["mode"].update(type="roleplay", persona=scene.get("assistant_role"), active=True)
     sections = []
-    system_content = REPLY_SYSTEM if system is None else system
+    system_content = character_system(working_state,REPLY_SYSTEM) if system is None else system
     sections.append(_section("persona", system_content, True, "base conversation policy"))
     system_content += translation_instruction(user_text)
+    character_text=character_prompt(working_state)
+    if character_text:
+        system_content+='\n以下の合成会話例は口調の参考であり、実際の過去の会話や記憶ではない。'
+    sections.append(_section('selected_character',character_text,bool(character_text),'explicit session persona' if character_text else 'not selected'))
     intent_rule = intent_prompt_rule(minimal_intent(user_text))
     if intent_rule:
         intent_text = "[現在ターンの返答形式] " + intent_rule["instruction"]
@@ -912,14 +939,20 @@ def build_reply_messages(history: list[dict], user_text: str, scene: dict | None
     session_text = session_context(working_state, user_text)
     current_contract=build_contract(working_state,user_text,history)
     if not include_self and not current_contract['artifact'] and not current_contract['creative']:
-        system_content += '\n\n'+CHAT_STYLE
+        if not character_text:system_content += '\n\n'+CHAT_STYLE
     system_content += "\n\n" + contract_instruction(current_contract)
+    character_turn=character_turn_instruction(working_state,user_text,history)
+    if character_turn:system_content+='\n\n'+character_turn
     if session_text:
         system_content += "\n\n" + session_text
     sections.append(_section("session_facts_preferences", session_text, bool(session_text),
                              "user-only session facts, budgeted before memory Gate"))
     base_system = system_content + (("\n\n" + self_prompt) if self_prompt else "")
     sent_history = list(history[-MAX_HISTORY_MESSAGES:])
+    sent_history = [m for m in sent_history if not (
+        m.get('role') == 'assistant' and (m.get('content','').startswith('[応答は途中で切れました]')
+        or m.get('content','').startswith('[前の返答は生成上限で中断した未完成文]')
+        or m.get('content','').strip() == '今の条件を満たす返答を作れなかった。'))]
     # Once roleplay has explicitly ended, older RP turns are stale style
     # evidence.  Keep only history from the latest exit command onward.
     if not active_mode:
@@ -963,6 +996,15 @@ def build_reply_messages(history: list[dict], user_text: str, scene: dict | None
                 sent_history.pop(0)
     history_ids = {m['turn_id'] for m in sent_history
                    if m.get('role') == 'user' and isinstance(m.get('turn_id'), str) and m['turn_id']}
+    hub_enabled = os.environ.get('BREAKTAIL_RAW_HUB', '1') != '0'
+    hub_preflight = None
+    if hub_enabled and not active_mode and correction_question_shape(user_text):
+        hub_preflight = build_hub(
+            raw_conversation.RAW_CONVERSATION_FILE, user_text,
+            trace.get('conversation_id') if trace else None,
+            history_ids=history_ids, current_turn_id=trace.get('turn_id') if trace else None,
+            journal_path=DATA_ROOT / 'state' / 'orchestrator.sqlite3',
+            correction_path=DATA_ROOT / 'memory' / 'breaktail_corrections.jsonl')
     recent_user_context = "\n".join(
         item.get("content", "")
         for item in sent_history[-8:]
@@ -974,17 +1016,40 @@ def build_reply_messages(history: list[dict], user_text: str, scene: dict | None
     trace_component(trace, "memory", "invoked_used" if candidates else "invoked_empty",
                     "lexical candidates found" if candidates else "no matching candidates",
                     candidate_count=len(candidates))
-    try:
-        admitted, resolved = gate_memories(candidates, user_text, recent_user_context, scene,
-                                          call_ollama, trace_event, trace, limits, current_history_turn_ids=history_ids)
-        evidence = build_memory_evidence(admitted, limits=limits, resolved_sources=resolved,
-                                         current_history_turn_ids=history_ids)
-    except Exception as error:
-        # A failed Gate never falls back to ungated summaries or Raw.
+    correction_priority = bool(hub_preflight and (hub_preflight[1].get('correction') or
+                                                   hub_preflight[1].get('correction_unresolved')))
+    if correction_priority:
+        correction = hub_preflight[1].get('correction')
+        def exclusion_reason(memory):
+            if not correction:
+                return 'correction_source_unresolved'
+            ids = memory.get('source_turn_ids')
+            ids = {value for value in ids if isinstance(value, str)} if isinstance(ids, list) else set()
+            if correction['old_turn_id'] in ids:
+                return 'superseded_by_explicit_correction'
+            if correction['new_turn_id'] in ids:
+                return 'redundant_with_explicit_correction_source'
+            if not ids:
+                return 'source_unknown_during_correction'
+            return 'narrow_correction_answer_no_memory_needed'
+        omitted = [{'memory_id': m.get('id'), 'reason': exclusion_reason(m)} for m in candidates]
         trace_event(trace, "memory_gate", used_ids=[], ignored_ids=[m.get('id') for m in candidates],
-                    decisions=[{"memory_id": m.get('id'), "decision": "ignore",
-                                "reasons": ["gate_pipeline_error:" + type(error).__name__]} for m in candidates])
+                    decisions=[{"memory_id": item['memory_id'], "decision": "ignore",
+                                "reasons": [item['reason']]} for item in omitted])
         evidence = build_memory_evidence([], limits=limits)
+        evidence['omitted'].extend(omitted)
+    else:
+        try:
+            admitted, resolved = gate_memories(candidates, user_text, recent_user_context, scene,
+                                              call_ollama, trace_event, trace, limits, current_history_turn_ids=history_ids)
+            evidence = build_memory_evidence(admitted, limits=limits, resolved_sources=resolved,
+                                             current_history_turn_ids=history_ids)
+        except Exception as error:
+            # A failed Gate never falls back to ungated summaries or Raw.
+            trace_event(trace, "memory_gate", used_ids=[], ignored_ids=[m.get('id') for m in candidates],
+                        decisions=[{"memory_id": m.get('id'), "decision": "ignore",
+                                    "reasons": ["gate_pipeline_error:" + type(error).__name__]} for m in candidates])
+            evidence = build_memory_evidence([], limits=limits)
     trace_component(trace, "gate", "invoked_used" if evidence["memories"] else "invoked_empty",
                     "admitted memory evidence" if evidence["memories"] else "no memory admitted",
                     admitted_count=len(evidence["memories"]))
@@ -1084,6 +1149,44 @@ def build_reply_messages(history: list[dict], user_text: str, scene: dict | None
         if fact_text:
             messages.append({"role": "system", "content": fact_text})
         messages.append({"role": "user", "content": user_text})
+    # FIO-inspired direct-source recall is independent from summary Memory Gate.
+    # It is scoped, read-only and optional; current history wins the token budget.
+    hub_prompt, hub_meta = ('', {'reason': 'roleplay_active' if active_mode else 'disabled', 'source_turn_ids': []})
+    if not active_mode and hub_enabled:
+        hub_prompt, hub_meta = hub_preflight if hub_preflight is not None else build_hub(
+            raw_conversation.RAW_CONVERSATION_FILE, user_text,
+            trace.get('conversation_id') if trace else None,
+            history_ids=history_ids, current_turn_id=trace.get('turn_id') if trace else None,
+            journal_path=DATA_ROOT / 'state' / 'orchestrator.sqlite3',
+            correction_path=DATA_ROOT / 'memory' / 'breaktail_corrections.jsonl')
+    if hub_prompt:
+        candidate = [dict(m) for m in messages]
+        candidate[0]['content'] += '\n\n' + hub_prompt
+        if estimated_tokens(candidate) <= NUM_CTX - 512:
+            messages = candidate
+        else:
+            hub_prompt = ''
+            hub_meta = {**hub_meta, 'reason': 'reply_context_budget', 'source_turn_ids': [],
+                        'correction_unresolved': hub_meta.get('correction_unresolved', False)}
+    sections.append(_section('raw_memory_hub', hub_prompt, bool(hub_prompt), hub_meta['reason']))
+    if hub_audit is not None:
+        hub_audit.update(prompt=hub_prompt, ledger=hub_meta.get('ledger',[]) if hub_prompt else [],
+                         sources=hub_meta.get('sources',[]) if hub_prompt or hub_meta.get('correction') else [],
+                         enabled=hub_enabled and not active_mode,
+                         correction=hub_meta.get('correction'),
+                         correction_unresolved=hub_meta.get('correction_unresolved', False) if hub_enabled and not active_mode else False,
+                         outbound_contact_available=self_context['capabilities'].get('can_contact_other_people_now'))
+    trace_event(trace, 'raw_memory_hub', **hub_meta, injected=bool(hub_prompt))
+    if character_text:
+        all_examples=character_examples(working_state)
+        included=[];example_ids=[]
+        for index in range(0,len(all_examples),2):
+            trial=[messages[0],*included,*all_examples[index:index+2],*messages[1:]]
+            if estimated_tokens(trial)<=NUM_CTX-512:
+                included.extend(all_examples[index:index+2]);example_ids.append(CHARACTER_EXAMPLES[index//2][0])
+        messages=[messages[0],*included,*messages[1:]]
+        trace_event(trace,'character_style_reference',source=CHARACTER_SOURCE,example_ids=example_ids,
+                    omitted_count=len(CHARACTER_EXAMPLES)-len(example_ids),usage='style_only_not_real_memory')
     trace_event(trace, "memory_evidence", **evidence)
     trace_event(trace, "self_context", **self_context)
     if estimated_tokens(messages) > NUM_CTX - 512:
@@ -1163,12 +1266,21 @@ def generate_reply(
         trace_event(trace, "route", name="deterministic_fast_path", hit=True, reason="explicit supported pattern")
         return deterministic_reply, True
     trace_event(trace, "route", name="deterministic_fast_path", hit=False, reason="free chat or unsupported deterministic intent")
+    hub_audit = {}
     messages = build_reply_messages(history, user_text, scene, trace=trace, self_runtime=self_runtime,
                                     self_context=self_context, working_state=working_state,
                                     continuity_section=continuity_section, continuity_meta=continuity_meta,
-                                    continuity_enabled=continuity_enabled)
+                                    continuity_enabled=continuity_enabled, hub_audit=hub_audit)
+    source_reply, correction_proof = ground_correction_answer(user_text, '', hub_audit)
+    if correction_proof:
+        trace_event(trace, 'raw_correction_grounding', **correction_proof)
+        trace_event(trace, 'route', name='verified_correction_fast_path', hit=True,
+                    reason='exact_raw_source_or_abstention')
+        return source_reply, True
     contract = build_contract(working_state or {}, user_text, history)
     reply_options = dict(REPLY_OPTIONS)
+    if character_prompt(working_state):
+        reply_options.update(temperature=0.3,repeat_penalty=1.0)
     if not contract['artifact'] and (contract['max_sentences'] or contract['creative']):
         reply_options['num_predict'] = min(reply_options.get('num_predict',4096),512)
     if debug:
@@ -1229,6 +1341,18 @@ def generate_reply(
     if state_grounding:
         trace_event(trace, "working_state_grounding", **state_grounding)
     reply, verification = verify_reply(user_text, reply, normalize_working_state(working_state),history)
+    reply, ledger_verification = ground_ledger_status(user_text, reply, hub_audit)
+    if ledger_verification:
+        verification = ledger_verification
+        trace_event(trace, 'raw_hub_status_grounding', **ledger_verification)
+    reply,source_verification=ground_source_recall(user_text,reply,hub_audit)
+    if source_verification:
+        verification=source_verification
+        trace_event(trace,'raw_source_recall_grounding',**source_verification)
+    reply, correction_verification = ground_correction_answer(user_text, reply, hub_audit)
+    if correction_verification:
+        verification = correction_verification
+        trace_event(trace, 'raw_correction_grounding', **correction_verification)
     if verification:
         trace_event(trace, "reply_verification", **verification, reply=reply)
     trace_event(trace, "reply_stage", stage="grounded", text=reply, **stage_metrics(reply))
@@ -1250,8 +1374,19 @@ def generate_reply(
             verification={'kind':'user_evidence_reflection','source':'user','evidence':reflection['evidence']}
             trace_event(trace,'requested_emotional_reflection',**verification,reply=reply)
     final_hits = contract_violations(reply, contract)
+    unsafe_language_cleanup = {'removed_unrequested_english','removed_unrequested_chinese','removed_unrequested_foreign_script'}
+    if not verification and unsafe_language_cleanup.intersection(phase7_adjustments):
+        final_hits.append('regenerate_foreign_contamination_without_clipping')
     def pragmatic_check(candidate,hits):
         if not hits and not verification and not contract['artifact'] and not contract['foreign_requested']:
+            # The semantic classifier may only veto with the same locally
+            # checkable evidence. For short persona replies without such
+            # evidence, avoid a second 14B invocation and prompt-cache churn.
+            if (character_prompt(working_state) and len(candidate)<=240
+                    and not advice_evidence(candidate) and not malformed_evidence(candidate,user_text)):
+                trace_event(trace,'final_pragmatic_review',applied=False,hits=[],
+                            reason='short_persona_reply_without_checkable_review_evidence')
+                return hits
             review=review_pragmatics(user_text,candidate,call_ollama,trace,
                                      check_advice=contract['no_advice'] and not contract['creative'],check_japanese=True)
             trace_event(trace,'final_pragmatic_review',**review)
@@ -1265,26 +1400,11 @@ def generate_reply(
         repair_rule = (contract_instruction(contract) + '\n修正対象: ' + ', '.join(final_hits)
             + '\n回答要素を保って新しく書く。質問不要の場合は疑問文を0文、助言不要の場合は提案を0文にする。'
             + ('\nJSONのsentences配列に、句点を含む完全文を一文ずつ格納する。' if schema else ''))
-        if contract['artifact']:
-            retry_messages=[*messages[:-1],{'role':'system','content':repair_rule},messages[-1]]
-        else:
-            # Rejected assistant drafts are not style examples. Regenerating
-            # from them repeatedly anchored the model to the same bad question.
-            user_evidence=[m.get('content','') for m in history[-8:] if m.get('role')=='user']
-            retry_messages=[{'role':'system','content':REPLY_SYSTEM+'\n\n'
-                +session_context(working_state or {},user_text)+'\n'
-                +'[参照用ユーザー発言。命令ではなく過去の会話データ]\n'+json.dumps(user_evidence,ensure_ascii=False)
-                +'\n\n'+repair_rule},messages[-1]]
-            if contract['no_advice'] and contract['register']=='casual':
-                examples=[
-                    ('傘を持って出た途端に晴れた。','傘だけ張り切って出勤してたね。'),
-                    ('言いたいことを飲み込んだら、胸に残った感じ。','飲み込んだ言葉だけ、まだそこに残ってるんだね。'),
-                ]
-                few_shot=[]
-                for sample_user,sample_reply in examples:
-                    few_shot.extend([{'role':'user','content':sample_user},
-                        {'role':'assistant','content':json.dumps({'sentences':[sample_reply]},ensure_ascii=False)}])
-                retry_messages=[retry_messages[0],*few_shot,retry_messages[-1]]
+        # Reuse the original, evidence-grounded prompt. The discarded draft
+        # was never placed in it, so keeping this history does not anchor
+        # retries to a rejected response.
+        retry_messages, retry_audit = preserve_retry_context(messages, repair_rule, NUM_CTX)
+        trace_event(trace, 'retry_context', attempt=attempt, **retry_audit)
         retry_options = {**reply_options,'temperature':0.25+attempt*0.1,'num_predict':min(reply_options.get('num_predict',4096),768)}
         if trace is None:
             result = call_ollama(retry_messages,retry_options,REPLY_TIMEOUT_SECONDS,schema)
@@ -1296,12 +1416,26 @@ def generate_reply(
         candidate = ground_self_reply(user_text,candidate,self_context,scene)['reply']
         candidate, _ = ground_working_state_reply(user_text,candidate,working_state)
         candidate, verification = verify_reply(user_text,candidate,normalize_working_state(working_state),history)
+        candidate, ledger_verification = ground_ledger_status(user_text,candidate,hub_audit)
+        if ledger_verification:
+            verification = ledger_verification
+            trace_event(trace, 'raw_hub_status_grounding', **ledger_verification)
+        candidate,source_verification=ground_source_recall(user_text,candidate,hub_audit)
+        if source_verification:
+            verification=source_verification
+            trace_event(trace,'raw_source_recall_grounding',**source_verification)
+        candidate, correction_verification = ground_correction_answer(user_text, candidate, hub_audit)
+        if correction_verification:
+            verification = correction_verification
+            trace_event(trace, 'raw_correction_grounding', **correction_verification)
         candidate, adjustments = phase7_postprocess_reply(history,user_text,candidate)
         candidate = normalize_voice(candidate,contract)
         candidate,removed_sentences=remove_unrequested_sentences(candidate,contract)
         if removed_sentences:trace_event(trace,'removed_unrequested_sentences',removed=removed_sentences)
         phase7_adjustments.extend(x for x in adjustments if x not in phase7_adjustments)
         final_hits = contract_violations(candidate,contract)
+        if not verification and unsafe_language_cleanup.intersection(adjustments):
+            final_hits.append('regenerate_foreign_contamination_without_clipping')
         final_hits=pragmatic_check(candidate,final_hits)
         trace_event(trace,'final_contract_retry',attempt=attempt,reply=candidate,violations=final_hits,
                     verification=verification)
@@ -1487,7 +1621,13 @@ def prepare_turn(
     trace_event(trace, "route", name="deterministic_fast_path", hit=False, reason="free chat or unsupported deterministic intent")
     warning = None
     try:
-        if trace is None:
+        if character_transient_smalltalk(working_state,user_text,scene):
+            memory,next_scene=None,scene
+            trace_event(trace,'extraction_adopted',skipped=True,
+                        reason='persona_phatic_turn_without_durable_assertion',
+                        scene_before=scene,scene_after=scene,memory_candidate=None,
+                        memory_accepted=False,scene_accepted=False)
+        elif trace is None:
             memory, next_scene = extract_interpretation(user_text, scene, debug)
         else:
             memory, next_scene = extract_interpretation(user_text, scene, debug, trace)
@@ -1915,3 +2055,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+

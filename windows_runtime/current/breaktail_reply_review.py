@@ -1,5 +1,24 @@
 """Independent local pragmatic classification; never a state/fact authority."""
 import json
+import re
+
+
+def advice_evidence(quote):
+    """Require an observable recommendation, not just a model's yes vote."""
+    return bool(re.search(
+        r'勧め|おすすめ|べき|(?:ほうが|方が)(?:いい|良い|よい|よさそう)|しよう|しましょう|ましょう|してみ|試して|しなさい|'
+        r'(?:休ん|飲ん|聞い|読ん|食べ|使っ|行っ|寝|気をつけ)(?:で|て)(?:ね|よ|みて)|'
+        r'(?:しなくて|しないで|なくても|して|ても|でも)いい|(?:しちゃ|しては)(?:ダメ|だめ|いけない)|'
+        r'(?:したら|すれば|[うくぐすつぬぶむる]と|れば|なら).{0,35}(?:美味|おいし|便利|楽に|楽しく|できる|できて|られる|効果|安心|改善|よく|良く)|'
+        r'(?:そのうち|明日|いつか|必ず).{0,35}(?:良く|元気|幸せ|大丈夫)|'
+        r'(?:のが|ことが|ことは).{0,10}(?:大切|大事)|(?:休む|寝る|待つ)しかない',quote))
+
+
+def malformed_evidence(quote, user_text):
+    # An unfamiliar proper name or a figurative expression is not a grammar
+    # error. The classifier may advise, but cannot reject without checkable form.
+    return bool(re.search(r'にで|てるある|ているある|だです|ですだ|ますだ|てるいる|感じてるある',quote)
+                or ('咩' in quote and '咩' not in user_text))
 
 
 REVIEW_SCHEMA={'type':'object','properties':{'advice':{'type':'boolean'},'japanese':{'type':'boolean'},'quote':{'type':'string'}},
@@ -40,13 +59,18 @@ def review_pragmatics(user_text,reply,model,trace=None,*,check_advice=True,check
         if response.get('done_reason')=='length' or type(parsed.get('advice')) is not bool or type(parsed.get('japanese')) is not bool or not isinstance(parsed.get('quote'),str):
             raise ValueError('invalid review')
         quote=parsed['quote']
-        hits=[]
-        if check_advice and parsed['advice']:hits.append('semantic_unrequested_advice_or_guarantee')
-        if check_japanese and not parsed['japanese']:hits.append('semantic_malformed_japanese')
-        if hits:
+        claims=[]
+        if check_advice and parsed['advice']:claims.append('semantic_unrequested_advice_or_guarantee')
+        if check_japanese and not parsed['japanese']:claims.append('semantic_malformed_japanese')
+        if claims:
             if not quote or quote not in reply:raise ValueError('review citation is not in reply')
-            return {'applied':True,'hits':hits,'quote':quote}
-        if quote:raise ValueError('contradictory review citation')
+            hits=[claim for claim in claims if (advice_evidence(quote) if claim=='semantic_unrequested_advice_or_guarantee'
+                                                else malformed_evidence(quote,user_text))]
+            return {'applied':True,'hits':hits,'quote':quote,'unconfirmed_claims':[c for c in claims if c not in hits]}
+        # Disabled dimensions are not vetoes. A classifier sometimes still
+        # quotes advice while only its Japanese-grammar result was requested.
+        disabled_claim=(not check_advice and parsed['advice']) or (not check_japanese and not parsed['japanese'])
+        if quote and not disabled_claim:raise ValueError('contradictory review citation')
         return {'applied':True,'hits':[],'quote':''}
     except (ValueError,TypeError,RuntimeError,KeyError) as error:
         return {'applied':True,'hits':['semantic_review_unavailable'],'error':type(error).__name__}

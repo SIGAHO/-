@@ -1,11 +1,17 @@
 """Local browser UI. RAM holds live state; reply inputs/outputs are also logged to disk."""
 
+import ast
+import difflib
+import hashlib
 import json
 import os
+import re
 import secrets
 import socket
+import sqlite3
 import tempfile
 import threading
+import time
 import urllib.parse
 import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -18,6 +24,12 @@ from breaktail_paths import DATA_ROOT, ensure_data_root, store_path
 from breaktail_review_bridge import handle_review
 from breaktail_memory_manager import ProfileStoreError, load_profile
 from breaktail_style import make_style_report
+from breaktail_agent import Workspace
+from breaktail_agent_edit_preview import ReplacementSyntaxError, preview as preview_replacement
+from breaktail_file_lock import ExclusiveLock
+from breaktail_web_agent import WebAgentService
+from breaktail_memory_pages import page_records
+from breaktail_correction_ledger import preview as preview_correction, commit as commit_correction, history as correction_history
 
 
 HOST = "127.0.0.1"
@@ -25,11 +37,15 @@ PORT = int(os.environ.get("BREAKTAIL_WEB_PORT", "8765"))
 RESTORE_FROM = os.environ.get("BREAKTAIL_WEB_RESTORE_FROM")
 STATE_FILE = store_path("state", "web_state.json", "BREAKTAIL_WEB_STATE_FILE")
 PAGE = Path(__file__).with_name("breaktail_web.html")
+CORRECTION_FILE = store_path("memory", "breaktail_corrections.jsonl")
 TOKEN = secrets.token_urlsafe(32)
 LOCK = threading.Lock()
 STATE = {"history": [], "messages": [], "scene": None, "pending": None, "busy": False,
          "conversation_id": secrets.token_urlsafe(16), "style_samples": [], "debug": False,
          "working_state": tail.new_working_state(), "passive_continuity": new_passive_continuity_state()}
+EDIT_LOCK = threading.Lock()
+PREPARED_EDITS = {}
+AGENT_SERVICE = WebAgentService()
 
 
 def save_state_snapshot() -> None:
@@ -159,6 +175,181 @@ def memories():
     return found
 
 
+def open_workspace(workspace_root):
+    if (not isinstance(workspace_root, str) or not workspace_root.strip() or
+            not Path(workspace_root).is_absolute() or not re.fullmatch(r"[A-Za-z]:", Path(workspace_root).drive)):
+        raise ValueError("作業フォルダーの絶対パスを指定してください")
+    return Workspace(workspace_root, create_audit=False)
+
+
+def read_workspace(workspace_root, tool, path):
+    if tool not in ("list_files", "read_file"):
+        raise ValueError("読取り専用の操作だけ利用できます")
+    if not isinstance(path, str) or not path.strip():
+        raise ValueError("作業フォルダー内の相対パスを指定してください")
+    workspace = open_workspace(workspace_root)
+    observation = workspace.execute(tool, {"path": path})
+    return {"tool": tool, "workspace": str(workspace.root), "path": path, "observation": observation}
+
+
+def preview_workspace_replace(workspace_root, path, old, new):
+    """Show a bounded literal replacement and syntax check without touching files."""
+    if not isinstance(path, str) or not path.strip() or not isinstance(old, str) or not old:
+        raise ValueError("対象ファイルと置換前の文字列を指定してください")
+    if not isinstance(new, str):
+        raise ValueError("置換後の文字列を指定してください")
+    workspace = open_workspace(workspace_root)
+    target = workspace.path(path)
+    if target.suffix.lower() in {".exe", ".dll", ".sys", ".key", ".pfx", ".pem", ".sqlite", ".db"}:
+        raise ValueError("この種類のファイルは編集できません")
+    observed = workspace.read(path)
+    with target.open("rb") as stream:
+        if stream.read(3) == b"\xef\xbb\xbf":
+            raise ValueError("UTF-8 BOM付きファイルの編集はこの画面では未対応です")
+    before = observed["content"]
+    if before.count(old) != 1:
+        raise ValueError("置換前の文字列はファイル中にちょうど1回必要です")
+    candidate = before.replace(old, new, 1)
+    if len(candidate.encode("utf-8")) > 64000:
+        raise ValueError("変更後のファイルは64KB以内にしてください")
+    try:
+        syntax = preview_replacement(path, before, candidate, observed["sha256"])
+    except ReplacementSyntaxError as error:
+        syntax = error.observation
+    if target.suffix.lower() == ".py" and syntax.get("reason") == "original_syntax_invalid":
+        try:
+            ast.parse(candidate, filename=path)
+        except SyntaxError as error:
+            syntax = {"checked": False, "source": "replacement_candidate_not_written",
+                      "error": type(error).__name__, "error_line": error.lineno,
+                      "written": False, "execution_performed": False}
+        else:
+            syntax = {"checked": True, "kind": "candidate_syntax_only",
+                      "execution_performed": False}
+    patch = "".join(difflib.unified_diff(before.splitlines(keepends=True),
+                                          candidate.splitlines(keepends=True),
+                                          fromfile="before/" + path, tofile="preview/" + path))
+    return {"workspace": str(workspace.root), "path": path, "source_sha256": observed["sha256"],
+            "candidate_sha256": hashlib.sha256(candidate.encode("utf-8")).hexdigest(),
+            "diff": patch[:8000], "diff_truncated": len(patch) > 8000,
+            "syntax": syntax, "written": False}
+
+
+def prepare_workspace_replace(workspace_root, path, old, new):
+    result = preview_workspace_replace(workspace_root, path, old, new)
+    if result["syntax"].get("source") == "replacement_candidate_not_written":
+        return result
+    if result["source_sha256"] == result["candidate_sha256"]:
+        raise ValueError("変更内容がありません")
+    if result["diff_truncated"]:
+        raise ValueError("差分が長すぎるため、この画面からは保存できません")
+    identity = secrets.token_urlsafe(32)
+    with EDIT_LOCK:
+        now = time.monotonic()
+        for key in list(PREPARED_EDITS):
+            if PREPARED_EDITS[key]["expires"] < now:
+                del PREPARED_EDITS[key]
+        if len(PREPARED_EDITS) >= 32:
+            del PREPARED_EDITS[next(iter(PREPARED_EDITS))]
+        PREPARED_EDITS[identity] = {"workspace": result["workspace"], "path": path,
+                                    "old": old, "new": new,
+                                    "source_sha256": result["source_sha256"],
+                                    "candidate_sha256": result["candidate_sha256"],
+                                    "expires": now + 600}
+    return {**result, "preview_id": identity}
+
+
+def commit_workspace_replace(preview_id):
+    if not isinstance(preview_id, str):
+        raise ValueError("変更案を先に確認してください")
+    with EDIT_LOCK:
+        prepared = PREPARED_EDITS.pop(preview_id, None)
+    if prepared is None or prepared["expires"] < time.monotonic():
+        raise ValueError("変更案の期限が切れました。もう一度確認してください")
+    guard = open_workspace(prepared["workspace"])
+    with ExclusiveLock(guard.path(".breaktail-agent/worker.lock", internal=True)):
+        workspace = Workspace(prepared["workspace"])
+        observed = workspace.read(prepared["path"])
+        if observed["sha256"] != prepared["source_sha256"]:
+            raise ValueError("確認後にファイルが変わりました。読み直してください")
+        candidate = observed["content"].replace(prepared["old"], prepared["new"], 1)
+        if (observed["content"].count(prepared["old"]) != 1 or
+                hashlib.sha256(candidate.encode("utf-8")).hexdigest() != prepared["candidate_sha256"]):
+            raise ValueError("確認した変更案と現在の内容が一致しません")
+        receipt = {"schema": 1, "workspace": str(workspace.root), "path": prepared["path"],
+                   "source_sha256": observed["sha256"],
+                   "candidate_sha256": prepared["candidate_sha256"], "status": "prepared"}
+        record = workspace.audit_dir / "web-edit.json"
+        record.write_text(json.dumps(receipt, ensure_ascii=False), encoding="utf-8")
+        result = workspace.execute("replace_text", {"path": prepared["path"],
+                                                     "old": prepared["old"], "new": prepared["new"]})
+        if not result.get("written") or result["sha256"] != prepared["candidate_sha256"]:
+            raise OSError("変更後のファイルを確認できませんでした")
+        receipt["status"] = "applied"
+        receipt["backup"] = workspace.changes[str(workspace.path(prepared["path"]))]["backup"]
+        temp_record = record.with_suffix(".json.tmp")
+        temp_record.write_text(json.dumps(receipt, ensure_ascii=False), encoding="utf-8")
+        os.replace(temp_record, record)
+        return {"written": True, "workspace": str(workspace.root), "path": prepared["path"],
+                "before_sha256": observed["sha256"], "after_sha256": result["sha256"],
+                "run_id": workspace.run_id, "backup": receipt["backup"]}
+
+
+def undo_workspace_edit(workspace_root, run_id):
+    if not isinstance(run_id, str) or not re.fullmatch(r"[0-9a-f]{32}", run_id):
+        raise ValueError("有効な作業IDを指定してください")
+    guard = open_workspace(workspace_root)
+    with ExclusiveLock(guard.path(".breaktail-agent/worker.lock", internal=True)):
+        record = guard.path(f".breaktail-agent/{run_id}/web-edit.json", internal=True)
+        if not record.is_file() or record.stat().st_size > 4096:
+            raise ValueError("変更記録が見つかりません")
+        receipt = json.loads(record.read_text(encoding="utf-8"))
+        expected_backup = Path(".breaktail-agent") / run_id / "before-0"
+        if (not isinstance(receipt, dict) or receipt.get("schema") != 1 or
+                receipt.get("workspace") != str(guard.root) or receipt.get("status") not in ("prepared", "applied") or
+                not all(isinstance(receipt.get(key), str) and re.fullmatch(r"[0-9a-f]{64}", receipt[key])
+                        for key in ("source_sha256", "candidate_sha256")) or
+                (receipt.get("status") == "applied" and
+                 (not isinstance(receipt.get("backup"), str) or
+                  Path(receipt["backup"]).parts != expected_backup.parts)) or
+                (receipt.get("status") == "prepared" and receipt.get("backup") is not None)):
+            raise ValueError("変更記録を確認できません")
+        target = guard.path(receipt.get("path"))
+        backup = guard.path(str(expected_backup), internal=True)
+        if not target.is_file() or not backup.is_file() or backup.stat().st_size > 64000:
+            raise ValueError("対象またはバックアップが見つかりません")
+        original = backup.read_bytes()
+        current = target.read_bytes()
+        if (hashlib.sha256(original).hexdigest() != receipt["source_sha256"] or
+                hashlib.sha256(current).hexdigest() != receipt["candidate_sha256"]):
+            raise ValueError("保存後にファイルまたはバックアップが変わりました。上書きしません")
+        temporary = target.with_name(target.name + "." + secrets.token_hex(8) + ".undo.tmp")
+        try:
+            with temporary.open("xb") as stream:
+                stream.write(original)
+                stream.flush()
+                os.fsync(stream.fileno())
+            os.replace(temporary, target)
+        finally:
+            temporary.unlink(missing_ok=True)
+        if hashlib.sha256(target.read_bytes()).hexdigest() != receipt["source_sha256"]:
+            raise OSError("取消後の読み戻しに失敗しました")
+        receipt["status"] = "undone"
+        temporary_record = record.with_name("web-edit." + secrets.token_hex(8) + ".tmp")
+        try:
+            temporary_record.write_text(json.dumps(receipt, ensure_ascii=False), encoding="utf-8")
+            os.replace(temporary_record, record)
+        finally:
+            temporary_record.unlink(missing_ok=True)
+        return {"undone": True, "workspace": str(guard.root), "path": receipt["path"],
+                "sha256": receipt["source_sha256"], "run_id": run_id}
+
+
+def local_request_allowed(host, origin=None):
+    allowed_hosts = {f"127.0.0.1:{PORT}", f"localhost:{PORT}"}
+    return host in allowed_hosts and (not origin or origin in {f"http://{name}" for name in allowed_hosts})
+
+
 def prepare_turn(history, user_text, scene, trace=None, working_state=None, passive_continuity=None):
     """Use the same core turn pipeline as CLI."""
     with LOCK:
@@ -182,15 +373,27 @@ def _style_report_text(samples):
             "これは発言の観測であって、Breaktailが学習した結果ではありません。")
 
 
-def web_command_reply(user_text, history, scene, conversation_id, style_samples):
+def web_command_reply(user_text, history, scene, conversation_id, style_samples, working_state=None):
     """Expose the established CLI operational commands through the Web chat route.
 
     Returns None for ordinary conversation.  Command effects stay in the same
     canonical stores used by CLI; no Web-only mirror is introduced.
     """
-    if user_text == "/memories":
+    if user_text.startswith('/persona '):
+        if working_state is None:
+            return '人格の切替には現在の会話状態が必要です。',scene
+        from breaktail_character import select
+        try:
+            select(working_state,user_text[len('/persona '):].strip())
+        except ValueError:
+            return '使い方: /persona atashi または /persona off',scene
+        return ('あたし版の会話人格に切り替えた。' if user_text.endswith('atashi') else '会話人格の指定を解除した。'),scene
+    if user_text == "/memories" or (re.search(r"記憶", user_text) and
+            re.search(r"すべて|全部|全件|一覧", user_text) and
+            re.search(r"見せ|表示|一覧|教え", user_text) and
+            not re.search(r"消し|削除|忘れ", user_text)):
         rows = memories()
-        return ("保存済みの記憶はありません。" if not rows else "保存済みの記憶:\n" + "\n".join(
+        return ("保存済みの解釈記憶はありません。" if not rows else f"保存済みの解釈記憶 {len(rows)} 件（Raw会話・プロフィールは別管理）:\n" + "\n".join(
             f"[{item['id']}] [未確認の解釈] {item['content']}" for item in rows)), scene
     if user_text.startswith("/forget"):
         argument = user_text[len("/forget"):].strip()
@@ -214,9 +417,10 @@ def web_command_reply(user_text, history, scene, conversation_id, style_samples)
                 if scene else "現在の場面: 未設定"), scene
     if user_text == "/capabilities":
         return ("できる: テキスト会話、コードの提案、直近16往復の参照、解釈記憶の保存・検索・Memory Gateでの採用と /forget での削除。\n"
-                "/memories で記憶を表示。会話では出典Rawを解決でき、Gateを通過した候補だけ14Bへ渡す。\n"
+                "/memories で解釈記憶を表示。Web画面ではRaw会話と解釈記憶を出典・件数・ページごとに確認でき、明示された確認事項の更新履歴も表示できる。会話では出典Rawを解決でき、Gateを通過した候補だけ14Bへ渡す。\n"
                 "確定したBreaktail自身の20項目プロフィールは /profile で確認でき、再起動後も会話に渡す。\n"
-                "できない: 外部検索、任意のファイル操作、裏での作業、前セッションの会話の参照。"), scene
+                "Web画面の明示操作では、指定した作業フォルダーの一覧・テキスト読取り・差分確認後の文字列置換と取消、作業エージェントの実行・停止・未完了からの再開・実行後の差分確認・既存ファイル１件の編集取消ができる。会話から自動でファイルを操作する機能はない。\n"
+                "できない: 外部検索、Web作業でのコードやテストの実行、裏での作業、前セッションの会話の参照。"), scene
     if user_text == "/debug":
         with LOCK:
             STATE["debug"] = not STATE["debug"]
@@ -285,6 +489,8 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(content)
 
     def do_GET(self):
+        if not local_request_allowed(self.headers.get("Host")):
+            return self.send(403, {"error": "ローカル画面からのみ利用できます"})
         if handle_review(self):
             return
         if self.path == "/":
@@ -313,6 +519,8 @@ class Handler(BaseHTTPRequestHandler):
         self.send(404, {"error": "見つかりません"})
 
     def do_POST(self):
+        if not local_request_allowed(self.headers.get("Host"), self.headers.get("Origin")):
+            return self.send(403, {"error": "ローカル画面からのみ利用できます"})
         if handle_review(self):
             return
         if self.headers.get("X-Breaktail-Token") != TOKEN:
@@ -331,6 +539,85 @@ class Handler(BaseHTTPRequestHandler):
 
         if self.path == "/api/reply":
             return self.reply(body)
+        if self.path == "/api/memory/page":
+            try:
+                result = page_records(tail.MEMORY_FILE, tail.raw_conversation.RAW_CONVERSATION_FILE,
+                                      body.get("scope"), body.get("page", 1))
+            except (ValueError, OSError, UnicodeError) as error:
+                return self.send(400, {"error": str(error)})
+            return self.send(200, result)
+        if self.path in ("/api/memory/correction/preview", "/api/memory/correction/commit",
+                         "/api/memory/correction/history"):
+            try:
+                if self.path.endswith("/preview"):
+                    result = preview_correction(tail.raw_conversation.RAW_CONVERSATION_FILE,
+                                                body.get("label"), body.get("old_turn_id"), body.get("new_turn_id"),
+                                                body.get("alias", ""))
+                    previous = correction_history(tail.raw_conversation.RAW_CONVERSATION_FILE,
+                                                  CORRECTION_FILE, result["label"], result["old"]["turn_id"])
+                    if previous["count"]:
+                        if not previous["chain_verified"]:
+                            raise ValueError("既存の訂正チェーンの出典を再確認できません")
+                        if result["alias"] and result["alias"] != previous["alias"]:
+                            raise ValueError("この話題の別名は変更できません")
+                        result["alias"] = previous["alias"]
+                elif self.path.endswith("/commit"):
+                    result = commit_correction(tail.raw_conversation.RAW_CONVERSATION_FILE, CORRECTION_FILE,
+                                               body.get("label"), body.get("old_turn_id"), body.get("new_turn_id"),
+                                               body.get("expected_old_sha256"), body.get("expected_new_sha256"),
+                                               body.get("alias", ""))
+                else:
+                    result = correction_history(tail.raw_conversation.RAW_CONVERSATION_FILE, CORRECTION_FILE,
+                                                body.get("label"), body.get("anchor_turn_id"))
+            except (ValueError, OSError, TimeoutError, UnicodeError) as error:
+                return self.send(409, {"error": str(error)})
+            return self.send(200, result)
+        if self.path == "/api/workspace/read":
+            try:
+                result = read_workspace(body.get("workspace"), body.get("tool"), body.get("path"))
+            except (ValueError, OSError, UnicodeError) as error:
+                return self.send(400, {"error": str(error)})
+            return self.send(200, result)
+        if self.path == "/api/workspace/preview":
+            try:
+                result = prepare_workspace_replace(body.get("workspace"), body.get("path"),
+                                                   body.get("old"), body.get("new"))
+            except (ValueError, OSError, UnicodeError) as error:
+                return self.send(400, {"error": str(error)})
+            return self.send(200, result)
+        if self.path == "/api/workspace/commit":
+            try:
+                result = commit_workspace_replace(body.get("preview_id"))
+            except (ValueError, OSError, UnicodeError, TimeoutError) as error:
+                return self.send(409, {"error": str(error)})
+            return self.send(200, result)
+        if self.path == "/api/workspace/undo":
+            try:
+                result = undo_workspace_edit(body.get("workspace"), body.get("run_id"))
+            except (ValueError, OSError, UnicodeError, TimeoutError, json.JSONDecodeError) as error:
+                return self.send(409, {"error": str(error)})
+            return self.send(200, result)
+        if self.path in ("/api/agent/start", "/api/agent/resume", "/api/agent/status",
+                         "/api/agent/cancel", "/api/agent/work", "/api/agent/review", "/api/agent/undo"):
+            try:
+                workspace = str(open_workspace(body.get("workspace")).root)
+                if self.path == "/api/agent/start":
+                    result = AGENT_SERVICE.start(workspace, body.get("task"))
+                elif self.path == "/api/agent/resume":
+                    result = AGENT_SERVICE.resume(workspace, body.get("run_id"))
+                elif self.path == "/api/agent/status":
+                    result = AGENT_SERVICE.status(workspace, body.get("job_id"))
+                elif self.path == "/api/agent/cancel":
+                    result = AGENT_SERVICE.cancel(workspace, body.get("job_id"))
+                elif self.path == "/api/agent/review":
+                    result = AGENT_SERVICE.review(workspace, body.get("job_id"))
+                elif self.path == "/api/agent/undo":
+                    result = AGENT_SERVICE.undo(workspace, body.get("job_id"), body.get("expected_after_sha256"))
+                else:
+                    result = AGENT_SERVICE.work_queued(workspace, body.get("job_id"))
+            except (ValueError, OSError, TimeoutError, sqlite3.Error) as error:
+                return self.send(409, {"error": str(error)})
+            return self.send(200, result)
         if self.path == "/api/extract":
             return self.extract(body)
         if self.path == "/api/clear":
@@ -362,7 +649,7 @@ class Handler(BaseHTTPRequestHandler):
                          history_message_count=len(history))
         with LOCK:
             style_samples = list(STATE["style_samples"])
-        command = web_command_reply(user_text, history, scene, conversation_id, style_samples)
+        command = web_command_reply(user_text, history, scene, conversation_id, style_samples,working_state=working_state)
         if command is None:
             command = web_profile_commit_reply(user_text, history, scene)
         if command is not None:
@@ -476,3 +763,4 @@ if __name__ == "__main__":
     finally:
         save_state_snapshot()
         server.server_close()
+

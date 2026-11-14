@@ -33,3 +33,9 @@ python demo.py
 
 `CompanionCore.handle()` の返り値 `context` をLLMへ渡し、返答を生成するだけです。
 LLM出力は `assistant_output` Event として記録しても、Stateへは昇格しません。
+
+
+## Windows版Breaktailの最新開発まとめ（2026-11-10）
+
+[会話・記憶・作業エージェントの全変更と検証結果](windows_runtime/docs/DEVELOPMENT_SUMMARY_20261110.md)。
+Windows版は `windows_runtime/`、既存Companion Coreは `src/companion_core/` で管理する。
