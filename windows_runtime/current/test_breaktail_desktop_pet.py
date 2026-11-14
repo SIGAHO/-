@@ -5,6 +5,7 @@ from unittest.mock import patch
 from PIL import Image
 
 from breaktail_desktop_pet import (KeyboardActivity, activity_guess, classify_key, clean_comment, ease, hop_arc,
+                                   identify_fisch_term,
                                    frame_change_score, screen_hint, vision_comment, window_category)
 
 
@@ -85,6 +86,14 @@ class DesktopPetTests(unittest.TestCase):
         self.assertEqual(body["model"], "qwen3.5:4b")
         self.assertEqual(body["messages"][0]["images"], ["dGVzdC1qcGVn"])
         self.assertFalse(body["stream"])
+
+    def test_image_game_term_is_rejected_when_model_is_unsure(self):
+        class Response:
+            def __enter__(self): return self
+            def __exit__(self, *args): return False
+            def read(self): return b'{"message":{"content":"NONE"}}'
+        with patch("breaktail_desktop_pet.request.urlopen", return_value=Response()):
+            self.assertEqual(identify_fisch_term(b"test-jpeg"), "")
 
 
 if __name__ == "__main__":
