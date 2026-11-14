@@ -5,6 +5,8 @@ import math
 import random
 import time
 import tkinter as tk
+from breaktail_pixel_art import render, slash_position
+from breaktail_pixel_blit import blit
 
 
 WIDTH, HEIGHT = 900, 600  # fallback dimensions for pure rule checks
@@ -25,14 +27,6 @@ def point_segment_distance(px: float, py: float, ax: float, ay: float,
     dx, dy = bx - ax, by - ay
     ratio = clamp(((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy), 0, 1) if dx or dy else 0
     return math.hypot(px - ax - ratio * dx, py - ay - ratio * dy)
-
-
-def scythe_tip(progress: float, width: int = WIDTH, height: int = HEIGHT,
-               origin_x: float | None = None, origin_y: float = 105) -> tuple[float, float]:
-    """A broad sweep centered on the moving desktop companion."""
-    angle = math.pi * (1.12 - 1.05 * clamp(progress, 0, 1))
-    return ((width / 2 if origin_x is None else origin_x) + width * 0.34 * math.cos(angle),
-            origin_y + height * 0.43 * math.sin(angle))
 
 
 class FireworksGame:
@@ -62,6 +56,7 @@ class FireworksGame:
         self.last_time = time.monotonic()
         self.reset()
         self.window.focus_force()
+        self.frames_drawn = 0
         self.window.after(16, self.tick)
 
     def reset(self):
@@ -77,9 +72,11 @@ class FireworksGame:
         self.started = time.monotonic()
         self.next_firework = self.started + 0.45
         self.next_scythe = self.started + 5.5
+        self.next_black_hole = self.started + 9.0
         self.explosions: list[dict] = []
         self.bombs: list[dict] = []
         self.scythe: dict | None = None
+        self.black_hole: dict | None = None
         self.finished = False
 
     def key_down(self, event):
@@ -89,7 +86,7 @@ class FireworksGame:
         self.keys.discard(event.keysym)
 
     def click(self, event):
-        if event.x >= self.width - 140 and event.y < 64:
+        if event.x >= self.width - 250 and event.y < 84:
             self.close()
         elif (self.finished and abs(event.x - self.width/2) < 260 and
               abs(event.y - self.height/2) < 90):
@@ -98,10 +95,9 @@ class FireworksGame:
             self.window.focus_force()
 
     def launch_firework(self, now: float):
-        x = int(clamp(self.boss_x + self.rng.randint(-self.width // 4, self.width // 4),
-                      90, self.width - 90))
-        y = int(clamp(self.boss_y + self.rng.randint(100, max(110, self.height // 3)),
-                      130, self.height - 180))
+        x = self.rng.randint(110, self.width - 110)
+        y = self.rng.randint(max(110, self.height // 8),
+                             max(180, self.height * 2 // 3))
         self.explosions.append({"x": x, "y": y, "born": now, "color":
                                 self.rng.choice(("#ffb855", "#fb65cb", "#8ceeff"))})
         # Bombs start at the burst and fan out toward the lower play field.
@@ -132,8 +128,9 @@ class FireworksGame:
         pointer_y = self.window.winfo_pointery()
         if (now - self.last_key_move > 1.5 and
                 0 <= pointer_x < self.width and 0 <= pointer_y < self.height):
-            self.player_x = pointer_x
-            self.player_y = pointer_y
+            follow = min(1.0, dt * 11)
+            self.player_x += (pointer_x - self.player_x) * follow
+            self.player_y += (pointer_y - self.player_y) * follow
         self.player_x = clamp(self.player_x, 20, self.width - 20)
         self.player_y = clamp(self.player_y, 100, self.height - 20)
         if now >= self.next_firework:
@@ -141,9 +138,36 @@ class FireworksGame:
                 self.launch_firework(now)
             self.next_firework = now + max(0.65, 1.4 - self.score / 1800)
         if self.scythe is None and now >= self.next_scythe:
-            self.scythe = {"born": now}
+            self.scythe = {"born": now, "direction": self.rng.choice((-1, 1))}
             self.next_scythe = now + 8.0
+        if self.black_hole is None and now >= self.next_black_hole:
+            self.black_hole = {"born": now,
+                               "x": self.rng.randint(self.width // 4, self.width * 3 // 4),
+                               "y": self.rng.randint(self.height // 3, self.height * 2 // 3)}
+            self.next_black_hole = now + 13.0
+        if self.black_hole:
+            hole = self.black_hole
+            age = now - hole["born"]
+            if age >= 4.2:
+                self.black_hole = None
+            elif age >= 0.8:
+                dx, dy = hole["x"] - self.player_x, hole["y"] - self.player_y
+                distance = math.hypot(dx, dy)
+                if 1 < distance < 360:
+                    pull = 230 * (1 - distance / 360) * dt
+                    self.player_x += dx / distance * pull
+                    self.player_y += dy / distance * pull
+                if now >= self.invulnerable_until and distance < 32:
+                    self.hit(now)
         for bomb in self.bombs:
+            if self.black_hole and now - self.black_hole["born"] >= 0.8:
+                dx = self.black_hole["x"] - bomb["x"]
+                dy = self.black_hole["y"] - bomb["y"]
+                distance = max(1, math.hypot(dx, dy))
+                if distance < 400:
+                    force = 80 * (1 - distance / 400) * dt
+                    bomb["vx"] += dx / distance * force
+                    bomb["vy"] += dy / distance * force
             bomb["x"] += bomb["vx"] * dt
             bomb["y"] += bomb["vy"] * dt
             bomb["vy"] += 45 * dt
@@ -151,17 +175,17 @@ class FireworksGame:
                     bomb["x"], bomb["y"], bomb["radius"], self.player_x, self.player_y, 7):
                 self.hit(now)
         self.bombs = [b for b in self.bombs if -20 < b["x"] < self.width + 20 and b["y"] < self.height + 20]
-        self.explosions = [e for e in self.explosions if now - e["born"] < 0.9]
+        self.explosions = [e for e in self.explosions if now - e["born"] < 1.05]
         if self.scythe:
             age = now - self.scythe["born"]
             if age >= 2.1:
                 self.scythe = None
-            elif 0.7 <= age <= 1.65:
-                tip = scythe_tip((age - 0.7) / 0.95, self.width, self.height,
-                                 self.boss_x, self.boss_y)
+            elif 0.85 <= age <= 1.75:
+                progress = (age - 0.85) / 0.9
+                x, y = slash_position(self.width, self.height, progress,
+                                      self.scythe["direction"])
                 if (now >= self.invulnerable_until and
-                        point_segment_distance(self.player_x, self.player_y,
-                                               self.boss_x, self.boss_y, *tip) < 16):
+                        hits_circle(self.player_x, self.player_y, 7, x, y, 95)):
                     self.hit(now)
         self.score += dt * 10
 
@@ -172,57 +196,8 @@ class FireworksGame:
             self.finished = True
 
     def draw(self, now: float):
-        c = self.canvas
-        c.delete("all")
-        for explosion in self.explosions:
-            age = now - explosion["born"]
-            cx, cy = explosion["x"], explosion["y"]
-            radius = 14 + age * 92
-            for i in range(16):
-                a = i * math.tau / 16
-                px, py = cx + radius * math.cos(a), cy + radius * math.sin(a)
-                c.create_line(cx + radius * 0.5 * math.cos(a),
-                              cy + radius * 0.5 * math.sin(a), px, py,
-                              fill=explosion["color"], width=2)
-        for bomb in self.bombs:
-            x, y, r = bomb["x"], bomb["y"], bomb["radius"]
-            c.create_oval(x-r, y-r, x+r, y+r, fill="#252329", outline="#ff6565", width=2)
-            c.create_line(x, y-r, x+4, y-r-7, fill="#ffd36b", width=2)
-        if self.scythe:
-            age = now - self.scythe["born"]
-            tip = scythe_tip(clamp((age - 0.7) / 0.95, 0, 1), self.width, self.height,
-                             self.boss_x, self.boss_y)
-            if age < 0.7:
-                c.create_text(self.boss_x, self.boss_y + 85, text="巨大な鎌が来る！", fill="#ff7e9d",
-                              font=("Yu Gothic UI", 23, "bold"))
-            else:
-                c.create_line(self.boss_x, self.boss_y, *tip, fill="#abb9d7", width=12)
-                c.create_line(self.boss_x, self.boss_y, *tip, fill="#fff5ef", width=4)
-                x, y = tip
-                c.create_polygon(x-12, y-8, x+84, y-82, x+30, y-6, x+8, y+22,
-                                 fill="#e8faff", outline="#85dfff", width=3)
-        if not (self.finished or now < self.invulnerable_until and int(now * 12) % 2):
-            x, y = self.player_x, self.player_y
-            c.create_polygon(x, y-18, x-14, y+12, x, y+5, x+14, y+12,
-                             fill="#7de4ff", outline="white", width=2)
-            c.create_oval(x-3, y-3, x+3, y+3, fill="#fffbcb", outline="")
-        c.create_rectangle(8, 8, 255, 58, fill="#151b30", outline="#7de4ff", width=2)
-        c.create_text(20, 18, anchor="nw", text=f"♥ {self.lives}    SCORE {int(self.score)}",
-                      fill="white", font=("Yu Gothic UI", 18, "bold"))
-        c.create_rectangle(self.width-140, 8, self.width-8, 58,
-                           fill="#151b30", outline="#ffb855", width=2)
-        c.create_text(self.width-74, 33, text="終了  Esc",
-                      fill="white", font=("Yu Gothic UI", 15, "bold"))
-        c.create_text(self.width/2, 33, text="マウスで避ける  ·  矢印キー/WASDも可",
-                      fill="#f5e3af", font=("Yu Gothic UI", 14, "bold"))
-        if self.finished:
-            cx, cy = self.width/2, self.height/2
-            c.create_rectangle(cx-260, cy-90, cx+260, cy+85,
-                               fill="#13182b", outline="#ffb855", width=3)
-            c.create_text(cx, cy-35, text="ゲームオーバー", fill="#ffb855",
-                          font=("Yu Gothic UI", 32, "bold"))
-            c.create_text(cx, cy+30, text="クリックかRで再挑戦  ·  Escで終了", fill="white",
-                          font=("Yu Gothic UI", 17))
+        blit(self.canvas, render(self, now, full_size=False), self.width, self.height)
+        self.frames_drawn += 1
 
     def tick(self):
         if not self.window.winfo_exists():
